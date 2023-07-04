@@ -1,6 +1,5 @@
 .gradle
 .idea
-.qodana
 build
 
 # Compiled class file
