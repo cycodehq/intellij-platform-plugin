@@ -8,9 +8,7 @@
 name: Run UI Tests
 on:
   workflow_dispatch:
-  push:
-    branches:
-      - CM-24419-create-plugin-skeleton
+  pull_request:
 
 jobs:
   testUI:
