@@ -4,15 +4,12 @@
 # - run UI tests with separate Gradle task
 #
 # Please check https://github.com/JetBrains/intellij-ui-test-robot for information about UI tests with IntelliJ Platform
-#
-# Workflow is triggered manually.
 
 name: Run UI Tests
 on:
   workflow_dispatch
 
 jobs:
-
   testUI:
     runs-on: ${{ matrix.os }}
     strategy:
@@ -30,24 +27,19 @@ jobs:
             runIde: ./gradlew runIdeForUiTests &
 
     steps:
-
-      # Check out current repository
       - name: Fetch Sources
         uses: actions/checkout@v3
 
-      # Setup Java environment for the next steps
       - name: Setup Java
         uses: actions/setup-java@v3
         with:
           distribution: zulu
-          java-version: 17
+          java-version: 11
           cache: gradle
 
-      # Run IDEA prepared for UI testing
       - name: Run IDE
         run: ${{ matrix.runIde }}
 
-      # Wait for IDEA to be started
       - name: Health Check
         uses: jtalk/url-health-check-action@v3
         with:
@@ -55,6 +47,5 @@ jobs:
           max-attempts: 15
           retry-delay: 30s
 
-      # Run tests
-      - name: Tests
+      - name: Run Tests
         run: ./gradlew test
