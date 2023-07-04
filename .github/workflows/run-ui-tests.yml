@@ -7,8 +7,7 @@
 
 name: Run UI Tests
 on:
-  workflow_dispatch:
-  pull_request:
+  push
 
 jobs:
   testUI:
