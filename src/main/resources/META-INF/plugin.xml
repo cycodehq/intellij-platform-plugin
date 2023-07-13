@@ -11,6 +11,7 @@
     <extensions defaultExtensionNs="com.intellij">
         <postStartupActivity implementation="com.cycode.plugin.activities.PostStartupActivity"/>
         <toolWindow factoryClass="com.cycode.plugin.toolWindow.CycodeToolWindowFactory" id="Cycode" anchor="bottom"/>
+        <projectConfigurable instance="com.cycode.plugin.settings.ApplicationSettingsConfigurable" groupId="tools"/>
     </extensions>
 
     <applicationListeners>
