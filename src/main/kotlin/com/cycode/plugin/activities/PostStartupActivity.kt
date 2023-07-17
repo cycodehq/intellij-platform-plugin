@@ -3,6 +3,9 @@ package com.cycode.plugin.activities
 import com.cycode.plugin.Consts.Companion.CLI_PATH
 import com.cycode.plugin.Consts.Companion.PLUGIN_PATH
 import com.cycode.plugin.managers.CliManager
+import com.cycode.plugin.utils.CliWrapper
+import com.intellij.openapi.progress.ProgressIndicator
+import com.intellij.openapi.progress.Task
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.startup.StartupActivity
 import java.nio.file.Files
@@ -26,5 +29,14 @@ class PostStartupActivity : StartupActivity.DumbAware {
         } else {
             println("Failed to download the latest release.")
         }
+
+        object : Task.Backgroundable(project, "CLI health checking...", true) {
+            override fun run(indicator: ProgressIndicator) {
+                // FIXME: blocked by CM-25361. need to add JSON output
+                println(CliWrapper(CLI_PATH).executeCommand("--version"))
+            }
+        }.queue()
+
+        println("PostStartupActivity finished.")
     }
 }
