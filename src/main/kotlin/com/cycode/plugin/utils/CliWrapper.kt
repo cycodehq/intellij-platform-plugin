@@ -2,14 +2,47 @@ package com.cycode.plugin.utils
 
 import com.intellij.execution.configurations.GeneralCommandLine
 import com.intellij.openapi.util.SystemInfo
+import com.intellij.openapi.application.ApplicationInfo
 import com.google.gson.Gson
 import com.google.gson.reflect.TypeToken
 import com.intellij.execution.process.*
+import com.intellij.ide.plugins.PluginManagerCore
+import com.intellij.openapi.diagnostic.thisLogger
+import com.intellij.openapi.extensions.PluginId
 import com.intellij.openapi.util.Key
 import java.nio.charset.Charset
 
+
+data class IDEUserAgent(
+    val app_name: String,
+    val app_version: String,
+    val env_name: String,
+    val env_version: String
+)
+
+fun retrieveIDEInfo(): IDEUserAgent {
+    val appInfo = ApplicationInfo.getInstance()
+
+    val appName = "jetbrains_plugin"
+    val appVersion = PluginManagerCore.getPlugin(PluginId.getId("com.cycode.plugin"))?.version ?: "unknown"
+    val envName = appInfo.versionName
+    val envVersion = appInfo.fullVersion
+
+    return IDEUserAgent(appName, appVersion, envName, envVersion)
+}
+
+fun getUserAgent(): String {
+    // Returns a JSON string representing the IDE user agent.
+    // Example:
+    // {"app_name":"jetbrains_plugin","app_version":"0.0.1","env_name":"IntelliJ IDEA","env_version":"2021.1"}
+    val ideInfo = retrieveIDEInfo()
+    return Gson().toJson(ideInfo)
+}
+
+
 class CliWrapper(private val executablePath: String) {
     private val gson: Gson = Gson()
+    private val defaultArgs = arrayOf("-o", "json", "--user-agent", getUserAgent())
 
     fun executeCommand(vararg arguments: String): CliResult<Map<String, Any>> {
         val commandLine = GeneralCommandLine()
@@ -24,7 +57,10 @@ class CliWrapper(private val executablePath: String) {
             commandLine.exePath = executablePath
         }
 
+        commandLine.addParameters(*defaultArgs)
         commandLine.addParameters(*arguments)
+
+        thisLogger().warn("CLI command: $commandLine")
 
         val processHandler = OSProcessHandler(commandLine)
         val outputListener = OutputListener()
