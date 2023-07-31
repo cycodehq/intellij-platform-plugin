@@ -16,9 +16,9 @@ class PostStartupActivity : StartupActivity.DumbAware {
         // create plugin directory.
         // this is where we'll store the CLI.
         // TODO: move creation to config manager
-        Files.createDirectories(Paths.get(PLUGIN_PATH));
+        Files.createDirectories(Paths.get(PLUGIN_PATH))
 
-        val owner = "MarshalX"
+        val owner = "ilya-siamionau-org"
         val repo = "cycode-cli"
 
         val cliManager = CliManager()
@@ -32,8 +32,7 @@ class PostStartupActivity : StartupActivity.DumbAware {
 
         object : Task.Backgroundable(project, "CLI health checking...", true) {
             override fun run(indicator: ProgressIndicator) {
-                // FIXME: blocked by CM-25361. need to add JSON output
-                println(CliWrapper(CLI_PATH).executeCommand("--version"))
+                println(CliWrapper(CLI_PATH).executeCommand("version"))
             }
         }.queue()
 

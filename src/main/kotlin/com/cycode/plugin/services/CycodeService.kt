@@ -19,12 +19,12 @@ class CycodeService(val project: Project) {
     fun startAuth() {
         object : Task.Backgroundable(project, "Start auth...", true) {
             override fun run(indicator: ProgressIndicator) {
-                println(CliWrapper(CLI_PATH).executeCommand("--output=json", "auth", "check"))
+                println(CliWrapper(CLI_PATH).executeCommand("auth", "check"))
 
                 // TODO: increase timeout
-                println(CliWrapper(CLI_PATH).executeCommand("--output=json", "auth"))
+                println(CliWrapper(CLI_PATH).executeCommand("auth"))
 
-                println(CliWrapper(CLI_PATH).executeCommand("--output=json", "auth", "check"))
+                println(CliWrapper(CLI_PATH).executeCommand("auth", "check"))
             }
         }.queue()
     }

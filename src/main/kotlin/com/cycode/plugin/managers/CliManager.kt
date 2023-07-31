@@ -9,7 +9,7 @@ class CliManager {
     fun downloadLatestRelease(owner: String, repo: String, localPath: String): File? {
         val releaseInfo = githubReleaseManager.getLatestReleaseInfo(owner, repo)
         // TODO: get checksum from release info
-        val checksum = "7c2259c01e0e617e6d39a88cfd6914433a00efabe0dbe0009c7c55dee9022a87"
+        val checksum = "6fbc3d107fc445f15aac2acfaf686bb5be880ce2b3962fd0ce336490b315c6c4"
 
         if (releaseInfo != null) {
             val downloadedFile = downloadManager.downloadFile(

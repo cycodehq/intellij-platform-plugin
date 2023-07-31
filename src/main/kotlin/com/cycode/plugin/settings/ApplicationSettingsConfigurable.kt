@@ -1,5 +1,6 @@
 package com.cycode.plugin.settings
 
+import com.cycode.plugin.components.common.BorderedPanel
 import com.intellij.openapi.options.SearchableConfigurable
 import com.intellij.openapi.project.Project
 import com.intellij.ui.components.JBLabel
@@ -7,7 +8,6 @@ import com.intellij.util.ui.JBUI
 import java.awt.BorderLayout
 import java.awt.GridBagConstraints
 import java.awt.GridBagLayout
-import javax.swing.BorderFactory
 import javax.swing.JComponent
 import javax.swing.JPanel
 
@@ -16,11 +16,9 @@ class ApplicationSettingsConfigurable(val project: Project) : SearchableConfigur
         // TODO: Implement
 
         // test placeholder
-        val contentPanel = JPanel().apply {
-            layout = BorderLayout()
+        val contentPanel = BorderedPanel().apply {
             add(JPanel().apply {
                 layout = GridBagLayout()
-                border = BorderFactory.createEmptyBorder(10, 20, 10, 20)
                 add(add(JPanel().apply {
                     add(JBLabel("Cycode settings test"))
                 }), GridBagConstraints().apply {
