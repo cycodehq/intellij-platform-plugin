@@ -73,6 +73,8 @@ class CliWrapper(private val executablePath: String) {
         val stdout = outputListener.stdout.trim().toString()
         val stderr = outputListener.stderr.trim().toString()
 
+        thisLogger().warn("CLI exitCode: $commandLine; stdout: $stdout; stderr: $stderr")
+
         return if (exitCode == 0) {
             try {
                 val result = gson.fromJson<Map<String, Any>>(stdout, object : TypeToken<Map<String, Any>>() {}.type)
