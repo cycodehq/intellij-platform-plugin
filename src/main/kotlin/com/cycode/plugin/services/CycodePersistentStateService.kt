@@ -1,7 +1,6 @@
 package com.cycode.plugin.services
 
 import com.cycode.plugin.Consts
-import com.cycode.plugin.Consts.Companion.CLI_PATH
 import com.intellij.openapi.components.*
 import com.intellij.util.xmlb.XmlSerializerUtil
 import java.nio.file.Files
@@ -13,9 +12,6 @@ import java.nio.file.Paths
     storages = [Storage("cycode.state.xml", roamingType = RoamingType.DISABLED)] // settings sharing is disabled
 )
 class CycodePersistentStateService : PersistentStateComponent<CycodePersistentStateService> {
-
-    var cliPath: String = CLI_PATH
-    var cliAutoManaged: Boolean = true
     var cliInstalled: Boolean = false
     var cliAuthed: Boolean = false
     var cliVer: String? = null
@@ -32,5 +28,4 @@ class CycodePersistentStateService : PersistentStateComponent<CycodePersistentSt
 
         XmlSerializerUtil.copyBean(state, this)
     }
-
 }

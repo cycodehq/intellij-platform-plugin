@@ -1,5 +1,6 @@
 package com.cycode.plugin.managers
 
+import com.cycode.plugin.services.pluginSettings
 import com.cycode.plugin.services.pluginState
 import com.cycode.plugin.utils.CliResult
 import com.cycode.plugin.utils.CliWrapper
@@ -12,12 +13,13 @@ class CliManager {
     private val fileManager = FileManager()
 
     private val pluginState = pluginState()
+    private val pluginSettings = pluginSettings()
 
     // TODO: get checksum from GitHub release info
     private val checksum = "6fbc3d107fc445f15aac2acfaf686bb5be880ce2b3962fd0ce336490b315c6c4"
 
     fun healthCheck(): Boolean {
-        val cliVersionResult = CliWrapper(pluginState.cliPath).executeCommand("version")
+        val cliVersionResult = CliWrapper(pluginSettings.cliPath).executeCommand("version")
         if (cliVersionResult is CliResult.Success) {
             pluginState.cliVer = cliVersionResult.result["version"] as String
             return true
@@ -27,7 +29,7 @@ class CliManager {
     }
 
     fun checkAuth(): Boolean {
-        val authCheckResult = CliWrapper(pluginState.cliPath).executeCommand("auth", "check")
+        val authCheckResult = CliWrapper(pluginSettings.cliPath).executeCommand("auth", "check")
         if (authCheckResult is CliResult.Success) {
             val autched = authCheckResult.result["result"] as Boolean
             pluginState.cliAuthed = autched
@@ -38,7 +40,7 @@ class CliManager {
     }
 
     fun auth(): Boolean {
-        val authResult = CliWrapper(pluginState.cliPath).executeCommand("auth")
+        val authResult = CliWrapper(pluginSettings.cliPath).executeCommand("auth")
         if (authResult is CliResult.Success) {
             val autched = authResult.result["result"] as Boolean
             pluginState.cliAuthed = autched

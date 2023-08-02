@@ -1,23 +1,35 @@
 package com.cycode.plugin.settings
 
 import com.cycode.plugin.components.settingsWindow.SettingsWindow
+import com.cycode.plugin.services.pluginSettings
 import com.intellij.openapi.options.SearchableConfigurable
 import com.intellij.openapi.project.Project
 import javax.swing.JComponent
 
 class ApplicationSettingsConfigurable(val project: Project) : SearchableConfigurable {
+    private val pluginSettings = pluginSettings()
+    private val settingsWindows = SettingsWindow()
+
     override fun createComponent(): JComponent {
-        return SettingsWindow().getComponent()
+        return settingsWindows.getComponent()
     }
 
     override fun isModified(): Boolean {
-        // TODO: Implement
-        return false
+        return pluginSettings.cliAutoManaged != settingsWindows.getCliAutoManaged() ||
+                pluginSettings.cliPath != settingsWindows.getCliPath() ||
+                pluginSettings.cliApiUrl != settingsWindows.getCliApiUrl() ||
+                pluginSettings.cliAppUrl != settingsWindows.getCliAppUrl() ||
+                pluginSettings.cliAdditionalParams != settingsWindows.getCliAdditionalParams() ||
+                pluginSettings.scanOnSave != settingsWindows.getScanOnSave()
     }
 
     override fun apply() {
-        // TODO: Implement
-        return
+        pluginSettings.cliAutoManaged = settingsWindows.getCliAutoManaged()
+        pluginSettings.cliPath = settingsWindows.getCliPath()
+        pluginSettings.cliApiUrl = settingsWindows.getCliApiUrl()
+        pluginSettings.cliAppUrl = settingsWindows.getCliAppUrl()
+        pluginSettings.cliAdditionalParams = settingsWindows.getCliAdditionalParams()
+        pluginSettings.scanOnSave = settingsWindows.getScanOnSave()
     }
 
     override fun getDisplayName(): String {
