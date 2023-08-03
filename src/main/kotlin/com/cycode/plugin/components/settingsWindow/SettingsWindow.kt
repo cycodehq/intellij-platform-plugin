@@ -2,6 +2,7 @@ package com.cycode.plugin.components.settingsWindow
 
 import com.cycode.plugin.CycodeBundle
 import com.cycode.plugin.services.pluginSettings
+import com.cycode.plugin.settings.Settings
 import com.intellij.ui.layout.panel
 import javax.swing.JCheckBox
 import javax.swing.JTextField
@@ -10,14 +11,16 @@ import javax.swing.JComponent
 class SettingsWindow {
     private val pluginSettings = pluginSettings()
 
-    private var cliAutoManagedCheckbox = JCheckBox(CycodeBundle.message("settingsCliAutoManagedCheckbox"), pluginSettings.cliAutoManaged)
+    private var cliAutoManagedCheckbox =
+        JCheckBox(CycodeBundle.message("settingsCliAutoManagedCheckbox"), pluginSettings.cliAutoManaged)
     private var cliPathTextField = JTextField(pluginSettings.cliPath)
 
     private var cliApiUrlTextField = JTextField(pluginSettings.cliApiUrl)
     private var cliAppUrlTextField = JTextField(pluginSettings.cliAppUrl)
     private var cliAdditionalParamsTextField = JTextField(pluginSettings.cliAdditionalParams)
 
-    private var scanOnSaveCheckbox = JCheckBox(CycodeBundle.message("settingsScanOnSaveCheckbox"), pluginSettings.scanOnSave)
+    private var scanOnSaveCheckbox =
+        JCheckBox(CycodeBundle.message("settingsScanOnSaveCheckbox"), pluginSettings.scanOnSave)
 
     fun getComponent(): JComponent {
         val contentPanel = panel {
@@ -51,7 +54,7 @@ class SettingsWindow {
                 }
             }
             row {
-                cell{
+                cell {
                     scanOnSaveCheckbox()
                 }
             }
@@ -60,27 +63,14 @@ class SettingsWindow {
         return contentPanel
     }
 
-    fun getCliAutoManaged(): Boolean {
-        return cliAutoManagedCheckbox.isSelected
-    }
-
-    fun getCliPath(): String {
-        return cliPathTextField.text
-    }
-
-    fun getCliApiUrl(): String {
-        return cliApiUrlTextField.text
-    }
-
-    fun getCliAppUrl(): String {
-        return cliAppUrlTextField.text
-    }
-
-    fun getCliAdditionalParams(): String {
-        return cliAdditionalParamsTextField.text
-    }
-
-    fun getScanOnSave(): Boolean {
-        return scanOnSaveCheckbox.isSelected
+    fun getSettings(): Settings {
+        return Settings(
+            cliAutoManagedCheckbox.isSelected,
+            cliPathTextField.text,
+            cliApiUrlTextField.text,
+            cliAppUrlTextField.text,
+            cliAdditionalParamsTextField.text,
+            scanOnSaveCheckbox.isSelected,
+        )
     }
 }

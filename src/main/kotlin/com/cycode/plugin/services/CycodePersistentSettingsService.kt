@@ -1,6 +1,7 @@
 package com.cycode.plugin.services
 
 import com.cycode.plugin.Consts.Companion.CLI_PATH
+import com.cycode.plugin.settings.Settings
 import com.intellij.openapi.components.*
 import com.intellij.util.xmlb.XmlSerializerUtil
 
@@ -25,5 +26,16 @@ class CycodePersistentSettingsService : PersistentStateComponent<CycodePersisten
 
     override fun loadState(state: CycodePersistentSettingsService) {
         XmlSerializerUtil.copyBean(state, this)
+    }
+
+    fun getSettings(): Settings {
+        return Settings(
+            cliAutoManaged,
+            cliPath,
+            cliApiUrl,
+            cliAppUrl,
+            cliAdditionalParams,
+            scanOnSave,
+        )
     }
 }

@@ -4,7 +4,12 @@ import com.cycode.plugin.components.settingsWindow.SettingsWindow
 import com.cycode.plugin.services.pluginSettings
 import com.intellij.openapi.options.SearchableConfigurable
 import com.intellij.openapi.project.Project
+import java.io.File
+import java.net.MalformedURLException
+import java.net.URISyntaxException
+import java.net.URL
 import javax.swing.JComponent
+
 
 class ApplicationSettingsConfigurable(val project: Project) : SearchableConfigurable {
     private val pluginSettings = pluginSettings()
@@ -15,21 +20,52 @@ class ApplicationSettingsConfigurable(val project: Project) : SearchableConfigur
     }
 
     override fun isModified(): Boolean {
-        return pluginSettings.cliAutoManaged != settingsWindows.getCliAutoManaged() ||
-                pluginSettings.cliPath != settingsWindows.getCliPath() ||
-                pluginSettings.cliApiUrl != settingsWindows.getCliApiUrl() ||
-                pluginSettings.cliAppUrl != settingsWindows.getCliAppUrl() ||
-                pluginSettings.cliAdditionalParams != settingsWindows.getCliAdditionalParams() ||
-                pluginSettings.scanOnSave != settingsWindows.getScanOnSave()
+        return pluginSettings.getSettings() != settingsWindows.getSettings()
+    }
+
+    private fun isValidCliPath(cliPath: String): Boolean {
+        try {
+            val cliFile = File(cliPath)
+
+            if (!cliFile.isFile) return false
+            if (!cliFile.canExecute()) return false
+        } catch (e: Exception) {
+            return false
+        }
+
+        return true
+    }
+
+    private fun isValidUrl(url: String): Boolean {
+        return try {
+            // toURI() method is important here as it ensures that any URL string that complies with RFC 2396
+            URL(url).toURI()
+            true
+        } catch (e: MalformedURLException) {
+            false
+        } catch (e: URISyntaxException) {
+            false
+        }
     }
 
     override fun apply() {
-        pluginSettings.cliAutoManaged = settingsWindows.getCliAutoManaged()
-        pluginSettings.cliPath = settingsWindows.getCliPath()
-        pluginSettings.cliApiUrl = settingsWindows.getCliApiUrl()
-        pluginSettings.cliAppUrl = settingsWindows.getCliAppUrl()
-        pluginSettings.cliAdditionalParams = settingsWindows.getCliAdditionalParams()
-        pluginSettings.scanOnSave = settingsWindows.getScanOnSave()
+        val newSettings = settingsWindows.getSettings()
+
+        pluginSettings.cliAutoManaged = newSettings.cliAutoManaged
+        pluginSettings.scanOnSave = newSettings.scanOnSave
+        pluginSettings.cliAdditionalParams = newSettings.cliAdditionalParams
+
+        if (isValidCliPath(newSettings.cliPath)) {
+            pluginSettings.cliPath = newSettings.cliPath
+        }
+
+        if (isValidUrl(newSettings.cliApiUrl)) {
+            pluginSettings.cliApiUrl = newSettings.cliApiUrl
+        }
+
+        if (isValidUrl(newSettings.cliAppUrl)) {
+            pluginSettings.cliAppUrl = newSettings.cliAppUrl
+        }
     }
 
     override fun getDisplayName(): String {
