@@ -22,7 +22,7 @@ class CycodeService(val project: Project) {
                 if (!cliManager.checkAuth()) {
                     // TODO(MarshalX): increase timeout
                     //   process.BaseOSProcessHandler Process hasn't generated any output for a long time.
-                    cliManager.auth()
+                    cliManager.doAuth()
                 }
             }
         }.queue()

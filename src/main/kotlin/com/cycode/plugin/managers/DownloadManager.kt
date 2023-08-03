@@ -1,5 +1,6 @@
 package com.cycode.plugin.managers
 
+import com.cycode.plugin.utils.verifyFileChecksum
 import com.intellij.openapi.diagnostic.thisLogger
 import java.io.*
 import java.net.URL
@@ -7,7 +8,10 @@ import java.nio.file.Files
 
 
 class DownloadManager {
-    private val fileManager = FileManager()
+    private fun shouldSaveFile(tempFile: File, checksum: String?): Boolean {
+        // if we don't expect checksum validation or checksum is valid
+        return checksum == null || verifyFileChecksum(tempFile, checksum)
+    }
 
     fun downloadFile(url: String, checksum: String?, localPath: String): File? {
         thisLogger().warn("Downloading $url with checksum $checksum")
@@ -36,20 +40,16 @@ class DownloadManager {
             outputStream.close()
             inputStream.close()
 
-            if (checksum == null || fileManager.verifyChecksum(tempFile, checksum)) {
+            if (shouldSaveFile(tempFile, checksum)) {
                 if (file.exists()) {
                     file.delete()
                 }
 
-                // TODO: use atomic move, handle exceptions
+                // TODO(MarshalX): use atomic move; fallback to tempFile.renameTo(file) on error?
                 Files.move(
                     tempFile.toPath(),
                     file.toPath()
                 )
-//                val renameResult = tempFile.renameTo(file);
-//                if (!renameResult) {
-//                    thisLogger().error("Failed to rename file")
-//                }
 
                 return file
             }

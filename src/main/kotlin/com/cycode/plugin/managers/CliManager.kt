@@ -4,13 +4,13 @@ import com.cycode.plugin.services.pluginSettings
 import com.cycode.plugin.services.pluginState
 import com.cycode.plugin.utils.CliResult
 import com.cycode.plugin.utils.CliWrapper
+import com.cycode.plugin.utils.verifyFileChecksum
 import com.intellij.openapi.diagnostic.thisLogger
 import java.io.File
 
 class CliManager {
     private val githubReleaseManager = GitHubReleaseManager()
     private val downloadManager = DownloadManager()
-    private val fileManager = FileManager()
 
     private val pluginState = pluginState()
     private val pluginSettings = pluginSettings()
@@ -39,7 +39,7 @@ class CliManager {
         return false
     }
 
-    fun auth(): Boolean {
+    fun doAuth(): Boolean {
         val authResult = CliWrapper(pluginSettings.cliPath).executeCommand("auth")
         if (authResult is CliResult.Success) {
             val autched = authResult.result["result"] as Boolean
@@ -50,18 +50,16 @@ class CliManager {
         return false
     }
 
-    fun maybeDownloadCli(owner: String, repo: String, localPath: String): Boolean {
+    fun shouldDownloadCli(localPath: String): Boolean {
         // return true if was downloaded
 
         if (pluginState.cliHash == null) {
-            thisLogger().warn("Downloading CLI because cliHash is Null")
-            downloadLatestRelease(owner, repo, localPath)
+            thisLogger().warn("Should download CLI because cliHash is Null")
             return true
         }
 
-        if (!fileManager.verifyChecksum(localPath, pluginState.cliHash!!)) {
-            thisLogger().warn("Downloading CLI because checksum is invalid")
-            downloadLatestRelease(owner, repo, localPath)
+        if (!verifyFileChecksum(localPath, pluginState.cliHash!!)) {
+            thisLogger().warn("Should download CLI because checksum is invalid")
             return true
         }
 
@@ -73,7 +71,7 @@ class CliManager {
         return false
     }
 
-    private fun downloadLatestRelease(owner: String, repo: String, localPath: String): File? {
+    fun downloadCli(owner: String, repo: String, localPath: String): File? {
         val releaseInfo = githubReleaseManager.getLatestReleaseInfo(owner, repo)
 
         if (releaseInfo != null) {

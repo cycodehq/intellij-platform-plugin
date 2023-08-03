@@ -22,7 +22,8 @@ class PostStartupActivity : StartupActivity.DumbAware {
 
         object : Task.Backgroundable(project, CycodeBundle.message("pluginLoading"), false) {
             override fun run(indicator: ProgressIndicator) {
-                if (pluginSettings.cliAutoManaged && cliManager.maybeDownloadCli(owner, repo, pluginSettings.cliPath)) {
+                if (pluginSettings.cliAutoManaged && cliManager.shouldDownloadCli(pluginSettings.cliPath)) {
+                    cliManager.downloadCli(owner, repo, pluginSettings.cliPath)
                     println("CLI was successfully downloaded/updated")
                 }
 
