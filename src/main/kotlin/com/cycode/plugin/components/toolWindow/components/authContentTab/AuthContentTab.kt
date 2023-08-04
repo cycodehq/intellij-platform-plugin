@@ -13,6 +13,7 @@ import javax.swing.JPanel
 
 class AuthContentTab {
     fun getContent(service: CycodeService) : JPanel {
+        // TODO(MarshalX): rework to jetbrains.ui; think about how to rerender on changed state
         return BorderedPanel().apply {
             add(JPanel().apply {
                 layout = GridBagLayout()

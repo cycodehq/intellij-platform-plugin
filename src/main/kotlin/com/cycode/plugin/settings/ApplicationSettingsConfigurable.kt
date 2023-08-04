@@ -1,45 +1,71 @@
 package com.cycode.plugin.settings
 
-import com.cycode.plugin.components.common.BorderedPanel
+import com.cycode.plugin.components.settingsWindow.SettingsWindow
+import com.cycode.plugin.services.pluginSettings
 import com.intellij.openapi.options.SearchableConfigurable
 import com.intellij.openapi.project.Project
-import com.intellij.ui.components.JBLabel
-import com.intellij.util.ui.JBUI
-import java.awt.BorderLayout
-import java.awt.GridBagConstraints
-import java.awt.GridBagLayout
+import java.io.File
+import java.net.MalformedURLException
+import java.net.URISyntaxException
+import java.net.URL
 import javax.swing.JComponent
-import javax.swing.JPanel
+
 
 class ApplicationSettingsConfigurable(val project: Project) : SearchableConfigurable {
+    private val pluginSettings = pluginSettings()
+    private val settingsWindows = SettingsWindow()
+
     override fun createComponent(): JComponent {
-        // TODO: Implement
-
-        // test placeholder
-        val contentPanel = BorderedPanel().apply {
-            add(JPanel().apply {
-                layout = GridBagLayout()
-                add(add(JPanel().apply {
-                    add(JBLabel("Cycode settings test"))
-                }), GridBagConstraints().apply {
-                    gridy = 0
-                    insets = JBUI.insetsBottom(10)
-                    anchor = GridBagConstraints.NORTHWEST
-                })
-            }, BorderLayout.NORTH)
-        }
-
-        return contentPanel
+        return settingsWindows.getComponent()
     }
 
     override fun isModified(): Boolean {
-        // TODO: Implement
-        return false
+        return pluginSettings.getSettings() != settingsWindows.getSettings()
+    }
+
+    private fun isValidCliPath(cliPath: String): Boolean {
+        try {
+            val cliFile = File(cliPath)
+
+            if (!cliFile.isFile) return false
+            if (!cliFile.canExecute()) return false
+        } catch (e: Exception) {
+            return false
+        }
+
+        return true
+    }
+
+    private fun isValidUrl(url: String): Boolean {
+        return try {
+            // toURI() method is important here as it ensures that any URL string that complies with RFC 2396
+            URL(url).toURI()
+            true
+        } catch (e: MalformedURLException) {
+            false
+        } catch (e: URISyntaxException) {
+            false
+        }
     }
 
     override fun apply() {
-        // TODO: Implement
-        return
+        val newSettings = settingsWindows.getSettings()
+
+        pluginSettings.cliAutoManaged = newSettings.cliAutoManaged
+        pluginSettings.scanOnSave = newSettings.scanOnSave
+        pluginSettings.cliAdditionalParams = newSettings.cliAdditionalParams
+
+        if (isValidCliPath(newSettings.cliPath)) {
+            pluginSettings.cliPath = newSettings.cliPath
+        }
+
+        if (isValidUrl(newSettings.cliApiUrl)) {
+            pluginSettings.cliApiUrl = newSettings.cliApiUrl
+        }
+
+        if (isValidUrl(newSettings.cliAppUrl)) {
+            pluginSettings.cliAppUrl = newSettings.cliAppUrl
+        }
     }
 
     override fun getDisplayName(): String {

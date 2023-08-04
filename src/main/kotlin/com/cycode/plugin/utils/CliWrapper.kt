@@ -10,6 +10,7 @@ import com.intellij.ide.plugins.PluginManagerCore
 import com.intellij.openapi.diagnostic.thisLogger
 import com.intellij.openapi.extensions.PluginId
 import com.intellij.openapi.util.Key
+import com.cycode.plugin.services.pluginSettings
 import java.nio.charset.Charset
 
 
@@ -32,25 +33,33 @@ fun retrieveIDEInfo(): IDEUserAgent {
 }
 
 fun getUserAgent(): String {
-    // Returns a JSON string representing the IDE user agent.
-    // Example:
-    // {"app_name":"jetbrains_plugin","app_version":"0.0.1","env_name":"IntelliJ IDEA","env_version":"2021.1"}
+    /*Returns a JSON string representing the IDE user agent.
+
+    Example:
+      {"app_name":"jetbrains_plugin","app_version":"0.0.1","env_name":"IntelliJ IDEA","env_version":"2021.1"}
+
+     */
     val ideInfo = retrieveIDEInfo()
     return Gson().toJson(ideInfo)
 }
 
 
 class CliWrapper(private val executablePath: String) {
+    private val pluginSettings = pluginSettings()
+
     private val gson: Gson = Gson()
     private val defaultArgs = arrayOf("-o", "json", "--user-agent", getUserAgent())
 
     fun executeCommand(vararg arguments: String): CliResult<Map<String, Any>> {
         val commandLine = GeneralCommandLine()
         commandLine.charset = Charset.forName("UTF-8")
-//         TODO set working dir to project root
+
+//         TODO(MarshalX): set working dir to project root?
 //        commandLine.workDirectory = "..."
-//         TODO: set envs from plugin settings
-//        commandLine.environment...
+
+        commandLine.environment["CYCODE_API_URL"] = pluginSettings.cliApiUrl
+        commandLine.environment["CYCODE_APP_URL"] = pluginSettings.cliAppUrl
+
         if (SystemInfo.isWindows) {
             commandLine.addParameter("/c")
         } else {
@@ -58,6 +67,12 @@ class CliWrapper(private val executablePath: String) {
         }
 
         commandLine.addParameters(*defaultArgs)
+
+        val additionalArgs = pluginSettings.cliAdditionalParams.split(" ").filterNot { it.isBlank() }.toTypedArray()
+        if (additionalArgs.isNotEmpty()) {
+            commandLine.addParameters(*additionalArgs)
+        }
+
         commandLine.addParameters(*arguments)
 
         thisLogger().warn("CLI command: $commandLine")
@@ -72,6 +87,8 @@ class CliWrapper(private val executablePath: String) {
         val exitCode = processHandler.exitCode
         val stdout = outputListener.stdout.trim().toString()
         val stderr = outputListener.stderr.trim().toString()
+
+        thisLogger().warn("CLI exitCode: $commandLine; stdout: $stdout; stderr: $stderr")
 
         return if (exitCode == 0) {
             try {
