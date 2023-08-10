@@ -15,7 +15,12 @@
     </extensions>
 
     <applicationListeners>
-        <listener class="com.cycode.plugin.listeners.CycodeApplicationActivationListener"
+        <listener class="com.cycode.plugin.listeners.ApplicationActivationListener"
                   topic="com.intellij.openapi.application.ApplicationActivationListener"/>
     </applicationListeners>
+
+    <projectListeners>
+        <listener class="com.cycode.plugin.listeners.FileSaveListener"
+                  topic="com.intellij.openapi.fileEditor.FileDocumentManagerListener"/>
+    </projectListeners>
 </idea-plugin>

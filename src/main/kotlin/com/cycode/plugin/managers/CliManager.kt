@@ -50,6 +50,10 @@ class CliManager {
         return false
     }
 
+    fun scanFile(filePath: String): CliResult<Map<String, Any>> {
+        return CliWrapper(pluginSettings.cliPath).executeCommand("scan", "path", filePath)
+    }
+
     fun shouldDownloadCli(localPath: String): Boolean {
         // return true if was downloaded
 
