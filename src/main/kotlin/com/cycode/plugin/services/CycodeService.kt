@@ -1,12 +1,12 @@
 package com.cycode.plugin.services
 
-import com.intellij.openapi.components.Service
-import com.intellij.openapi.diagnostic.thisLogger
-import com.intellij.openapi.project.Project
 import com.cycode.plugin.CycodeBundle
 import com.cycode.plugin.managers.CliManager
+import com.intellij.openapi.components.Service
+import com.intellij.openapi.diagnostic.thisLogger
 import com.intellij.openapi.progress.ProgressIndicator
 import com.intellij.openapi.progress.Task
+import com.intellij.openapi.project.Project
 
 @Service(Service.Level.PROJECT)
 class CycodeService(val project: Project) {

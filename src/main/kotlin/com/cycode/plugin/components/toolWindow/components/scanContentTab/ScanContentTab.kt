@@ -10,7 +10,7 @@ import java.awt.GridBagLayout
 import javax.swing.JPanel
 
 class ScanContentTab {
-    fun getContent(service: CycodeService) : JPanel {
+    fun getContent(service: CycodeService): JPanel {
         return BorderedPanel().apply {
             add(JPanel().apply {
                 layout = GridBagLayout()

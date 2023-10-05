@@ -1,23 +1,29 @@
 package com.cycode.plugin.managers
 
-import com.google.gson.Gson
+import com.fasterxml.jackson.databind.DeserializationFeature
+import com.fasterxml.jackson.databind.PropertyNamingStrategies
+import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
+import com.fasterxml.jackson.module.kotlin.readValue
 import java.net.URL
 
 
 data class GitHubReleaseAsset(
     val name: String,
-    val browser_download_url: String,
+    val browserDownloadUrl: String,
 )
 
 
 data class GitHubRelease(
-    val tag_name: String,
+    val tagName: String,
     val name: String,
-    val downloadUrl: String,
-    val assets: Array<GitHubReleaseAsset>
+    val assets: List<GitHubReleaseAsset>
 )
 
 class GitHubReleaseManager {
+    var mapper = jacksonObjectMapper()
+        .setPropertyNamingStrategy(PropertyNamingStrategies.SNAKE_CASE)
+        .configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false)
+
     fun getLatestReleaseInfo(owner: String, repo: String): GitHubRelease? {
         val apiUrl = "https://api.github.com/repos/$owner/$repo/releases"
 
@@ -30,7 +36,7 @@ class GitHubReleaseManager {
             val response = inputStream.bufferedReader().use { it.readText() }
             inputStream.close()
 
-            val releases = Gson().fromJson(response, Array<GitHubRelease>::class.java)
+            val releases: List<GitHubRelease> = mapper.readValue(response)
 
             if (releases.isNotEmpty()) {
                 return releases[0]

@@ -8,3 +8,5 @@ inline fun <reified T : Any> getCycodeService(): T = getService(T::class.java)
 fun pluginState(): CycodePersistentStateService = getCycodeService()
 
 fun pluginSettings(): CycodePersistentSettingsService = getCycodeService()
+
+fun scanResults(): CycodeResultsService = getCycodeService()

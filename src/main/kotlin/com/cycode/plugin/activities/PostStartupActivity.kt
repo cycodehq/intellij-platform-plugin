@@ -4,6 +4,7 @@ import com.cycode.plugin.CycodeBundle
 import com.cycode.plugin.managers.CliManager
 import com.cycode.plugin.services.pluginSettings
 import com.cycode.plugin.services.pluginState
+import com.intellij.openapi.diagnostic.thisLogger
 import com.intellij.openapi.progress.ProgressIndicator
 import com.intellij.openapi.progress.Task
 import com.intellij.openapi.project.Project
@@ -24,17 +25,17 @@ class PostStartupActivity : StartupActivity.DumbAware {
             override fun run(indicator: ProgressIndicator) {
                 if (pluginSettings.cliAutoManaged && cliManager.shouldDownloadCli(pluginSettings.cliPath)) {
                     cliManager.downloadCli(owner, repo, pluginSettings.cliPath)
-                    println("CLI was successfully downloaded/updated")
+                    thisLogger().info("CLI was successfully downloaded/updated")
                 }
 
                 if (cliManager.healthCheck()) {
                     pluginState.cliInstalled = true
                 } else {
-                    println("CLI is not working. Need to handle somehow")
+                    thisLogger().error("CLI is not working. Need to handle somehow")
                 }
             }
         }.queue()
 
-        println("PostStartupActivity finished.")
+        thisLogger().info("PostStartupActivity finished.")
     }
 }

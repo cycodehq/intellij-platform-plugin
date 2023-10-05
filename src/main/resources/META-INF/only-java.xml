@@ -1,0 +1,6 @@
+<idea-plugin>
+    <extensions defaultExtensionNs="com.intellij">
+        <externalAnnotator language="JAVA" implementationClass="com.cycode.plugin.annotators.CycodeAnnotator"/>
+        <externalAnnotator language="Groovy" implementationClass="com.cycode.plugin.annotators.CycodeAnnotator"/>
+    </extensions>
+</idea-plugin>
