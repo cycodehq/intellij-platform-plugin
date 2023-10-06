@@ -1,56 +1,31 @@
-package com.cycode.plugin.utils
+package com.cycode.plugin.cli
 
-import com.intellij.execution.configurations.GeneralCommandLine
-import com.intellij.openapi.util.SystemInfo
-import com.intellij.openapi.application.ApplicationInfo
-import com.google.gson.Gson
-import com.google.gson.reflect.TypeToken
-import com.intellij.execution.process.*
-import com.intellij.ide.plugins.PluginManagerCore
-import com.intellij.openapi.diagnostic.thisLogger
-import com.intellij.openapi.extensions.PluginId
-import com.intellij.openapi.util.Key
 import com.cycode.plugin.services.pluginSettings
+import com.fasterxml.jackson.databind.DeserializationFeature
+import com.fasterxml.jackson.databind.PropertyNamingStrategies
+import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
+import com.fasterxml.jackson.module.kotlin.readValue
+import com.intellij.execution.configurations.GeneralCommandLine
+import com.intellij.execution.process.OSProcessHandler
+import com.intellij.execution.process.ProcessEvent
+import com.intellij.execution.process.ProcessListener
+import com.intellij.execution.process.ProcessOutputTypes
+import com.intellij.openapi.diagnostic.thisLogger
+import com.intellij.openapi.util.Key
+import com.intellij.openapi.util.SystemInfo
 import java.nio.charset.Charset
 
 
-data class IDEUserAgent(
-    val app_name: String,
-    val app_version: String,
-    val env_name: String,
-    val env_version: String
-)
+class CliWrapper(val executablePath: String) {
+    val pluginSettings = pluginSettings()
 
-fun retrieveIDEInfo(): IDEUserAgent {
-    val appInfo = ApplicationInfo.getInstance()
+    var mapper = jacksonObjectMapper()
+        .setPropertyNamingStrategy(PropertyNamingStrategies.SNAKE_CASE)
+        .configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false)
 
-    val appName = "jetbrains_plugin"
-    val appVersion = PluginManagerCore.getPlugin(PluginId.getId("com.cycode.plugin"))?.version ?: "unknown"
-    val envName = appInfo.versionName
-    val envVersion = appInfo.fullVersion
+    val defaultCliArgs = arrayOf("-o", "json", "--user-agent", getUserAgent())
 
-    return IDEUserAgent(appName, appVersion, envName, envVersion)
-}
-
-fun getUserAgent(): String {
-    /*Returns a JSON string representing the IDE user agent.
-
-    Example:
-      {"app_name":"jetbrains_plugin","app_version":"0.0.1","env_name":"IntelliJ IDEA","env_version":"2021.1"}
-
-     */
-    val ideInfo = retrieveIDEInfo()
-    return Gson().toJson(ideInfo)
-}
-
-
-class CliWrapper(private val executablePath: String) {
-    private val pluginSettings = pluginSettings()
-
-    private val gson: Gson = Gson()
-    private val defaultArgs = arrayOf("-o", "json", "--user-agent", getUserAgent())
-
-    fun executeCommand(vararg arguments: String): CliResult<Map<String, Any>> {
+    inline fun <reified T> executeCommand(vararg arguments: String): CliResult<T> {
         val commandLine = GeneralCommandLine()
         commandLine.charset = Charset.forName("UTF-8")
 
@@ -66,7 +41,7 @@ class CliWrapper(private val executablePath: String) {
             commandLine.exePath = executablePath
         }
 
-        commandLine.addParameters(*defaultArgs)
+        commandLine.addParameters(*defaultCliArgs)
 
         val additionalArgs = pluginSettings.cliAdditionalParams.split(" ").filterNot { it.isBlank() }.toTypedArray()
         if (additionalArgs.isNotEmpty()) {
@@ -88,21 +63,19 @@ class CliWrapper(private val executablePath: String) {
         val stdout = outputListener.stdout.trim().toString()
         val stderr = outputListener.stderr.trim().toString()
 
-        thisLogger().warn("CLI exitCode: $commandLine; stdout: $stdout; stderr: $stderr")
+        thisLogger().warn("CLI exitCode: $exitCode; stdout: $stdout; stderr: $stderr")
 
-        return if (exitCode == 0) {
-            try {
-                val result = gson.fromJson<Map<String, Any>>(stdout, object : TypeToken<Map<String, Any>>() {}.type)
-                CliResult.Success(result)
-            } catch (ex: Exception) {
-                CliResult.Error(exitCode, "Failed to parse JSON response: ${ex.message}")
-            }
-        } else {
+        return try {
+            val result: T = mapper.readValue(stdout)
+            CliResult.Success(result)
+        } catch (e: Exception) {
+            // TODO(MarshalX): handle parse errors objects. For example from scan
+            thisLogger().error("Failed to parse CLI output: $stdout", e)
             CliResult.Error(exitCode, stderr)
         }
     }
 
-    private class OutputListener : ProcessListener {
+    class OutputListener : ProcessListener {
         val stdout = StringBuilder()
         val stderr = StringBuilder()
 

@@ -2,7 +2,9 @@ package com.cycode.plugin.managers
 
 import com.cycode.plugin.utils.verifyFileChecksum
 import com.intellij.openapi.diagnostic.thisLogger
-import java.io.*
+import java.io.BufferedInputStream
+import java.io.File
+import java.io.FileOutputStream
 import java.net.URL
 import java.nio.file.Files
 
@@ -54,8 +56,7 @@ class DownloadManager {
                 return file
             }
         } catch (e: Exception) {
-            thisLogger().error("Failed to download file $e")
-            e.printStackTrace()
+            thisLogger().error("Failed to download file $e", e)
         } finally {
             tempFile.delete()
         }

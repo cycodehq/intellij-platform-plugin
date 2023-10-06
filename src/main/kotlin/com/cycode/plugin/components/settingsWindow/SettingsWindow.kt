@@ -5,8 +5,8 @@ import com.cycode.plugin.services.pluginSettings
 import com.cycode.plugin.settings.Settings
 import com.intellij.ui.layout.panel
 import javax.swing.JCheckBox
-import javax.swing.JTextField
 import javax.swing.JComponent
+import javax.swing.JTextField
 
 class SettingsWindow {
     private val pluginSettings = pluginSettings()

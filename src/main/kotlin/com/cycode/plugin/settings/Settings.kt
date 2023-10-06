@@ -1,6 +1,6 @@
 package com.cycode.plugin.settings
 
-data class Settings (
+data class Settings(
     val cliAutoManaged: Boolean,
     val cliPath: String,
     val cliApiUrl: String,

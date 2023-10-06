@@ -1,27 +1,42 @@
 package com.cycode.plugin.managers
 
+import com.cycode.plugin.cli.CliResult
+import com.cycode.plugin.cli.CliWrapper
+import com.cycode.plugin.cli.models.AuthCheckResult
+import com.cycode.plugin.cli.models.AuthResult
+import com.cycode.plugin.cli.models.VersionResult
+import com.cycode.plugin.cli.models.scanResult.secret.SecretScanResult
 import com.cycode.plugin.services.pluginSettings
 import com.cycode.plugin.services.pluginState
-import com.cycode.plugin.utils.CliResult
-import com.cycode.plugin.utils.CliWrapper
+import com.cycode.plugin.services.scanResults
 import com.cycode.plugin.utils.verifyFileChecksum
+import com.intellij.codeInsight.daemon.DaemonCodeAnalyzer
 import com.intellij.openapi.diagnostic.thisLogger
+import com.intellij.openapi.project.Project
 import java.io.File
 
-class CliManager {
+
+enum class CliScanType {
+    Secret, Sast, Sca, Iac
+}
+
+
+class CliManager(private val project: Project? = null) {
     private val githubReleaseManager = GitHubReleaseManager()
     private val downloadManager = DownloadManager()
 
     private val pluginState = pluginState()
     private val pluginSettings = pluginSettings()
 
+    private val scanResults = scanResults()
+
     // TODO: get checksum from GitHub release info
     private val checksum = "6fbc3d107fc445f15aac2acfaf686bb5be880ce2b3962fd0ce336490b315c6c4"
 
     fun healthCheck(): Boolean {
-        val cliVersionResult = CliWrapper(pluginSettings.cliPath).executeCommand("version")
+        val cliVersionResult: CliResult<VersionResult> = CliWrapper(pluginSettings.cliPath).executeCommand("version")
         if (cliVersionResult is CliResult.Success) {
-            pluginState.cliVer = cliVersionResult.result["version"] as String
+            pluginState.cliVer = cliVersionResult.result.version
             return true
         }
 
@@ -29,29 +44,43 @@ class CliManager {
     }
 
     fun checkAuth(): Boolean {
-        val authCheckResult = CliWrapper(pluginSettings.cliPath).executeCommand("auth", "check")
+        val authCheckResult: CliResult<AuthCheckResult> =
+            CliWrapper(pluginSettings.cliPath).executeCommand("auth", "check")
         if (authCheckResult is CliResult.Success) {
-            val autched = authCheckResult.result["result"] as Boolean
-            pluginState.cliAuthed = autched
-            return autched
+            pluginState.cliAuthed = authCheckResult.result.result
+            return pluginState.cliAuthed
         }
 
         return false
     }
 
     fun doAuth(): Boolean {
-        val authResult = CliWrapper(pluginSettings.cliPath).executeCommand("auth")
+        val authResult: CliResult<AuthResult> = CliWrapper(pluginSettings.cliPath).executeCommand("auth")
         if (authResult is CliResult.Success) {
-            val autched = authResult.result["result"] as Boolean
-            pluginState.cliAuthed = autched
-            return autched
+            pluginState.cliAuthed = authResult.result.result
+            return pluginState.cliAuthed
         }
 
         return false
     }
 
-    fun scanFile(filePath: String): CliResult<Map<String, Any>> {
-        return CliWrapper(pluginSettings.cliPath).executeCommand("scan", "path", filePath)
+    private inline fun <reified T> scanFile(filePath: String, scanType: CliScanType): CliResult<T> {
+        val scanTypeString = scanType.name.toLowerCase()
+        return CliWrapper(pluginSettings.cliPath)
+            .executeCommand<T>("scan", "-t", scanTypeString, "path", filePath)
+    }
+
+    fun scanFileSecrets(filePath: String): CliResult<SecretScanResult> {
+        val results = scanFile<SecretScanResult>(filePath, CliScanType.Secret)
+        scanResults.secretsResults = results
+
+        if (project != null) {
+            // TODO(MarshalX): run only for the provided file?
+            // rerun annotators
+            DaemonCodeAnalyzer.getInstance(project).restart()
+        }
+
+        return results
     }
 
     fun shouldDownloadCli(localPath: String): Boolean {
@@ -80,7 +109,7 @@ class CliManager {
 
         if (releaseInfo != null) {
             val downloadedFile = downloadManager.downloadFile(
-                releaseInfo.assets[0].browser_download_url, checksum, localPath
+                releaseInfo.assets[0].browserDownloadUrl, checksum, localPath
             )
             downloadedFile?.setExecutable(true)
 

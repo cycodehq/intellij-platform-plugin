@@ -13,7 +13,7 @@ import com.intellij.openapi.project.Project
 
 
 class FileSaveListener(private val project: Project) : FileDocumentManagerListener {
-    private val cliManager = CliManager()
+    private val cliManager = CliManager(project)
     private val pluginSettings = pluginSettings()
 
     override fun beforeDocumentSaving(document: Document) {
@@ -23,12 +23,13 @@ class FileSaveListener(private val project: Project) : FileDocumentManagerListen
             return
         }
 
-        val filePath = FileDocumentManager.getInstance().getFile(document)?.canonicalFile?.canonicalPath ?: return
+        val file = FileDocumentManager.getInstance().getFile(document) ?: return
+        val filePath = file.canonicalFile?.canonicalPath ?: return
 
         object : Task.Backgroundable(project, CycodeBundle.message("fileScanning"), false) {
             override fun run(indicator: ProgressIndicator) {
                 thisLogger().debug("Start scanning file: $filePath")
-                cliManager.scanFile(filePath)
+                cliManager.scanFileSecrets(filePath)
                 thisLogger().debug("Finish scanning file: $filePath")
             }
         }.queue()

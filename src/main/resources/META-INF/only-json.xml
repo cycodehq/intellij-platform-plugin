@@ -1,0 +1,5 @@
+<idea-plugin>
+    <extensions defaultExtensionNs="com.intellij">
+        <externalAnnotator language="JSON" implementationClass="com.cycode.plugin.annotators.CycodeAnnotator"/>
+    </extensions>
+</idea-plugin>
