@@ -47,6 +47,12 @@ class DownloadManager {
                     file.delete()
                 }
 
+                try {
+                    Files.createDirectories(file.toPath().parent)
+                } catch (e: Exception) {
+                    thisLogger().info("Failed to create directories for $file. Probably exists already", e)
+                }
+
                 // TODO(MarshalX): use atomic move; fallback to tempFile.renameTo(file) on error?
                 Files.move(
                     tempFile.toPath(),
