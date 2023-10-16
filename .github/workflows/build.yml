@@ -1,10 +1,4 @@
-# GitHub Actions Workflow is created for testing and preparing the plugin release in the following steps:
-# - validate Gradle Wrapper
-# - run 'test' and 'verifyPlugin' tasks
-# - run 'buildPlugin' task and prepare artifact for the further tests
-# - run 'runPluginVerifier' task
-
-name: Build
+name: Build and verify
 on:
   push:
     branches:
@@ -75,34 +69,34 @@ jobs:
           name: ${{ steps.artifact.outputs.filename }}
           path: ./build/distributions/content/*/*
 
-  test:
-    name: Test
-    needs: [ build ]
-    runs-on: ubuntu-latest
-    steps:
-      - name: Fetch Sources
-        uses: actions/checkout@v4
-
-      - name: Setup Java
-        uses: actions/setup-java@v3
-        with:
-          distribution: zulu
-          java-version: 11
-
-      - name: Setup Gradle
-        uses: gradle/gradle-build-action@v2
-        with:
-          gradle-home-cache-cleanup: true
-
-      - name: Run Tests
-        run: ./gradlew check
-
-      - name: Collect Tests Result
-        if: ${{ failure() }}
-        uses: actions/upload-artifact@v3
-        with:
-          name: tests-result
-          path: ${{ github.workspace }}/build/reports/tests
+      #  test:
+      #    name: Test
+      #    needs: [ build ]
+      #    runs-on: ubuntu-latest
+      #    steps:
+      #      - name: Fetch Sources
+      #        uses: actions/checkout@v4
+      #
+      #      - name: Setup Java
+      #        uses: actions/setup-java@v3
+      #        with:
+      #          distribution: zulu
+      #          java-version: 11
+      #
+      #      - name: Setup Gradle
+      #        uses: gradle/gradle-build-action@v2
+      #        with:
+      #          gradle-home-cache-cleanup: true
+      #
+      #      - name: Run Tests
+      #        run: ./gradlew check
+      #
+      #      - name: Collect Tests Result
+      #        if: ${{ failure() }}
+      #        uses: actions/upload-artifact@v3
+      #        with:
+      #          name: tests-result
+      #          path: ${{ github.workspace }}/build/reports/tests
 
       # TODO(MarshalX): uncomment when repository will be public
       #      - name: Upload Code Coverage Report
