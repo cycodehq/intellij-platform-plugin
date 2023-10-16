@@ -36,6 +36,7 @@ class CliManager(private val project: Project? = null) {
     fun healthCheck(): Boolean {
         val cliVersionResult: CliResult<VersionResult> = CliWrapper(pluginSettings.cliPath).executeCommand("version")
         if (cliVersionResult is CliResult.Success) {
+            pluginState.cliInstalled = true
             pluginState.cliVer = cliVersionResult.result.version
             return true
         }
@@ -47,6 +48,7 @@ class CliManager(private val project: Project? = null) {
         val authCheckResult: CliResult<AuthCheckResult> =
             CliWrapper(pluginSettings.cliPath).executeCommand("auth", "check")
         if (authCheckResult is CliResult.Success) {
+            pluginState.cliInstalled = true
             pluginState.cliAuthed = authCheckResult.result.result
             return pluginState.cliAuthed
         }

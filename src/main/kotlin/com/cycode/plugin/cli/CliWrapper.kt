@@ -13,7 +13,15 @@ import com.intellij.execution.process.ProcessOutputTypes
 import com.intellij.openapi.diagnostic.thisLogger
 import com.intellij.openapi.util.Key
 import com.intellij.openapi.util.SystemInfo
+import com.intellij.util.io.BaseOutputReader
 import java.nio.charset.Charset
+
+
+class CliOSProcessHandler(commandLine: GeneralCommandLine) : OSProcessHandler(commandLine) {
+    override fun readerOptions(): BaseOutputReader.Options {
+        return BaseOutputReader.Options.forMostlySilentProcess()
+    }
+}
 
 
 class CliWrapper(val executablePath: String) {
@@ -52,7 +60,7 @@ class CliWrapper(val executablePath: String) {
 
         thisLogger().warn("CLI command: $commandLine")
 
-        val processHandler = OSProcessHandler(commandLine)
+        val processHandler = CliOSProcessHandler(commandLine)
         val outputListener = OutputListener()
         processHandler.addProcessListener(outputListener)
         processHandler.startNotify()

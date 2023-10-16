@@ -1,6 +1,7 @@
 package com.cycode.plugin.components.toolWindow.components.authContentTab
 
 import com.cycode.plugin.CycodeBundle
+import com.cycode.plugin.components.Component
 import com.cycode.plugin.components.common.BorderedPanel
 import com.cycode.plugin.components.common.createClickableLabel
 import com.cycode.plugin.services.CycodeService
@@ -11,8 +12,8 @@ import java.awt.GridBagLayout
 import javax.swing.JButton
 import javax.swing.JPanel
 
-class AuthContentTab {
-    fun getContent(service: CycodeService): JPanel {
+class AuthContentTab: Component<CycodeService>() {
+    override fun getContent(service: CycodeService): JPanel {
         // TODO(MarshalX): rework to jetbrains.ui; think about how to rerender on changed state
         return BorderedPanel().apply {
             add(JPanel().apply {
@@ -26,6 +27,7 @@ class AuthContentTab {
                 })
                 add(JButton(CycodeBundle.message("authBtn")).apply {
                     addActionListener {
+                        this.setEnabled(false)
                         service.startAuth()
                     }
                 }, GridBagConstraints().apply {

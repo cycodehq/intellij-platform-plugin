@@ -1,9 +1,9 @@
 package com.cycode.plugin.activities
 
 import com.cycode.plugin.CycodeBundle
+import com.cycode.plugin.components.toolWindow.updateToolWindowState
 import com.cycode.plugin.managers.CliManager
 import com.cycode.plugin.services.pluginSettings
-import com.cycode.plugin.services.pluginState
 import com.intellij.openapi.diagnostic.thisLogger
 import com.intellij.openapi.progress.ProgressIndicator
 import com.intellij.openapi.progress.Task
@@ -13,7 +13,6 @@ import com.intellij.openapi.startup.StartupActivity
 class PostStartupActivity : StartupActivity.DumbAware {
     private val cliManager = CliManager()
 
-    private val pluginState = pluginState()
     private val pluginSettings = pluginSettings()
 
     override fun runActivity(project: Project) {
@@ -28,11 +27,8 @@ class PostStartupActivity : StartupActivity.DumbAware {
                     thisLogger().info("CLI was successfully downloaded/updated")
                 }
 
-                if (cliManager.healthCheck()) {
-                    pluginState.cliInstalled = true
-                } else {
-                    thisLogger().error("CLI is not working. Need to handle somehow")
-                }
+                cliManager.checkAuth()
+                updateToolWindowState(project)
             }
         }.queue()
 
