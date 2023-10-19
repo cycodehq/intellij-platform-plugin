@@ -10,7 +10,7 @@ import java.awt.GridBagConstraints
 import java.awt.GridBagLayout
 import javax.swing.JPanel
 
-class LoadingContentTab: Component<CycodeService>() {
+class LoadingContentTab : Component<CycodeService>() {
     override fun getContent(service: CycodeService): JPanel {
         return BorderedPanel().apply {
             add(JPanel().apply {

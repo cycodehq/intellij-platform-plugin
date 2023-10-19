@@ -1,5 +1,6 @@
 package com.cycode.plugin.cli
 
+import com.cycode.plugin.cli.models.CliError
 import com.cycode.plugin.services.pluginSettings
 import com.fasterxml.jackson.databind.DeserializationFeature
 import com.fasterxml.jackson.databind.PropertyNamingStrategies
@@ -14,6 +15,7 @@ import com.intellij.openapi.diagnostic.thisLogger
 import com.intellij.openapi.util.Key
 import com.intellij.openapi.util.SystemInfo
 import com.intellij.util.io.BaseOutputReader
+import java.io.File
 import java.nio.charset.Charset
 
 
@@ -24,7 +26,7 @@ class CliOSProcessHandler(commandLine: GeneralCommandLine) : OSProcessHandler(co
 }
 
 
-class CliWrapper(val executablePath: String) {
+class CliWrapper(val executablePath: String, val workDirectory: String? = null) {
     val pluginSettings = pluginSettings()
 
     var mapper = jacksonObjectMapper()
@@ -37,8 +39,9 @@ class CliWrapper(val executablePath: String) {
         val commandLine = GeneralCommandLine()
         commandLine.charset = Charset.forName("UTF-8")
 
-//         TODO(MarshalX): set working dir to project root?
-//        commandLine.workDirectory = "..."
+        if (workDirectory != null) {
+            commandLine.workDirectory = File(workDirectory)
+        }
 
         commandLine.environment["CYCODE_API_URL"] = pluginSettings.cliApiUrl
         commandLine.environment["CYCODE_APP_URL"] = pluginSettings.cliAppUrl
@@ -73,13 +76,23 @@ class CliWrapper(val executablePath: String) {
 
         thisLogger().warn("CLI exitCode: $exitCode; stdout: $stdout; stderr: $stderr")
 
-        return try {
+        if (T::class == Unit::class) {
+            return CliResult.Success(Unit) as CliResult<T>
+        }
+
+        try {
             val result: T = mapper.readValue(stdout)
-            CliResult.Success(result)
+            return CliResult.Success(result)
         } catch (e: Exception) {
-            // TODO(MarshalX): handle parse errors objects. For example from scan
-            thisLogger().error("Failed to parse CLI output: $stdout", e)
-            CliResult.Error(exitCode, stderr)
+            try {
+                // FIXME(MarshalX): probably CLI not standardized error format for the whole project yet
+                val result: CliError = mapper.readValue(stdout)
+                return CliResult.Error(result)
+            } catch (e: Exception) {
+                thisLogger().error("Failed to parse CLI output: $stdout", e)
+            }
+
+            return CliResult.Panic(exitCode, stderr)
         }
     }
 
@@ -104,5 +117,6 @@ class CliWrapper(val executablePath: String) {
 
 sealed class CliResult<out T> {
     data class Success<T>(val result: T) : CliResult<T>()
-    data class Error(val exitCode: Int?, val errorMessage: String) : CliResult<Nothing>()
+    data class Error(val result: CliError) : CliResult<Nothing>()
+    data class Panic(val exitCode: Int?, val errorMessage: String) : CliResult<Nothing>()
 }

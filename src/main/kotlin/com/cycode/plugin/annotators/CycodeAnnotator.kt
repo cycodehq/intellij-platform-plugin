@@ -1,6 +1,8 @@
 package com.cycode.plugin.annotators
 
 import com.cycode.plugin.cli.CliResult
+import com.cycode.plugin.intentions.CycodeIgnoreIntentionQuickFix
+import com.cycode.plugin.intentions.CycodeIgnoreType
 import com.cycode.plugin.services.scanResults
 import com.intellij.lang.annotation.AnnotationHolder
 import com.intellij.lang.annotation.ExternalAnnotator
@@ -49,6 +51,8 @@ class CycodeAnnotator : DumbAware, ExternalAnnotator<PsiFile, Unit>() {
                 detectionDetails.startPosition + detectionDetails.length
             )
 
+            val detectedValue = psiFile.text.substring(textRange.startOffset, textRange.endOffset)
+
             val message = detection.message.replace("within '' repository", "")  // BE bug
             val title = "Cycode: ${detection.type}. $message"
             val tooltip = """<html>
@@ -58,11 +62,14 @@ class CycodeAnnotator : DumbAware, ExternalAnnotator<PsiFile, Unit>() {
                 In file: ${detectionDetails.fileName}<br>
                 Secret SHA: ${detectionDetails.sha512}
             </html>""".trimIndent()
-
             holder.newAnnotation(severity, title)
                 .range(textRange)
                 .tooltip(tooltip)
+                .withFix(CycodeIgnoreIntentionQuickFix(CycodeIgnoreType.PATH, detection.detectionDetails.getFilepath()))
+                .withFix(CycodeIgnoreIntentionQuickFix(CycodeIgnoreType.RULE, detection.detectionRuleId))
+                .withFix(CycodeIgnoreIntentionQuickFix(CycodeIgnoreType.VALUE, detectedValue))
                 .create()
+
         }
     }
 

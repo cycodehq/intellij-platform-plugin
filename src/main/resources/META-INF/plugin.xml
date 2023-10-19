@@ -26,6 +26,7 @@
                     anchor="bottom"/>
         <projectConfigurable instance="com.cycode.plugin.settings.ApplicationSettingsConfigurable" groupId="tools"
                              displayName="Cycode"/>
+        <notificationGroup id="Cycode" displayType="BALLOON"/>
     </extensions>
 
     <applicationListeners>

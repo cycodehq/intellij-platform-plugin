@@ -11,8 +11,6 @@ import com.intellij.openapi.project.Project
 import com.intellij.openapi.startup.StartupActivity
 
 class PostStartupActivity : StartupActivity.DumbAware {
-    private val cliManager = CliManager()
-
     private val pluginSettings = pluginSettings()
 
     override fun runActivity(project: Project) {
@@ -21,6 +19,8 @@ class PostStartupActivity : StartupActivity.DumbAware {
         val repo = "cycode-cli"
 
         object : Task.Backgroundable(project, CycodeBundle.message("pluginLoading"), false) {
+            val cliManager = CliManager(project)
+
             override fun run(indicator: ProgressIndicator) {
                 if (pluginSettings.cliAutoManaged && cliManager.shouldDownloadCli(pluginSettings.cliPath)) {
                     cliManager.downloadCli(owner, repo, pluginSettings.cliPath)

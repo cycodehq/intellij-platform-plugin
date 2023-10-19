@@ -23,7 +23,7 @@ class CycodeService(val project: Project) {
     }
 
     fun startAuth() {
-        object : Task.Backgroundable(project, CycodeBundle.message("authProcessing"), true) {
+        object : Task.Backgroundable(project, CycodeBundle.message("authProcessing"), false) {
             override fun run(indicator: ProgressIndicator) {
                 if (!pluginState.cliAuthed) {
                     val successLogin = cliManager.doAuth()
@@ -35,22 +35,42 @@ class CycodeService(val project: Project) {
         }.queue()
     }
 
+    fun startSecretScanForFile(filepath: String) {
+        object : Task.Backgroundable(project, CycodeBundle.message("fileScanning"), false) {
+            override fun run(indicator: ProgressIndicator) {
+                if (!pluginState.cliAuthed) {
+                    return
+                }
+
+                cliManager.scanFileSecrets(filepath)
+            }
+        }.queue()
+    }
+
+    fun applyIgnoreFromFileAnnotation(filepath: String, optionName: String, optionValue: String) {
+        object : Task.Backgroundable(project, CycodeBundle.message("ignoresApplying"), false) {
+            override fun run(indicator: ProgressIndicator) {
+                if (!pluginState.cliAuthed) {
+                    return
+                }
+
+                cliManager.ignore(optionName, optionValue)
+
+                // same trick as in our vs code extension
+                // the right way: apply "ignore rules" in the local results db of the plugin
+                // the disadvantage of the right way: we rewrite code that already exists in CLI in every plugin...
+                // TODO(MarshalX): think about what we can do from CLI side
+                cliManager.scanFileSecrets(filepath)
+            }
+        }.queue()
+    }
+
     fun startSecretScanForCurrentFile() {
         val currentOpenedDocument = FileEditorManager.getInstance(project).selectedTextEditor?.document ?: return
 
         val psiFile = PsiDocumentManager.getInstance(project).getPsiFile(currentOpenedDocument)
         val vFile = psiFile!!.originalFile.virtualFile
 
-        val currentOpenedFilePath = vFile.path
-
-        object : Task.Backgroundable(project, CycodeBundle.message("fileScanning"), true) {
-            override fun run(indicator: ProgressIndicator) {
-                if (!pluginState.cliAuthed) {
-                    return
-                }
-
-                cliManager.scanFileSecrets(currentOpenedFilePath)
-            }
-        }.queue()
+        startSecretScanForFile(vFile.path)
     }
 }
