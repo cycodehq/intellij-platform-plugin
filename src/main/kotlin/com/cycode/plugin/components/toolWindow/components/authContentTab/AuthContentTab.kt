@@ -12,7 +12,7 @@ import java.awt.GridBagLayout
 import javax.swing.JButton
 import javax.swing.JPanel
 
-class AuthContentTab: Component<CycodeService>() {
+class AuthContentTab : Component<CycodeService>() {
     override fun getContent(service: CycodeService): JPanel {
         // TODO(MarshalX): rework to jetbrains.ui; think about how to rerender on changed state
         return BorderedPanel().apply {
