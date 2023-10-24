@@ -15,6 +15,26 @@ class DownloadManager {
         return checksum == null || verifyFileChecksum(tempFile, checksum)
     }
 
+    fun retrieveFileTextContent(url: String): String? {
+        thisLogger().warn("Retrieving $url")
+
+        try {
+            val urlObj = URL(url)
+            val connection = urlObj.openConnection()
+            connection.connect()
+
+            val inputStream = BufferedInputStream(connection.getInputStream())
+            val content = inputStream.bufferedReader().use { it.readText() }
+            inputStream.close()
+
+            return content
+        } catch (e: Exception) {
+            thisLogger().error("Failed to download file $e", e)
+        }
+
+        return null
+    }
+
     fun downloadFile(url: String, checksum: String?, localPath: String): File? {
         thisLogger().warn("Downloading $url with checksum $checksum")
         thisLogger().warn("Expecting to download to $localPath")

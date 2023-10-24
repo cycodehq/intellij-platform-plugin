@@ -1,5 +1,6 @@
 package com.cycode.plugin.settings
 
+import com.cycode.plugin.Consts
 import com.cycode.plugin.components.settingsWindow.SettingsWindow
 import com.cycode.plugin.services.pluginSettings
 import com.intellij.openapi.options.SearchableConfigurable
@@ -57,6 +58,8 @@ class ApplicationSettingsConfigurable(val project: Project) : SearchableConfigur
 
         if (isValidCliPath(newSettings.cliPath)) {
             pluginSettings.cliPath = newSettings.cliPath
+        } else {
+            pluginSettings.cliPath = Consts.DEFAULT_CLI_PATH
         }
 
         if (isValidUrl(newSettings.cliApiUrl)) {

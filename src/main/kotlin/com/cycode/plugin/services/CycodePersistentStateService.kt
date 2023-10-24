@@ -16,6 +16,7 @@ class CycodePersistentStateService : PersistentStateComponent<CycodePersistentSt
     var cliAuthed: Boolean = false
     var cliVer: String? = null
     var cliHash: String? = null
+    var cliLastUpdateCheckedAt: Long? = null
 
     override fun getState(): CycodePersistentStateService {
         return this
