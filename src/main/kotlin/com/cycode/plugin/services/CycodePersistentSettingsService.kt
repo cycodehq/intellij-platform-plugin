@@ -1,6 +1,6 @@
 package com.cycode.plugin.services
 
-import com.cycode.plugin.Consts.Companion.CLI_PATH
+import com.cycode.plugin.Consts
 import com.cycode.plugin.settings.Settings
 import com.intellij.openapi.components.*
 import com.intellij.util.xmlb.XmlSerializerUtil
@@ -12,7 +12,7 @@ import com.intellij.util.xmlb.XmlSerializerUtil
 )
 class CycodePersistentSettingsService : PersistentStateComponent<CycodePersistentSettingsService> {
     var cliAutoManaged: Boolean = true
-    var cliPath: String = CLI_PATH
+    var cliPath: String = Consts.DEFAULT_CLI_PATH
 
     var cliApiUrl: String = "https://api.cycode.com"
     var cliAppUrl: String = "https://app.cycode.com"

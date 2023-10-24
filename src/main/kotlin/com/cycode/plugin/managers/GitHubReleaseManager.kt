@@ -25,6 +25,11 @@ class GitHubReleaseManager {
         .configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false)
 
     fun getLatestReleaseInfo(owner: String, repo: String): GitHubRelease? {
+        // TODO(MarshalX): probably we should not download major releases.
+        //  we should store the current supported major release (for example 1) in the plugin
+        //  and download only minor releases (1.1, 1.2, etc.)
+        //  it will be easier to manage breaking changes in CLI
+
         val apiUrl = "https://api.github.com/repos/$owner/$repo/releases"
 
         try {
@@ -43,6 +48,16 @@ class GitHubReleaseManager {
             }
         } catch (e: Exception) {
             e.printStackTrace()
+        }
+
+        return null
+    }
+
+    fun findAssetByFilename(assets: List<GitHubReleaseAsset>, filename: String): GitHubReleaseAsset? {
+        for (asset in assets) {
+            if (asset.name == filename) {
+                return asset
+            }
         }
 
         return null
