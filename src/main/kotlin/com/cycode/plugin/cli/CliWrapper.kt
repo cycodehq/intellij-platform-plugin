@@ -35,7 +35,10 @@ class CliWrapper(val executablePath: String, val workDirectory: String? = null) 
 
     val defaultCliArgs = arrayOf("-o", "json", "--user-agent", getUserAgent())
 
-    inline fun <reified T> executeCommand(vararg arguments: String): CliResult<T> {
+    inline fun <reified T> executeCommand(
+        vararg arguments: String,
+        noinline shouldDestroyCallback: (() -> Boolean)? = null
+    ): CliResult<T> {
         val commandLine = GeneralCommandLine()
         commandLine.charset = Charset.forName("UTF-8")
 
@@ -68,7 +71,14 @@ class CliWrapper(val executablePath: String, val workDirectory: String? = null) 
         processHandler.addProcessListener(outputListener)
         processHandler.startNotify()
 
-        processHandler.waitFor()
+        while (!processHandler.isProcessTerminated) {
+            if (shouldDestroyCallback != null && shouldDestroyCallback()) {
+                processHandler.destroyProcess()
+                return CliResult.Panic(TERMINATION_EXIT_CODE, "Execution was canceled")
+            }
+
+            processHandler.waitFor(WAIT_FOR_DELAY_MS)
+        }
 
         val exitCode = processHandler.exitCode
         val stdout = outputListener.stdout.trim().toString()
@@ -111,6 +121,11 @@ class CliWrapper(val executablePath: String, val workDirectory: String? = null) 
         override fun processTerminated(event: ProcessEvent) {}
         override fun processWillTerminate(event: ProcessEvent, willBeDestroyed: Boolean) {}
         override fun startNotified(event: ProcessEvent) {}
+    }
+
+    companion object {
+        const val WAIT_FOR_DELAY_MS = 1000L
+        const val TERMINATION_EXIT_CODE = 130
     }
 
 }

@@ -23,9 +23,11 @@ class CycodeService(val project: Project) {
     }
 
     fun startAuth() {
-        object : Task.Backgroundable(project, CycodeBundle.message("authProcessing"), false) {
+        object : Task.Backgroundable(project, CycodeBundle.message("authProcessing"), true) {
             override fun run(indicator: ProgressIndicator) {
                 if (!pluginState.cliAuthed) {
+                    cliManager.cliShouldDestroyCallback = { indicator.isCanceled }
+
                     val successLogin = cliManager.doAuth()
                     pluginState.cliAuthed = successLogin
 
@@ -36,23 +38,26 @@ class CycodeService(val project: Project) {
     }
 
     fun startSecretScanForFile(filepath: String) {
-        object : Task.Backgroundable(project, CycodeBundle.message("fileScanning"), false) {
+        object : Task.Backgroundable(project, CycodeBundle.message("fileScanning"), true) {
             override fun run(indicator: ProgressIndicator) {
                 if (!pluginState.cliAuthed) {
                     return
                 }
 
+                cliManager.cliShouldDestroyCallback = { indicator.isCanceled }
                 cliManager.scanFileSecrets(filepath)
             }
         }.queue()
     }
 
     fun applyIgnoreFromFileAnnotation(filepath: String, optionName: String, optionValue: String) {
-        object : Task.Backgroundable(project, CycodeBundle.message("ignoresApplying"), false) {
+        object : Task.Backgroundable(project, CycodeBundle.message("ignoresApplying"), true) {
             override fun run(indicator: ProgressIndicator) {
                 if (!pluginState.cliAuthed) {
                     return
                 }
+
+                cliManager.cliShouldDestroyCallback = { indicator.isCanceled }
 
                 cliManager.ignore(optionName, optionValue)
 
