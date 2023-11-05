@@ -74,7 +74,7 @@ class CliWrapper(val executablePath: String, val workDirectory: String? = null) 
         while (!processHandler.isProcessTerminated) {
             if (shouldDestroyCallback != null && shouldDestroyCallback()) {
                 processHandler.destroyProcess()
-                return CliResult.Panic(TERMINATION_EXIT_CODE, "Execution was canceled")
+                return CliResult.Panic(ExitCodes.TERMINATION, "Execution was canceled")
             }
 
             processHandler.waitFor(WAIT_FOR_DELAY_MS)
@@ -125,7 +125,6 @@ class CliWrapper(val executablePath: String, val workDirectory: String? = null) 
 
     companion object {
         const val WAIT_FOR_DELAY_MS = 1000L
-        const val TERMINATION_EXIT_CODE = 130
     }
 
 }

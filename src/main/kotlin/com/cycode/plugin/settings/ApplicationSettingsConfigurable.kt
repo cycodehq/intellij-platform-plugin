@@ -2,7 +2,9 @@ package com.cycode.plugin.settings
 
 import com.cycode.plugin.Consts
 import com.cycode.plugin.components.settingsWindow.SettingsWindow
+import com.cycode.plugin.services.CycodeService
 import com.cycode.plugin.services.pluginSettings
+import com.intellij.openapi.components.service
 import com.intellij.openapi.options.SearchableConfigurable
 import com.intellij.openapi.project.Project
 import java.io.File
@@ -15,6 +17,7 @@ import javax.swing.JComponent
 class ApplicationSettingsConfigurable(val project: Project) : SearchableConfigurable {
     private val pluginSettings = pluginSettings()
     private val settingsWindows = SettingsWindow()
+    private val cycodeService: CycodeService = project.service<CycodeService>()
 
     override fun createComponent(): JComponent {
         return settingsWindows.getComponent()
@@ -69,6 +72,9 @@ class ApplicationSettingsConfigurable(val project: Project) : SearchableConfigur
         if (isValidUrl(newSettings.cliAppUrl)) {
             pluginSettings.cliAppUrl = newSettings.cliAppUrl
         }
+
+        // run the same checks as on the plugin start after updating of settings
+        cycodeService.installCliIfNeededAndCheckAuthentication()
     }
 
     override fun getDisplayName(): String {
