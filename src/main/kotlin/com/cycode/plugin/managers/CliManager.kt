@@ -1,8 +1,10 @@
 package com.cycode.plugin.managers
 
 import com.cycode.plugin.Consts
+import com.cycode.plugin.CycodeBundle
 import com.cycode.plugin.cli.CliResult
 import com.cycode.plugin.cli.CliWrapper
+import com.cycode.plugin.cli.ExitCodes
 import com.cycode.plugin.cli.models.AuthCheckResult
 import com.cycode.plugin.cli.models.AuthResult
 import com.cycode.plugin.cli.models.VersionResult
@@ -36,10 +38,40 @@ class CliManager(private val project: Project) {
 
     private var githubReleaseInfo: GitHubRelease? = null
 
+    private val cli: CliWrapper
+
+    var cliShouldDestroyCallback: (() -> Boolean)? = null
+
+    init {
+        cli = CliWrapper(pluginSettings.cliPath, getWorkingDirectory())
+    }
+
     private fun resetPluginCLiState() {
         pluginState.cliAuthed = false
         pluginState.cliInstalled = false
         pluginState.cliVer = null
+    }
+
+    private fun showErrorNotification(message: String) {
+        CycodeNotifier.notifyError(project, message)
+    }
+
+    private fun <T> processResult(result: CliResult<T>): CliResult<T>? {
+        if (result is CliResult.Error) {
+            showErrorNotification(result.result.message)
+            return null
+        }
+        if (result is CliResult.Panic) {
+            if (result.exitCode == ExitCodes.TERMINATION) {
+                // don't notify user about user-requested terminations
+                return null
+            }
+
+            showErrorNotification(result.errorMessage)
+            return null
+        }
+
+        return result
     }
 
     private fun getGitHubLatestRelease(dropCache: Boolean = false): GitHubRelease? {
@@ -77,11 +109,16 @@ class CliManager(private val project: Project) {
     }
 
     fun healthCheck(): Boolean {
-        val cliVersionResult: CliResult<VersionResult> =
-            CliWrapper(pluginSettings.cliPath, getWorkingDirectory()).executeCommand("version")
-        if (cliVersionResult is CliResult.Success) {
+        val result: CliResult<VersionResult> =
+            CliWrapper(pluginSettings.cliPath, getWorkingDirectory()).executeCommand(
+                "version",
+                shouldDestroyCallback = cliShouldDestroyCallback
+            )
+
+        val processedResult = processResult(result)
+        if (processedResult is CliResult.Success) {
             pluginState.cliInstalled = true
-            pluginState.cliVer = cliVersionResult.result.version
+            pluginState.cliVer = processedResult.result.version
             return true
         }
 
@@ -90,11 +127,21 @@ class CliManager(private val project: Project) {
     }
 
     fun checkAuth(): Boolean {
-        val authCheckResult: CliResult<AuthCheckResult> =
-            CliWrapper(pluginSettings.cliPath, getWorkingDirectory()).executeCommand("auth", "check")
-        if (authCheckResult is CliResult.Success) {
+        val result: CliResult<AuthCheckResult> =
+            CliWrapper(pluginSettings.cliPath, getWorkingDirectory()).executeCommand(
+                "auth",
+                "check",
+                shouldDestroyCallback = cliShouldDestroyCallback
+            )
+
+        val processedResult = processResult(result)
+        if (processedResult is CliResult.Success) {
             pluginState.cliInstalled = true
-            pluginState.cliAuthed = authCheckResult.result.result
+            pluginState.cliAuthed = processedResult.result.result
+            if (!pluginState.cliAuthed) {
+                showErrorNotification(CycodeBundle.message("checkAuthErrorNotification"))
+            }
+
             return pluginState.cliAuthed
         }
 
@@ -103,10 +150,18 @@ class CliManager(private val project: Project) {
     }
 
     fun doAuth(): Boolean {
-        val authResult: CliResult<AuthResult> =
-            CliWrapper(pluginSettings.cliPath, getWorkingDirectory()).executeCommand("auth")
-        if (authResult is CliResult.Success) {
-            pluginState.cliAuthed = authResult.result.result
+        val result: CliResult<AuthResult> =
+            CliWrapper(pluginSettings.cliPath, getWorkingDirectory()).executeCommand(
+                "auth",
+                shouldDestroyCallback = cliShouldDestroyCallback
+            )
+
+        val processedResult = processResult(result)
+        if (processedResult is CliResult.Success) {
+            pluginState.cliAuthed = processedResult.result.result
+            if (!pluginState.cliAuthed) {
+                showErrorNotification(CycodeBundle.message("authErrorNotification"))
+            }
             return pluginState.cliAuthed
         }
 
@@ -117,27 +172,27 @@ class CliManager(private val project: Project) {
         val result: CliResult<Unit> = CliWrapper(pluginSettings.cliPath, getWorkingDirectory()).executeCommand(
             "ignore",
             optionName,
-            optionValue
+            optionValue,
+            shouldDestroyCallback = cliShouldDestroyCallback
         )
 
-        return result is CliResult.Success
+        val processedResult = processResult(result)
+        return processedResult is CliResult.Success
     }
 
     private inline fun <reified T> scanFile(filePath: String, scanType: CliScanType): CliResult<T>? {
         val scanTypeString = scanType.name.toLowerCase()
         val result = CliWrapper(pluginSettings.cliPath, getWorkingDirectory())
-            .executeCommand<T>("scan", "-t", scanTypeString, "path", filePath)
+            .executeCommand<T>(
+                "scan",
+                "-t",
+                scanTypeString,
+                "path",
+                filePath,
+                shouldDestroyCallback = cliShouldDestroyCallback
+            )
 
-        if (result is CliResult.Error) {
-            CycodeNotifier.notifyError(project, result.result.message)
-            return null
-        }
-        if (result is CliResult.Panic) {
-            CycodeNotifier.notifyError(project, result.errorMessage)
-            return null
-        }
-
-        return result
+        return processResult(result)
     }
 
     fun scanFileSecrets(filePath: String) {

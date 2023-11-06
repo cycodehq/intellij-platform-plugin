@@ -28,8 +28,10 @@ class FileSaveListener(private val project: Project) : FileDocumentManagerListen
         val file = FileDocumentManager.getInstance().getFile(document) ?: return
         val filePath = file.canonicalFile?.canonicalPath ?: return
 
-        object : Task.Backgroundable(project, CycodeBundle.message("fileScanning"), false) {
+        object : Task.Backgroundable(project, CycodeBundle.message("fileScanning"), true) {
             override fun run(indicator: ProgressIndicator) {
+                cliManager.cliShouldDestroyCallback = { indicator.isCanceled }
+
                 thisLogger().debug("Start scanning file: $filePath")
                 cliManager.scanFileSecrets(filePath)
                 thisLogger().debug("Finish scanning file: $filePath")
