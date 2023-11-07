@@ -12,15 +12,12 @@ Cycode IntelliJ Platform Plugin scans your code for exposed secrets, passwords, 
 well as open-source packages' vulnerabilities. The extension provides functionalities such as:
 
 * Cycode IntelliJ Platform Plugin scans your code for exposed secrets, passwords, tokens, keys, and other credentials.
-    * Coming soon: Open-source Threats (SCA), Code Security (SAST), and Infrastructure as Code)
-* Running a new scan from your IDE even before committing the code
-* Triggering a scan automatically whenever a file is saved
+    * Coming soon: Open-source Threats (SCA), Code Security (SAST), and Infrastructure as Code).
+* Running a new scan from your IDE even before committing the code.
+* Triggering a scan automatically whenever a file is saved.
 * Highlighting vulnerable code in the editor - syntax highlighting for Cycode-specific code and configuration files,
   making it easy for users to identify and work with these files in their projects.
-* Removing a detected secret or ignoring it by secret value, rule (type) or by path
-* Cycode CLI: The extension includes a built-in Cycode command-line interface (CLI) that allows users to interact with
-  the Cycode platform directly from the JetBrains
-  IDEs ([learn more about Cycode CLI](https://github.com/cycodehq/cycode-cli)).
+* Removing a detected secret or ignoring it by secret value, rule (type) or by path.
 
 ## Installation
 
