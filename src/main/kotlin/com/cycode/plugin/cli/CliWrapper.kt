@@ -86,6 +86,15 @@ class CliWrapper(val executablePath: String, val workDirectory: String? = null) 
 
         thisLogger().warn("CLI exitCode: $exitCode; stdout: $stdout; stderr: $stderr")
 
+        if (exitCode == ExitCodes.ABNORMAL_TERMINATION) {
+            val errorCode = detectErrorCode(stderr)
+            if (errorCode == ErrorCode.UNKNOWN) {
+                thisLogger().error("Unknown error with abnormal termination: $stdout; $stderr")
+            } else {
+                return CliResult.Panic(exitCode, getUserFriendlyCliErrorMessage(errorCode))
+            }
+        }
+
         if (T::class == Unit::class) {
             return CliResult.Success(Unit) as CliResult<T>
         }
