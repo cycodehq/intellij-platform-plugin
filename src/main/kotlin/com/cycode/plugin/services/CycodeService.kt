@@ -3,7 +3,9 @@ package com.cycode.plugin.services
 import com.cycode.plugin.Consts
 import com.cycode.plugin.CycodeBundle
 import com.cycode.plugin.components.toolWindow.updateToolWindowState
+import com.cycode.plugin.managers.CliDownloadManager
 import com.cycode.plugin.managers.CliManager
+import com.cycode.plugin.utils.CycodeNotifier
 import com.intellij.openapi.components.Service
 import com.intellij.openapi.diagnostic.thisLogger
 import com.intellij.openapi.fileEditor.FileEditorManager
@@ -26,6 +28,7 @@ class CycodeService(val project: Project) {
 
     fun installCliIfNeededAndCheckAuthentication() {
         object : Task.Backgroundable(project, CycodeBundle.message("pluginLoading"), false) {
+            val cliDownloadManager = CliDownloadManager()
             val cliManager = CliManager(project)
 
             override fun run(indicator: ProgressIndicator) {
@@ -33,9 +36,9 @@ class CycodeService(val project: Project) {
                 if (
                     pluginSettings.cliPath == Consts.DEFAULT_CLI_PATH &&
                     pluginSettings.cliAutoManaged &&
-                    cliManager.shouldDownloadCli(pluginSettings.cliPath)
+                    cliDownloadManager.shouldDownloadCli(pluginSettings.cliPath)
                 ) {
-                    cliManager.downloadCli(pluginSettings.cliPath)
+                    cliDownloadManager.downloadCli(pluginSettings.cliPath)
                     thisLogger().info("CLI was successfully downloaded/updated")
                 }
 
@@ -98,7 +101,11 @@ class CycodeService(val project: Project) {
     }
 
     fun startSecretScanForCurrentFile() {
-        val currentOpenedDocument = FileEditorManager.getInstance(project).selectedTextEditor?.document ?: return
+        val currentOpenedDocument = FileEditorManager.getInstance(project).selectedTextEditor?.document
+        if (currentOpenedDocument == null) {
+            CycodeNotifier.notifyInfo(project, CycodeBundle.message("noOpenFileErrorNotification"))
+            return
+        }
 
         val psiFile = PsiDocumentManager.getInstance(project).getPsiFile(currentOpenedDocument)
         val vFile = psiFile!!.originalFile.virtualFile
