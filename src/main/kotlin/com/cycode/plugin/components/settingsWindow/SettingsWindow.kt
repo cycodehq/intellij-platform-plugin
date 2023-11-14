@@ -3,59 +3,59 @@ package com.cycode.plugin.components.settingsWindow
 import com.cycode.plugin.CycodeBundle
 import com.cycode.plugin.services.pluginSettings
 import com.cycode.plugin.settings.Settings
+import com.intellij.openapi.ui.DialogPanel
+import com.intellij.ui.components.JBCheckBox
+import com.intellij.ui.components.JBTextField
 import com.intellij.ui.layout.panel
-import javax.swing.JCheckBox
-import javax.swing.JComponent
-import javax.swing.JTextField
 
 class SettingsWindow {
     private val pluginSettings = pluginSettings()
 
-    private var cliAutoManagedCheckbox =
-        JCheckBox(CycodeBundle.message("settingsCliAutoManagedCheckbox"), pluginSettings.cliAutoManaged)
-    private var cliPathTextField = JTextField(pluginSettings.cliPath)
+    private var cliAutoManagedCheckbox = JBCheckBox(null, pluginSettings.cliAutoManaged)
+    private var cliPathTextField = JBTextField(pluginSettings.cliPath, FIELD_COLUMNS_COUNT)
 
-    private var cliApiUrlTextField = JTextField(pluginSettings.cliApiUrl)
-    private var cliAppUrlTextField = JTextField(pluginSettings.cliAppUrl)
-    private var cliAdditionalParamsTextField = JTextField(pluginSettings.cliAdditionalParams)
+    private var cliApiUrlTextField = JBTextField(pluginSettings.cliApiUrl, FIELD_COLUMNS_COUNT)
+    private var cliAppUrlTextField = JBTextField(pluginSettings.cliAppUrl, FIELD_COLUMNS_COUNT)
+    private var cliAdditionalParamsTextField = JBTextField(pluginSettings.cliAdditionalParams, FIELD_COLUMNS_COUNT)
 
-    private var scanOnSaveCheckbox =
-        JCheckBox(CycodeBundle.message("settingsScanOnSaveCheckbox"), pluginSettings.scanOnSave)
+    private var scanOnSaveCheckbox = JBCheckBox(null, pluginSettings.scanOnSave)
 
-    fun getComponent(): JComponent {
+    fun getComponent(): DialogPanel {
         val contentPanel = panel {
-            row {
-                cell {
-                    cliAutoManagedCheckbox()
+            titledRow(CycodeBundle.message("settingsCliSectionTitle")) {
+                row(label = CycodeBundle.message("settingsCliAutoManagedCheckbox")) {
+                    cell {
+                        cliAutoManagedCheckbox()
+                    }
+                }
+                row(label = CycodeBundle.message("settingsCliPathLabel")) {
+                    cell {
+                        cliPathTextField()
+                    }
+                }
+                row(label = CycodeBundle.message("settingsCliAdditionalParamsLabel")) {
+                    cell {
+                        cliAdditionalParamsTextField()
+                    }
                 }
             }
-            row {
-                cell {
-                    label(CycodeBundle.message("settingsCliPathLabel"))
-                    cliPathTextField()
+            titledRow(CycodeBundle.message("settingsOnPremiseSectionTitle")) {
+                row(label = CycodeBundle.message("settingsCliApiUrlLabel")) {
+                    cell {
+                        cliApiUrlTextField()
+                    }
+                }
+                row(label = CycodeBundle.message("settingsCliAppUrlLabel")) {
+                    cell {
+                        cliAppUrlTextField()
+                    }
                 }
             }
-            row {
-                cell {
-                    label(CycodeBundle.message("settingsCliApiUrlLabel"))
-                    cliApiUrlTextField()
-                }
-            }
-            row {
-                cell {
-                    label(CycodeBundle.message("settingsCliAppUrlLabel"))
-                    cliAppUrlTextField()
-                }
-            }
-            row {
-                cell {
-                    label(CycodeBundle.message("settingsCliAdditionalParamsLabel"))
-                    cliAdditionalParamsTextField()
-                }
-            }
-            row {
-                cell {
-                    scanOnSaveCheckbox()
+            titledRow(CycodeBundle.message("settingsIdeSectionTitle")) {
+                row(label = CycodeBundle.message("settingsScanOnSaveCheckbox")) {
+                    cell {
+                        scanOnSaveCheckbox()
+                    }
                 }
             }
         }
@@ -72,5 +72,9 @@ class SettingsWindow {
             cliAdditionalParamsTextField.text,
             scanOnSaveCheckbox.isSelected,
         )
+    }
+
+    companion object {
+        const val FIELD_COLUMNS_COUNT = 40  // max on the smallest settings window
     }
 }
