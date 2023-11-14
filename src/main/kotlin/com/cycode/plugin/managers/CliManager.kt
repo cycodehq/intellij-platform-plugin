@@ -52,10 +52,6 @@ class CliManager(private val project: Project) {
         CycodeNotifier.notifyError(project, message)
     }
 
-    private fun showInfoNotification(message: String) {
-        CycodeNotifier.notifyInfo(project, message)
-    }
-
     private fun <T> processResult(result: CliResult<T>): CliResult<T>? {
         if (result is CliResult.Error) {
             showErrorNotification(result.result.message)
@@ -152,7 +148,8 @@ class CliManager(private val project: Project) {
         }
 
         val scanTypeName = getScanTypeDisplayName(scanType)
-        showInfoNotification(CycodeBundle.message("scanFileResultNotification", detectionsCount, scanTypeName))
+        val message = CycodeBundle.message("scanFileResultNotification", detectionsCount, scanTypeName)
+        CycodeNotifier.notifyDetections(project, message)
     }
 
     private inline fun <reified T> scanFile(filePath: String, scanType: CliScanType): CliResult<T>? {
