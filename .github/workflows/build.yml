@@ -3,8 +3,6 @@ on:
   push:
     branches:
       - main
-      - marketplace-release
-      - CM-29074-setup-git-hub-actions-workflow-to-publish-new-alpha-versions-from-the-main-branch
 
   pull_request:
   workflow_dispatch:
