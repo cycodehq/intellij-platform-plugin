@@ -6,7 +6,7 @@ import javax.swing.Icon
 
 
 object PluginIcons {
-    val TOOL_WINDOW: Icon = load("/icons/toolWindowIcon.png")
+    val TOOL_WINDOW: Icon = load("/icons/toolWindowIcon.svg")
 
     private fun load(path: String): Icon {
         return IconLoader.getIcon(path, PluginIcons::class.java)

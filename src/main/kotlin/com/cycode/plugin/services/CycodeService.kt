@@ -32,7 +32,7 @@ class CycodeService(val project: Project) {
             val cliManager = CliManager(project)
 
             override fun run(indicator: ProgressIndicator) {
-                // if the CLI path is not overriden and executable is auto managed, and eed to download - download it.
+                // if the CLI path is not overriden and executable is auto managed, and need to download - download it.
                 if (
                     pluginSettings.cliPath == Consts.DEFAULT_CLI_PATH &&
                     pluginSettings.cliAutoManaged &&
