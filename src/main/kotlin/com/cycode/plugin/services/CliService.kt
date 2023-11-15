@@ -1,36 +1,29 @@
-package com.cycode.plugin.managers
+package com.cycode.plugin.services
 
 import com.cycode.plugin.CycodeBundle
-import com.cycode.plugin.cli.CliResult
-import com.cycode.plugin.cli.CliWrapper
-import com.cycode.plugin.cli.ExitCodes
+import com.cycode.plugin.cli.*
 import com.cycode.plugin.cli.models.AuthCheckResult
 import com.cycode.plugin.cli.models.AuthResult
 import com.cycode.plugin.cli.models.VersionResult
 import com.cycode.plugin.cli.models.scanResult.secret.SecretScanResult
-import com.cycode.plugin.services.pluginSettings
-import com.cycode.plugin.services.pluginState
-import com.cycode.plugin.services.scanResults
 import com.cycode.plugin.utils.CycodeNotifier
 import com.intellij.codeInsight.daemon.DaemonCodeAnalyzer
+import com.intellij.openapi.components.Service
 import com.intellij.openapi.diagnostic.thisLogger
 import com.intellij.openapi.module.ModuleManager
 import com.intellij.openapi.project.Project
 
 
-class CliManager(private val project: Project) {
+@Service(Service.Level.PROJECT)
+class CliService(private val project: Project) {
     private val pluginState = pluginState()
     private val pluginSettings = pluginSettings()
 
     private val scanResults = scanResults()
 
-    private val cli: CliWrapper
+    private val cli = CliWrapper(pluginSettings.cliPath, getCliWorkingDirectory())
 
     var cliShouldDestroyCallback: (() -> Boolean)? = null
-
-    init {
-        cli = CliWrapper(pluginSettings.cliPath, getCliWorkingDirectory())
-    }
 
     private fun getCliWorkingDirectory(): String? {
         val modules = ModuleManager.getInstance(project).modules

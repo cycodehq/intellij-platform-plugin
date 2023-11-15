@@ -10,6 +10,8 @@ import java.nio.file.Paths
 @State(
     name = "CycodePersistentStateService",
     storages = [Storage("cycode.state.xml", roamingType = RoamingType.DISABLED)] // settings sharing is disabled
+    // roaming must be disabled in light services:
+    // https://plugins.jetbrains.com/docs/intellij/plugin-services.html#light-service-restrictions
 )
 class CycodePersistentStateService : PersistentStateComponent<CycodePersistentStateService> {
     var cliInstalled: Boolean = false

@@ -1,6 +1,7 @@
-package com.cycode.plugin.managers
+package com.cycode.plugin.services
 
 import com.cycode.plugin.utils.verifyFileChecksum
+import com.intellij.openapi.components.Service
 import com.intellij.openapi.diagnostic.thisLogger
 import java.io.BufferedInputStream
 import java.io.File
@@ -9,7 +10,8 @@ import java.net.URL
 import java.nio.file.Files
 
 
-class DownloadManager {
+@Service(Service.Level.APP)
+class DownloadService {
     private fun shouldSaveFile(tempFile: File, checksum: String?): Boolean {
         // if we don't expect checksum validation or checksum is valid
         return checksum == null || verifyFileChecksum(tempFile, checksum)

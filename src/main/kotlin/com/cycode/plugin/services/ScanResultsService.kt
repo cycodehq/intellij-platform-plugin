@@ -6,7 +6,7 @@ import com.intellij.openapi.components.Service
 import com.intellij.openapi.diagnostic.thisLogger
 
 @Service(Service.Level.PROJECT)
-class CycodeResultsService {
+class ScanResultsService {
     var secretsResults: CliResult<SecretScanResult>? = null
 
     init {

@@ -1,4 +1,4 @@
-package com.cycode.plugin.managers
+package com.cycode.plugin.cli
 
 import com.cycode.plugin.CycodeBundle
 

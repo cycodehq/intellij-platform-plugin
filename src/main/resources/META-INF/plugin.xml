@@ -2,7 +2,7 @@
 <idea-plugin>
     <id>com.cycode.plugin</id>
     <name>Cycode</name>
-    <vendor>cycodehq</vendor>
+    <vendor url="https://cycode.com/">Cycode Ltd.</vendor>
 
     <depends>com.intellij.modules.platform</depends>
     <depends>com.intellij.modules.lang</depends>
