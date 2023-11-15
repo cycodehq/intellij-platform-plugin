@@ -7,10 +7,10 @@ import com.cycode.plugin.components.toolWindow.components.loadingContentTab.Load
 import com.cycode.plugin.components.toolWindow.components.scanContentTab.ScanContentTab
 import com.cycode.plugin.icons.PluginIcons
 import com.cycode.plugin.services.CycodeService
+import com.cycode.plugin.services.cycode
 import com.cycode.plugin.services.pluginState
 import com.intellij.openapi.application.ApplicationManager
 import com.intellij.openapi.application.WriteAction
-import com.intellij.openapi.components.service
 import com.intellij.openapi.project.DumbAware
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.wm.ToolWindow
@@ -44,10 +44,8 @@ private fun replaceToolWindowContent(project: Project, content: Content) {
 }
 
 private fun createToolWindowContent(project: Project, component: Component<CycodeService>): Content {
-    val service = project.service<CycodeService>()
-
     return ContentFactory.SERVICE.getInstance()
-        .createContent(component.getContent(service), null, false)
+        .createContent(component.getContent(cycode(project)), null, false)
 }
 
 private fun createLoadingTabOnly(project: Project) {

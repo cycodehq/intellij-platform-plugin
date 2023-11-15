@@ -1,9 +1,8 @@
 package com.cycode.plugin.intentions
 
-import com.cycode.plugin.services.CycodeService
+import com.cycode.plugin.services.cycode
 import com.intellij.codeInsight.intention.PriorityAction
 import com.intellij.codeInsight.intention.impl.BaseIntentionAction
-import com.intellij.openapi.components.service
 import com.intellij.openapi.diagnostic.thisLogger
 import com.intellij.openapi.editor.Editor
 import com.intellij.openapi.project.Project
@@ -49,9 +48,8 @@ class CycodeIgnoreIntentionQuickFix(private val type: CycodeIgnoreType, private 
     override fun invoke(project: Project, editor: Editor?, file: PsiFile?) {
         thisLogger().warn("Ignore quick fix intention has been invoked")
 
-        val service = project.service<CycodeService>()
         val filepath = file?.virtualFile?.path ?: return
-        service.applyIgnoreFromFileAnnotation(filepath, mapTypeToOptionName(type), value)
+        cycode(project).applyIgnoreFromFileAnnotation(filepath, mapTypeToOptionName(type), value)
     }
 
     override fun getPriority(): PriorityAction.Priority {

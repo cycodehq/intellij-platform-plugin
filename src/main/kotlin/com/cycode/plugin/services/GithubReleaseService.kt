@@ -1,9 +1,10 @@
-package com.cycode.plugin.managers
+package com.cycode.plugin.services
 
 import com.fasterxml.jackson.databind.DeserializationFeature
 import com.fasterxml.jackson.databind.PropertyNamingStrategies
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import com.fasterxml.jackson.module.kotlin.readValue
+import com.intellij.openapi.components.Service
 import java.net.URL
 
 
@@ -19,7 +20,8 @@ data class GitHubRelease(
     val assets: List<GitHubReleaseAsset>
 )
 
-class GitHubReleaseManager {
+@Service(Service.Level.APP)
+class GithubReleaseService {
     var mapper = jacksonObjectMapper()
         .setPropertyNamingStrategy(PropertyNamingStrategies.SNAKE_CASE)
         .configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false)

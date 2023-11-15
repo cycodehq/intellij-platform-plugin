@@ -1,7 +1,7 @@
 package com.cycode.plugin.listeners
 
 import com.cycode.plugin.CycodeBundle
-import com.cycode.plugin.managers.CliManager
+import com.cycode.plugin.services.cli
 import com.cycode.plugin.services.pluginSettings
 import com.cycode.plugin.services.pluginState
 import com.intellij.openapi.diagnostic.thisLogger
@@ -14,7 +14,7 @@ import com.intellij.openapi.project.Project
 
 
 class FileSaveListener(private val project: Project) : FileDocumentManagerListener {
-    private val cliManager = CliManager(project)
+    private val cliService = cli(project)
     private val pluginState = pluginState()
     private val pluginSettings = pluginSettings()
 
@@ -30,10 +30,10 @@ class FileSaveListener(private val project: Project) : FileDocumentManagerListen
 
         object : Task.Backgroundable(project, CycodeBundle.message("fileScanning"), true) {
             override fun run(indicator: ProgressIndicator) {
-                cliManager.cliShouldDestroyCallback = { indicator.isCanceled }
+                cliService.cliShouldDestroyCallback = { indicator.isCanceled }
 
                 thisLogger().debug("Start scanning file: $filePath")
-                cliManager.scanFileSecrets(filePath)
+                cliService.scanFileSecrets(filePath)
                 thisLogger().debug("Finish scanning file: $filePath")
             }
         }.queue()

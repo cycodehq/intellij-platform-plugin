@@ -1,16 +1,17 @@
-package com.cycode.plugin.managers
+package com.cycode.plugin.services
 
 import com.cycode.plugin.Consts
-import com.cycode.plugin.services.pluginState
 import com.cycode.plugin.utils.verifyFileChecksum
+import com.intellij.openapi.components.Service
 import com.intellij.openapi.diagnostic.thisLogger
 import com.intellij.openapi.util.SystemInfo
 import java.io.File
 
 
-class CliDownloadManager {
-    private val githubReleaseManager = GitHubReleaseManager()
-    private val downloadManager = DownloadManager()
+@Service(Service.Level.APP)
+class CliDownloadService {
+    private val githubReleaseService = githubReleases()
+    private val downloadService = download()
 
     private val pluginState = pluginState()
 
@@ -22,7 +23,7 @@ class CliDownloadManager {
             return githubReleaseInfo
         }
 
-        githubReleaseInfo = githubReleaseManager.getLatestReleaseInfo(Consts.CLI_GITHUB_ORG, Consts.CLI_GITHUB_REPO)
+        githubReleaseInfo = githubReleaseService.getLatestReleaseInfo(Consts.CLI_GITHUB_ORG, Consts.CLI_GITHUB_REPO)
         return githubReleaseInfo
     }
 
@@ -107,13 +108,13 @@ class CliDownloadManager {
             return null
         }
 
-        val executableHashAsset = githubReleaseManager.findAssetByFilename(releaseInfo.assets, executableAssetHashName)
+        val executableHashAsset = githubReleaseService.findAssetByFilename(releaseInfo.assets, executableAssetHashName)
         if (executableHashAsset == null) {
             thisLogger().warn("Failed to find executableHashAsset")
             return null
         }
 
-        return downloadManager.retrieveFileTextContent(executableHashAsset.browserDownloadUrl)
+        return downloadService.retrieveFileTextContent(executableHashAsset.browserDownloadUrl)
     }
 
     private fun getExecutableAsset(): GitHubReleaseAsset? {
@@ -129,7 +130,7 @@ class CliDownloadManager {
             return null
         }
 
-        val executableAsset = githubReleaseManager.findAssetByFilename(releaseInfo.assets, executableAssetName)
+        val executableAsset = githubReleaseService.findAssetByFilename(releaseInfo.assets, executableAssetName)
         if (executableAsset == null) {
             thisLogger().warn("Failed to find executableAsset")
             return null
@@ -152,7 +153,7 @@ class CliDownloadManager {
         }
 
         val downloadedFile =
-            downloadManager.downloadFile(executableAsset.browserDownloadUrl, expectedFileChecksum, localPath)
+            downloadService.downloadFile(executableAsset.browserDownloadUrl, expectedFileChecksum, localPath)
         downloadedFile?.setExecutable(true)
 
         pluginState.cliHash = expectedFileChecksum
