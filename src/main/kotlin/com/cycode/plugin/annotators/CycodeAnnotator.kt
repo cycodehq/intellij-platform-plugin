@@ -44,10 +44,11 @@ class CycodeAnnotator : DumbAware, ExternalAnnotator<PsiFile, Unit>() {
             return false
         }
 
-        val detectedSegment = psiFile.text.substring(textRange.startOffset, textRange.endOffset)
-        if (scanResults.getDetectedSegment(scanType, textRange) == null) {
-            scanResults.saveDetectedSegment(scanType, textRange, detectedSegment)
-        } else if (scanResults.getDetectedSegment(scanType, textRange) != detectedSegment) {
+        val detectedSubstr = psiFile.text.substring(textRange.startOffset, textRange.endOffset)
+        val detectedSegment = scanResults.getDetectedSegment(scanType, textRange)
+        if (detectedSegment == null) {
+            scanResults.saveDetectedSegment(scanType, textRange, detectedSubstr)
+        } else if (detectedSegment != detectedSubstr) {
             // case: the code has been added or deleted before the detection
             thisLogger().warn(
                 "Text range of detection has been shifted. " +
