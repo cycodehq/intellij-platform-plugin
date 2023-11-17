@@ -176,7 +176,7 @@ class CliService(private val project: Project) {
 
         // TODO(MarshalX): run only for the provided file?
         // save results and rerun annotators
-        scanResults.secretsResults = results
+        scanResults.setSecretsResults(results)
         DaemonCodeAnalyzer.getInstance(project).restart()
     }
 }
