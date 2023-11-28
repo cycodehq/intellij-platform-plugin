@@ -33,7 +33,7 @@ class FileSaveListener(private val project: Project) : FileDocumentManagerListen
                 cliService.cliShouldDestroyCallback = { indicator.isCanceled }
 
                 thisLogger().debug("Start scanning file: $filePath")
-                cliService.scanFileSecrets(filePath)
+                cliService.scanFileSecrets(filePath, false)
                 thisLogger().debug("Finish scanning file: $filePath")
             }
         }.queue()

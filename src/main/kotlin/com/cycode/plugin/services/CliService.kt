@@ -135,14 +135,16 @@ class CliService(private val project: Project) {
         return processedResult is CliResult.Success
     }
 
-    private fun showScanFileResultNotification(scanType: CliScanType, detectionsCount: Int) {
-        if (detectionsCount < 1) {
-            return
-        }
-
+    private fun showScanFileResultNotification(scanType: CliScanType, detectionsCount: Int, onDemand: Boolean) {
         val scanTypeName = getScanTypeDisplayName(scanType)
-        val message = CycodeBundle.message("scanFileResultNotification", detectionsCount, scanTypeName)
-        CycodeNotifier.notifyDetections(project, message)
+
+        if (detectionsCount > 0) {
+            val message = CycodeBundle.message("scanFileResultNotification", detectionsCount, scanTypeName)
+            CycodeNotifier.notifyDetections(project, message)
+        } else if (onDemand) {
+            val message = CycodeBundle.message("scanFileNoResultNotification", scanTypeName)
+            CycodeNotifier.notifyInfo(project, message)
+        }
     }
 
     private inline fun <reified T> scanFile(filePath: String, scanType: CliScanType): CliResult<T>? {
@@ -160,7 +162,7 @@ class CliService(private val project: Project) {
         return processResult(result)
     }
 
-    fun scanFileSecrets(filePath: String) {
+    fun scanFileSecrets(filePath: String, onDemand: Boolean = true) {
         val results = scanFile<SecretScanResult>(filePath, CliScanType.Secret)
         if (results == null) {
             thisLogger().warn("Failed to scan file: $filePath")
@@ -172,7 +174,7 @@ class CliService(private val project: Project) {
             detectionsCount = results.result.detections.count()
         }
 
-        showScanFileResultNotification(CliScanType.Secret, detectionsCount)
+        showScanFileResultNotification(CliScanType.Secret, detectionsCount, onDemand)
 
         // TODO(MarshalX): run only for the provided file?
         // save results and rerun annotators
