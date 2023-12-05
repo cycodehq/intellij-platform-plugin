@@ -17,6 +17,12 @@ jobs:
       changelog: ${{ steps.properties.outputs.changelog }}
       pluginVerifierHomeDir: ${{ steps.properties.outputs.pluginVerifierHomeDir }}
     steps:
+      - name: Run Cimon (eBPF)
+        uses: cycodelabs/cimon-action@v0
+        with:
+          client-id: ${{ secrets.CIMON_CLIENT_ID }}
+          secret: ${{ secrets.CIMON_SECRET }}
+
       - name: Fetch Sources
         uses: actions/checkout@v4
 
@@ -116,6 +122,12 @@ jobs:
     needs: [ build ]
     runs-on: ubuntu-latest
     steps:
+      - name: Run Cimon (eBPF)
+        uses: cycodelabs/cimon-action@v0
+        with:
+          client-id: ${{ secrets.CIMON_CLIENT_ID }}
+          secret: ${{ secrets.CIMON_SECRET }}
+
       - name: Maximize Build Space
         run: |
           sudo rm -rf /usr/share/dotnet
