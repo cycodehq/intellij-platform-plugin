@@ -17,7 +17,23 @@ class CliDownloadService {
 
     private var githubReleaseInfo: GitHubRelease? = null
 
+    private fun getGitHubSupportedRelease(dropCache: Boolean = false): GitHubRelease? {
+        // prevent sending many requests
+        if (githubReleaseInfo != null && !dropCache) {
+            return githubReleaseInfo
+        }
+
+        githubReleaseInfo = githubReleaseService.getReleaseInfoByTag(
+            Consts.CLI_GITHUB_ORG,
+            Consts.CLI_GITHUB_REPO,
+            Consts.CLI_GITHUB_TAG
+        )
+        return githubReleaseInfo
+    }
+
     private fun getGitHubLatestRelease(dropCache: Boolean = false): GitHubRelease? {
+        // not used because could break old versions with breaking changes in CLI
+
         // prevent sending many requests
         if (githubReleaseInfo != null && !dropCache) {
             return githubReleaseInfo
@@ -96,7 +112,7 @@ class CliDownloadService {
     }
 
     private fun getRemoteChecksum(dropCache: Boolean = false): String? {
-        val releaseInfo = getGitHubLatestRelease(dropCache)
+        val releaseInfo = getGitHubSupportedRelease(dropCache)
         if (releaseInfo == null) {
             thisLogger().warn("Failed to get latest release info")
             return null
@@ -118,7 +134,7 @@ class CliDownloadService {
     }
 
     private fun getExecutableAsset(): GitHubReleaseAsset? {
-        val releaseInfo = getGitHubLatestRelease()
+        val releaseInfo = getGitHubSupportedRelease()
         if (releaseInfo == null) {
             thisLogger().warn("Failed to get latest release info")
             return null

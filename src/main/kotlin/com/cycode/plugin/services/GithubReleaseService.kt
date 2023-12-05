@@ -22,9 +22,40 @@ data class GitHubRelease(
 
 @Service(Service.Level.APP)
 class GithubReleaseService {
-    var mapper = jacksonObjectMapper()
+    private var mapper = jacksonObjectMapper()
         .setPropertyNamingStrategy(PropertyNamingStrategies.SNAKE_CASE)
         .configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false)
+
+    private fun getJson(url: String): String? {
+        try {
+            val urlObj = URL(url)
+            val connection = urlObj.openConnection()
+            connection.setRequestProperty("Accept", "application/vnd.github.v3+json")
+
+            val inputStream = connection.getInputStream()
+            val response = inputStream.bufferedReader().use { it.readText() }
+            inputStream.close()
+
+            return response
+        } catch (e: Exception) {
+            e.printStackTrace()
+        }
+
+        return null
+    }
+
+    fun getReleaseInfoByTag(owner: String, repo: String, tag: String): GitHubRelease? {
+        val apiUrl = "https://api.github.com/repos/$owner/$repo/releases/tags/$tag"
+
+        return try {
+            val response = getJson(apiUrl) ?: return null
+            val release: GitHubRelease = mapper.readValue(response)
+            release
+        } catch (e: Exception) {
+            e.printStackTrace()
+            null
+        }
+    }
 
     fun getLatestReleaseInfo(owner: String, repo: String): GitHubRelease? {
         // TODO(MarshalX): probably we should not download major releases.
@@ -34,25 +65,19 @@ class GithubReleaseService {
 
         val apiUrl = "https://api.github.com/repos/$owner/$repo/releases"
 
-        try {
-            val url = URL(apiUrl)
-            val connection = url.openConnection()
-            connection.setRequestProperty("Accept", "application/vnd.github.v3+json")
-
-            val inputStream = connection.getInputStream()
-            val response = inputStream.bufferedReader().use { it.readText() }
-            inputStream.close()
+        return try {
+            val response = getJson(apiUrl) ?: return null
 
             val releases: List<GitHubRelease> = mapper.readValue(response)
-
             if (releases.isNotEmpty()) {
-                return releases[0]
+                releases[0]
             }
+
+            null
         } catch (e: Exception) {
             e.printStackTrace()
+            null
         }
-
-        return null
     }
 
     fun findAssetByFilename(assets: List<GitHubReleaseAsset>, filename: String): GitHubReleaseAsset? {
