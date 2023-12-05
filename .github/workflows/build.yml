@@ -7,6 +7,9 @@ on:
   pull_request:
   workflow_dispatch:
 
+permissions:
+  contents: read
+
 jobs:
 
   build:
@@ -17,6 +20,19 @@ jobs:
       changelog: ${{ steps.properties.outputs.changelog }}
       pluginVerifierHomeDir: ${{ steps.properties.outputs.pluginVerifierHomeDir }}
     steps:
+      - name: Run Cimon (eBPF)
+        uses: cycodelabs/cimon-action@v0
+        with:
+          client-id: ${{ secrets.CIMON_CLIENT_ID }}
+          secret: ${{ secrets.CIMON_SECRET }}
+          allowed-hosts: >
+            cdn.azul.com
+            jb.gg
+            jcenter.bintray.com
+            plugins.gradle.org
+            teamcity.jetbrains.com
+            www.jetbrains.com
+
       - name: Fetch Sources
         uses: actions/checkout@v4
 
@@ -116,6 +132,24 @@ jobs:
     needs: [ build ]
     runs-on: ubuntu-latest
     steps:
+      - name: Run Cimon (eBPF)
+        uses: cycodelabs/cimon-action@v0
+        with:
+          client-id: ${{ secrets.CIMON_CLIENT_ID }}
+          secret: ${{ secrets.CIMON_SECRET }}
+          allowed-hosts: >
+            cache-redirector.jetbrains.com
+            cdn.azul.com
+            data.services.jetbrains.com
+            *.cloudfront.net
+            jb.gg
+            jcenter.bintray.com
+            packages.jetbrains.team
+            plugins.gradle.org
+            plugins.jetbrains.com
+            raw.githubusercontent.com
+            teamcity.jetbrains.com
+
       - name: Maximize Build Space
         run: |
           sudo rm -rf /usr/share/dotnet
