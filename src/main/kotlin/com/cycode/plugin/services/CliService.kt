@@ -147,7 +147,7 @@ class CliService(private val project: Project) {
         }
     }
 
-    private inline fun <reified T> scanFile(filePath: String, scanType: CliScanType): CliResult<T>? {
+    private inline fun <reified T> scanPaths(paths: List<String>, scanType: CliScanType): CliResult<T>? {
         val scanTypeString = scanType.name.toLowerCase()
         val result = cli
             .executeCommand<T>(
@@ -155,17 +155,21 @@ class CliService(private val project: Project) {
                 "-t",
                 scanTypeString,
                 "path",
-                filePath,
+                *getPathsAsArguments(paths),
                 shouldDestroyCallback = cliShouldDestroyCallback
             )
 
         return processResult(result)
     }
 
-    fun scanFileSecrets(filePath: String, onDemand: Boolean = true) {
-        val results = scanFile<SecretScanResult>(filePath, CliScanType.Secret)
+    private fun getPathsAsArguments(paths: List<String>): Array<String> {
+        return paths.toTypedArray()
+    }
+
+    fun scanPathsSecrets(paths: List<String>, onDemand: Boolean = true) {
+        val results = scanPaths<SecretScanResult>(paths, CliScanType.Secret)
         if (results == null) {
-            thisLogger().warn("Failed to scan file: $filePath")
+            thisLogger().warn("Failed to scan paths: $paths")
             return
         }
 

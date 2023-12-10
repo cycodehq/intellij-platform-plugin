@@ -67,7 +67,7 @@ class CycodeService(val project: Project) {
                 }
 
                 cliService.cliShouldDestroyCallback = { indicator.isCanceled }
-                cliService.scanFileSecrets(filepath)
+                cliService.scanPathsSecrets(listOf(filepath))
             }
         }.queue()
     }
@@ -87,7 +87,7 @@ class CycodeService(val project: Project) {
                 // the right way: apply "ignore rules" in the local results db of the plugin
                 // the disadvantage of the right way: we rewrite code that already exists in CLI in every plugin...
                 // TODO(MarshalX): think about what we can do from CLI side
-                cliService.scanFileSecrets(filepath)
+                cliService.scanPathsSecrets(listOf(filepath))
             }
         }.queue()
     }
