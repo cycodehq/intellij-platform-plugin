@@ -4,7 +4,7 @@
 
 ## [Unreleased]
 
-## [1.0.1] - 2023-12-XX
+## [1.0.1] - 2023-12-12
 
 Fix the creation of many scan jobs on many on-save events for a short period of time.
 
