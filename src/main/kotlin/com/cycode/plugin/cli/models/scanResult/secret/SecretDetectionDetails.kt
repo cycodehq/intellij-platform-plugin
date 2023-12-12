@@ -13,6 +13,7 @@ data class SecretDetectionDetails(
     val filePath: String,
     val fileName: String,
     val fileExtension: String,
+    val customRemediationGuidelines: String?,
 ) : ScanDetectionDetailsBase {
     override fun getFilepath(): String {
         return "$filePath$fileName"
