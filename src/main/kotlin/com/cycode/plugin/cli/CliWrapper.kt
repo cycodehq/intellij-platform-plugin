@@ -41,6 +41,7 @@ class CliWrapper(val executablePath: String, val workDirectory: String? = null) 
     ): CliResult<T> {
         val commandLine = GeneralCommandLine()
         commandLine.charset = Charset.forName("UTF-8")
+        commandLine.exePath = executablePath
 
         if (workDirectory != null) {
             commandLine.workDirectory = File(workDirectory)
@@ -48,12 +49,6 @@ class CliWrapper(val executablePath: String, val workDirectory: String? = null) 
 
         commandLine.environment["CYCODE_API_URL"] = pluginSettings.cliApiUrl
         commandLine.environment["CYCODE_APP_URL"] = pluginSettings.cliAppUrl
-
-        if (SystemInfo.isWindows) {
-            commandLine.addParameter("/c")
-        } else {
-            commandLine.exePath = executablePath
-        }
 
         commandLine.addParameters(*defaultCliArgs)
 
