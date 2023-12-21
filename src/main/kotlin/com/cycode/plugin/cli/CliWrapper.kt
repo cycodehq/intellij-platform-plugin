@@ -50,10 +50,6 @@ class CliWrapper(val executablePath: String, val workDirectory: String? = null) 
         commandLine.environment["CYCODE_API_URL"] = pluginSettings.cliApiUrl
         commandLine.environment["CYCODE_APP_URL"] = pluginSettings.cliAppUrl
 
-        if (SystemInfo.isWindows) {
-            commandLine.addParameter("/c")
-        }
-
         commandLine.addParameters(*defaultCliArgs)
 
         val additionalArgs = pluginSettings.cliAdditionalParams.split(" ").filterNot { it.isBlank() }.toTypedArray()
