@@ -28,9 +28,9 @@ class CycodeService(val project: Project) {
                 if (
                     pluginSettings.cliPath == Consts.DEFAULT_CLI_PATH &&
                     pluginSettings.cliAutoManaged &&
-                    cliDownloadService.shouldDownloadCli(pluginSettings.cliPath)
+                    cliDownloadService.shouldDownloadCli()
                 ) {
-                    cliDownloadService.downloadCli(pluginSettings.cliPath)
+                    cliDownloadService.downloadCli()
                     thisLogger().info("CLI was successfully downloaded/updated")
                 }
 

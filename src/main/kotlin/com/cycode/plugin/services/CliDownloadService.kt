@@ -1,6 +1,9 @@
 package com.cycode.plugin.services
 
 import com.cycode.plugin.Consts
+import com.cycode.plugin.utils.parseOnedirChecksumDb
+import com.cycode.plugin.utils.unzip
+import com.cycode.plugin.utils.verifyDirContentChecksums
 import com.cycode.plugin.utils.verifyFileChecksum
 import com.intellij.openapi.components.Service
 import com.intellij.openapi.diagnostic.thisLogger
@@ -17,9 +20,9 @@ class CliDownloadService {
 
     private var githubReleaseInfo: GitHubRelease? = null
 
-    private fun getGitHubSupportedRelease(dropCache: Boolean = false): GitHubRelease? {
+    private fun getGitHubSupportedRelease(forceRefresh: Boolean = false): GitHubRelease? {
         // prevent sending many requests
-        if (githubReleaseInfo != null && !dropCache) {
+        if (githubReleaseInfo != null && !forceRefresh) {
             return githubReleaseInfo
         }
 
@@ -31,11 +34,11 @@ class CliDownloadService {
         return githubReleaseInfo
     }
 
-    private fun getGitHubLatestRelease(dropCache: Boolean = false): GitHubRelease? {
+    private fun getGitHubLatestRelease(forceRefresh: Boolean = false): GitHubRelease? {
         // not used because could break old versions with breaking changes in CLI
 
         // prevent sending many requests
-        if (githubReleaseInfo != null && !dropCache) {
+        if (githubReleaseInfo != null && !forceRefresh) {
             return githubReleaseInfo
         }
 
@@ -43,21 +46,30 @@ class CliDownloadService {
         return githubReleaseInfo
     }
 
-    private fun getOperatingSystemRelatedCliFilename(): String? {
+    private fun getOperatingSystemRelatedReleaseAssetFilename(): String? {
+        val isAarch64 = SystemInfo.OS_ARCH == "aarch64"
         return when {
             SystemInfo.isWindows -> "cycode-win.exe"
-            SystemInfo.isMac -> "cycode-mac"
+            SystemInfo.isMac && isAarch64 -> "cycode-mac-arm-onedir.zip"
+            SystemInfo.isMac && !isAarch64 -> "cycode-mac-onedir.zip"
             SystemInfo.isLinux -> "cycode-linux"
             else -> null
         }
     }
 
-    private fun getOperatingSystemRelatedCliHashFilename(): String? {
-        val filename = getOperatingSystemRelatedCliFilename() ?: return null
+    private fun getOperatingSystemRelatedReleaseAssetHashFilename(): String? {
+        val filename = getOperatingSystemRelatedReleaseAssetFilename() ?: return null
+
+        // TODO(MarshalX): mb we should rename GitHub asset to remove this hack
+        //   but there is question about .sha256 of zip and zip content
+        if (filename.endsWith(".zip")) {
+            return filename.substring(0, filename.length - 4) + ".sha256"
+        }
+
         return "$filename.sha256"
     }
 
-    private fun shouldDownloadNewRemoteCli(localPath: String): Boolean {
+    private fun shouldDownloadNewRemoteCli(localPath: String, isDir: Boolean): Boolean {
         val timeNow = System.currentTimeMillis()
 
         if (pluginState.cliLastUpdateCheckedAt == null) {
@@ -73,9 +85,11 @@ class CliDownloadService {
                         "(less than ${Consts.CLI_CHECK_NEW_VERSION_EVERY_SEC})"
             )
             return false
+        } else {
+            pluginState.cliLastUpdateCheckedAt = timeNow
         }
 
-        val remoteChecksum = getRemoteChecksum(true)
+        val remoteChecksum = getRemoteChecksumFile(true)
         if (remoteChecksum == null) {
             thisLogger().warn(
                 "Should not download new CLI because can't get remoteChecksum. " +
@@ -84,26 +98,40 @@ class CliDownloadService {
             return false
         }
 
-        if (!verifyFileChecksum(localPath, remoteChecksum)) {
-            thisLogger().warn("Should download CLI because checksum doesn't mach remote checksum ($remoteChecksum)")
+        val isValidChecksum = if (isDir) {
+            verifyDirContentChecksums(localPath, parseOnedirChecksumDb(remoteChecksum))
+        } else {
+            verifyFileChecksum(localPath, remoteChecksum)
+        }
+
+        if (!isValidChecksum) {
+            thisLogger().warn("Should download CLI because checksum doesn't mach remote checksum")
             return true
         }
 
         return false
     }
 
-    fun shouldDownloadCli(localPath: String): Boolean {
+    fun shouldDownloadCli(): Boolean {
+        if (SystemInfo.isMac) {
+            return shouldDownloadOnedirCli()
+        }
+
+        return shouldDownloadSingleCliExecutable()
+    }
+
+    private fun shouldDownloadSingleCliExecutable(): Boolean {
         if (pluginState.cliHash == null) {
             thisLogger().warn("Should download CLI because cliHash is Null")
             return true
         }
 
-        if (!verifyFileChecksum(localPath, pluginState.cliHash!!)) {
+        if (!verifyFileChecksum(Consts.DEFAULT_CLI_PATH, pluginState.cliHash!!)) {
             thisLogger().warn("Should download CLI because checksum is invalid")
             return true
         }
 
-        if (shouldDownloadNewRemoteCli(localPath)) {
+        if (shouldDownloadNewRemoteCli(Consts.DEFAULT_CLI_PATH, false)) {
             return true
         }
 
@@ -111,14 +139,33 @@ class CliDownloadService {
         return false
     }
 
-    private fun getRemoteChecksum(dropCache: Boolean = false): String? {
-        val releaseInfo = getGitHubSupportedRelease(dropCache)
+    private fun shouldDownloadOnedirCli(): Boolean {
+        if (pluginState.cliDirHashes == null) {
+            thisLogger().warn("Should download CLI because cliDirHashes is Null")
+            return true
+        }
+
+        if (!verifyDirContentChecksums(Consts.PLUGIN_PATH, pluginState.cliDirHashes!!)) {
+            thisLogger().warn("Should download CLI because one of checksum is invalid")
+            return true
+        }
+
+        if (shouldDownloadNewRemoteCli(Consts.PLUGIN_PATH, true)) {
+            return true
+        }
+
+        thisLogger().warn("CLI is downloaded and the checksums are valid.")
+        return false
+    }
+
+    private fun getRemoteChecksumFile(forceRefresh: Boolean = false): String? {
+        val releaseInfo = getGitHubSupportedRelease(forceRefresh)
         if (releaseInfo == null) {
             thisLogger().warn("Failed to get latest release info")
             return null
         }
 
-        val executableAssetHashName = getOperatingSystemRelatedCliHashFilename()
+        val executableAssetHashName = getOperatingSystemRelatedReleaseAssetHashFilename()
         if (executableAssetHashName == null) {
             thisLogger().warn("Failed to get asset names. Unknown operating system")
             return null
@@ -140,7 +187,7 @@ class CliDownloadService {
             return null
         }
 
-        val executableAssetName = getOperatingSystemRelatedCliFilename()
+        val executableAssetName = getOperatingSystemRelatedReleaseAssetFilename()
         if (executableAssetName == null) {
             thisLogger().warn("Failed to get asset names. Unknown operating system")
             return null
@@ -155,25 +202,75 @@ class CliDownloadService {
         return executableAsset
     }
 
-    fun downloadCli(localPath: String): File? {
+    private fun getAssetAndFileChecksum(): Pair<GitHubReleaseAsset, String>? {
         val executableAsset = getExecutableAsset()
         if (executableAsset == null) {
             thisLogger().warn("Failed to get executableAsset")
             return null
         }
 
-        val expectedFileChecksum = getRemoteChecksum()
+        val expectedFileChecksum = getRemoteChecksumFile()
         if (expectedFileChecksum == null) {
             thisLogger().warn("Failed to get expectedFileChecksum")
             return null
         }
 
-        val downloadedFile =
-            downloadService.downloadFile(executableAsset.browserDownloadUrl, expectedFileChecksum, localPath)
+        return Pair(executableAsset, expectedFileChecksum)
+    }
+
+    fun downloadCli(): File? {
+        if (SystemInfo.isMac) {
+            return downloadOnedirCli()
+        }
+
+        return downloadSingleCliExecutable()
+    }
+
+    private fun downloadSingleCliExecutable(): File? {
+        val assetAndFileChecksum = getAssetAndFileChecksum()
+        if (assetAndFileChecksum == null) {
+            thisLogger().warn("Failed to get assetAndFileChecksum")
+            return null
+        }
+        val (executableAsset, expectedFileChecksum) = assetAndFileChecksum
+
+        val downloadedFile = downloadService.downloadFile(
+            executableAsset.browserDownloadUrl,
+            expectedFileChecksum,
+            Consts.DEFAULT_CLI_PATH
+        )
         downloadedFile?.setExecutable(true)
 
         pluginState.cliHash = expectedFileChecksum
 
         return downloadedFile
+    }
+
+    private fun downloadOnedirCli(): File? {
+        val assetAndFileChecksum = getAssetAndFileChecksum()
+        if (assetAndFileChecksum == null) {
+            thisLogger().warn("Failed to get assetAndFileChecksum")
+            return null
+        }
+        val (executableAsset, expectedDirContentChecksums) = assetAndFileChecksum
+
+        val pathToZip = File(Consts.PLUGIN_PATH, "cycode-cli.zip")
+        // we don't verify the checksum of the directory because it's not a single file
+        // we will verify the checksum of the files inside the directory later
+        downloadService.downloadFile(executableAsset.browserDownloadUrl, null, pathToZip)
+
+        val cliExecutableFile = File(Consts.DEFAULT_CLI_PATH)
+        val pathToCliDir = cliExecutableFile.parent
+        unzip(pathToZip, pathToCliDir)
+        pathToZip.delete()
+
+        cliExecutableFile.setExecutable(true)
+
+        // migrate old macOS users to onedir mode
+        pluginState.cliHash = null
+
+        pluginState.cliDirHashes = parseOnedirChecksumDb(expectedDirContentChecksums)
+
+        return cliExecutableFile
     }
 }
