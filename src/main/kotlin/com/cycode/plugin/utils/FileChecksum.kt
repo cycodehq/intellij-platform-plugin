@@ -47,3 +47,30 @@ fun verifyFileChecksum(file: File, sha256Checksum: String): Boolean {
 fun verifyFileChecksum(file: String, sha256Checksum: String): Boolean {
     return verifyFileChecksum(File(file), sha256Checksum)
 }
+
+fun verifyDirContentChecksums(dir: String, checksumDb: Map<String, String>): Boolean {
+    for ((filename, checksum) in checksumDb) {
+        val filePath = File(dir, filename)
+        if (!verifyFileChecksum(filePath, checksum)) {
+            return false
+        }
+    }
+
+    return true
+}
+
+
+fun parseOnedirChecksumDb(rawChecksumDb: String): Map<String, String> {
+    val checksums = mutableMapOf<String, String>()
+    val lines = rawChecksumDb.split("\n")
+    for (line in lines) {
+        val parts = line.split(" ")
+        if (parts.size != 2) {
+            continue
+        }
+
+        val (checksum, filename) = parts
+        checksums[filename] = checksum
+    }
+    return checksums
+}

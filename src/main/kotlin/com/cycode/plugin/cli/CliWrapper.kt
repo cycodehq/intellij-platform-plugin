@@ -13,7 +13,6 @@ import com.intellij.execution.process.ProcessListener
 import com.intellij.execution.process.ProcessOutputTypes
 import com.intellij.openapi.diagnostic.thisLogger
 import com.intellij.openapi.util.Key
-import com.intellij.openapi.util.SystemInfo
 import com.intellij.util.io.BaseOutputReader
 import java.io.File
 import java.nio.charset.Charset

@@ -37,6 +37,10 @@ class DownloadService {
         return null
     }
 
+    fun downloadFile(url: String, checksum: String?, localPath: File): File? {
+        return downloadFile(url, checksum, localPath.toString())
+    }
+
     fun downloadFile(url: String, checksum: String?, localPath: String): File? {
         thisLogger().warn("Downloading $url with checksum $checksum")
         thisLogger().warn("Expecting to download to $localPath")
