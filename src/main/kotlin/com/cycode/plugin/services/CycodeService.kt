@@ -72,7 +72,7 @@ class CycodeService(val project: Project) {
         }.queue()
     }
 
-    fun applyIgnoreFromFileAnnotation(filepath: String, optionName: String, optionValue: String) {
+    fun applyIgnoreFromFileAnnotation(optionName: String, optionValue: String) {
         object : Task.Backgroundable(project, CycodeBundle.message("ignoresApplying"), true) {
             override fun run(indicator: ProgressIndicator) {
                 if (!pluginState.cliAuthed) {
@@ -80,14 +80,7 @@ class CycodeService(val project: Project) {
                 }
 
                 cliService.cliShouldDestroyCallback = { indicator.isCanceled }
-
                 cliService.ignore(optionName, optionValue)
-
-                // same trick as in our vs code extension
-                // the right way: apply "ignore rules" in the local results db of the plugin
-                // the disadvantage of the right way: we rewrite code that already exists in CLI in every plugin...
-                // TODO(MarshalX): think about what we can do from CLI side
-                cliService.scanPathsSecrets(listOf(filepath))
             }
         }.queue()
     }

@@ -84,6 +84,8 @@ class CycodeAnnotator : DumbAware, ExternalAnnotator<PsiFile, Unit>() {
             }
 
             val detectedValue = psiFile.text.substring(textRange.startOffset, textRange.endOffset)
+            detectionDetails.detectedValue = detectedValue
+
             val message = detection.message.replace("within '' repository", "")  // BE bug
             val title = CycodeBundle.message("secretsAnnotationTitle", detection.type, message)
 

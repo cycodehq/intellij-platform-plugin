@@ -3,6 +3,7 @@ package com.cycode.plugin.services
 import com.cycode.plugin.cli.CliResult
 import com.cycode.plugin.cli.CliScanType
 import com.cycode.plugin.cli.models.scanResult.secret.SecretScanResult
+import com.cycode.plugin.services.scanResultsFilters.SecretScanResultsFilter
 import com.intellij.openapi.components.Service
 import com.intellij.openapi.diagnostic.thisLogger
 import com.intellij.openapi.util.TextRange
@@ -43,5 +44,14 @@ class ScanResultsService {
 
     private fun clearDetectedSegments() {
         detectedSegments.clear()
+    }
+
+    fun excludeResults(byValue: String? = null, byPath: String? = null, byRuleId: String? = null) {
+        if (secretsResults is CliResult.Success) {
+            val filter = SecretScanResultsFilter((secretsResults as CliResult.Success<SecretScanResult>).result)
+            filter.exclude(byValue, byPath, byRuleId)
+            secretsResults = CliResult.Success(filter.getFilteredScanResults())
+        }
+        // more scan types to be added here
     }
 }
