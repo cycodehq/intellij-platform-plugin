@@ -1,6 +1,8 @@
 package com.cycode.plugin.intentions
 
 import com.cycode.plugin.services.cycode
+import com.cycode.plugin.services.scanResults
+import com.intellij.codeInsight.daemon.DaemonCodeAnalyzer
 import com.intellij.codeInsight.intention.PriorityAction
 import com.intellij.codeInsight.intention.impl.BaseIntentionAction
 import com.intellij.openapi.diagnostic.thisLogger
@@ -19,6 +21,8 @@ enum class CycodeIgnoreType {
 
 class CycodeIgnoreIntentionQuickFix(private val type: CycodeIgnoreType, private val value: String) :
     BaseIntentionAction(), PriorityAction, Iconable {
+    private val scanResults = scanResults()
+
     override fun getText(): String {
         with(type) {
             return when (this) {
@@ -45,11 +49,25 @@ class CycodeIgnoreIntentionQuickFix(private val type: CycodeIgnoreType, private 
         }
     }
 
+    private fun applyIgnoreInUi(project: Project) {
+        // exclude results from the local DB and restart the code analyzer
+
+        when (type) {
+            CycodeIgnoreType.VALUE -> scanResults.excludeResults(byValue = value)
+            CycodeIgnoreType.RULE -> scanResults.excludeResults(byRuleId = value)
+            CycodeIgnoreType.PATH -> scanResults.excludeResults(byPath = value)
+        }
+
+        DaemonCodeAnalyzer.getInstance(project).restart()
+    }
+
     override fun invoke(project: Project, editor: Editor?, file: PsiFile?) {
         thisLogger().warn("Ignore quick fix intention has been invoked")
 
-        val filepath = file?.virtualFile?.path ?: return
-        cycode(project).applyIgnoreFromFileAnnotation(filepath, mapTypeToOptionName(type), value)
+        // we are removing is from UI first to show how it's blazing fast and then apply it in the background
+        applyIgnoreInUi(project)
+
+        cycode(project).applyIgnoreFromFileAnnotation(mapTypeToOptionName(type), value)
     }
 
     override fun getPriority(): PriorityAction.Priority {
