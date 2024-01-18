@@ -4,6 +4,11 @@
 
 ## [Unreleased]
 
+## [1.1.2] - 2024-01-18
+
+- Fix performance on macOS
+- Fix performance of quick fix actions
+
 ## [1.1.1] - 2023-12-21
 
 - Fix working on Windows
@@ -21,8 +26,14 @@
 
 The first public release of the plugin.
 
+[1.1.2]: https://github.com/cycodehq/intellij-platform-plugin/releases/tag/v1.1.2
+
 [1.1.1]: https://github.com/cycodehq/intellij-platform-plugin/releases/tag/v1.1.1
+
 [1.1.0]: https://github.com/cycodehq/intellij-platform-plugin/releases/tag/v1.1.0
+
 [1.0.1]: https://github.com/cycodehq/intellij-platform-plugin/releases/tag/v1.0.1
+
 [1.0.0]: https://github.com/cycodehq/intellij-platform-plugin/releases/tag/v1.0.0
+
 [Unreleased]: https://github.com/cycodehq/intellij-platform-plugin/compare/v1.0.0...HEAD
