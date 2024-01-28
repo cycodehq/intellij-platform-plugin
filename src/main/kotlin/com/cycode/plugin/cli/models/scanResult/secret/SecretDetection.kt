@@ -5,6 +5,6 @@ data class SecretDetection(
     val detectionDetails: SecretDetectionDetails,
     val severity: String,
     val type: String,
-    val detectionRuleId: String,  // TODO(MarshalX): actually UUID. annotate?
-    val detectionTypeId: String,  // TODO(MarshalX): actually UUID. annotate?
+    val detectionRuleId: String,  // UUID
+    val detectionTypeId: String,  // UUID
 )

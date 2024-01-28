@@ -97,12 +97,14 @@ class CliWrapper(val executablePath: String, val workDirectory: String? = null) 
             val result: T = mapper.readValue(stdout)
             return CliResult.Success(result)
         } catch (e: Exception) {
+            thisLogger().warn("Failed to parse success CLI output: $stdout", e)
+
             try {
                 // FIXME(MarshalX): probably CLI not standardized error format for the whole project yet
                 val result: CliError = mapper.readValue(stdout)
                 return CliResult.Error(result)
             } catch (e: Exception) {
-                thisLogger().error("Failed to parse CLI output: $stdout", e)
+                thisLogger().error("Failed to parse ANY CLI output: $stdout", e)
             }
 
             return CliResult.Panic(exitCode, stderr)

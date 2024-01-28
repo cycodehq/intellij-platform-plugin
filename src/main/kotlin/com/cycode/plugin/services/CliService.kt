@@ -5,6 +5,7 @@ import com.cycode.plugin.cli.*
 import com.cycode.plugin.cli.models.AuthCheckResult
 import com.cycode.plugin.cli.models.AuthResult
 import com.cycode.plugin.cli.models.VersionResult
+import com.cycode.plugin.cli.models.scanResult.sca.ScaScanResult
 import com.cycode.plugin.cli.models.scanResult.secret.SecretScanResult
 import com.cycode.plugin.utils.CycodeNotifier
 import com.intellij.codeInsight.daemon.DaemonCodeAnalyzer
@@ -21,11 +22,12 @@ class CliService(private val project: Project) {
 
     private val scanResults = scanResults()
 
-    private val cli = CliWrapper(pluginSettings.cliPath, getCliWorkingDirectory())
+    private val cli = CliWrapper(pluginSettings.cliPath, getProjectRootDirectory())
 
+    // FIXME(MarshalX): should be scan related not global because now we can have multiple scan types
     var cliShouldDestroyCallback: (() -> Boolean)? = null
 
-    private fun getCliWorkingDirectory(): String? {
+    fun getProjectRootDirectory(): String? {
         val modules = ModuleManager.getInstance(project).modules
         if (modules.isEmpty()) {
             return null
@@ -182,7 +184,25 @@ class CliService(private val project: Project) {
 
         // TODO(MarshalX): run only for the provided file?
         // save results and rerun annotators
-        scanResults.setSecretsResults(results)
+        scanResults.setSecretResults(results)
+        DaemonCodeAnalyzer.getInstance(project).restart()
+    }
+
+    fun scanPathsSca(paths: List<String>, onDemand: Boolean = true) {
+        val results = scanPaths<ScaScanResult>(paths, CliScanType.Sca)
+        if (results == null) {
+            thisLogger().warn("Failed to scan paths: $paths")
+            return
+        }
+
+        var detectionsCount = 0
+        if (results is CliResult.Success) {
+            detectionsCount = results.result.detections.count()
+        }
+
+        showScanFileResultNotification(CliScanType.Sca, detectionsCount, onDemand)
+
+        scanResults.setScaResults(results)
         DaemonCodeAnalyzer.getInstance(project).restart()
     }
 }

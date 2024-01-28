@@ -40,17 +40,26 @@ class ScanContentTab : Component<CycodeService>() {
                     insets = JBUI.insetsBottom(10)
                     fill = GridBagConstraints.HORIZONTAL
                 })
+                add(JButton(CycodeBundle.message("scanTabScaBtn")).apply {
+                    addActionListener {
+                        service.startScaScanForCurrentProject()
+                    }
+                }, GridBagConstraints().apply {
+                    gridy = 3
+                    insets = JBUI.insetsBottom(10)
+                    fill = GridBagConstraints.HORIZONTAL
+                })
                 add(add(JPanel().apply {
                     add(createClickableLabel(CycodeBundle.message("scanTabOnSaveTip")))
                 }), GridBagConstraints().apply {
-                    gridy = 3
+                    gridy = 4
                     insets = JBUI.insetsBottom(10)
                     anchor = GridBagConstraints.NORTHWEST
                 })
                 add(add(JPanel().apply {
                     add(createClickableLabel(CycodeBundle.message("howToUseLabel")))
                 }), GridBagConstraints().apply {
-                    gridy = 4
+                    gridy = 5
                     insets = JBUI.insetsBottom(10)
                     anchor = GridBagConstraints.NORTHWEST
                 })

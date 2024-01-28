@@ -2,6 +2,7 @@ package com.cycode.plugin.services
 
 import com.cycode.plugin.cli.CliResult
 import com.cycode.plugin.cli.CliScanType
+import com.cycode.plugin.cli.models.scanResult.sca.ScaScanResult
 import com.cycode.plugin.cli.models.scanResult.secret.SecretScanResult
 import com.cycode.plugin.services.scanResultsFilters.SecretScanResultsFilter
 import com.intellij.openapi.components.Service
@@ -11,27 +12,39 @@ import com.intellij.openapi.util.TextRange
 @Service(Service.Level.PROJECT)
 class ScanResultsService {
     private val detectedSegments = mutableMapOf<Pair<CliScanType, TextRange>, String>()
-    private var secretsResults: CliResult<SecretScanResult>? = null
+    private var secretResults: CliResult<SecretScanResult>? = null
+    private var scaResults: CliResult<ScaScanResult>? = null
 
     init {
         thisLogger().info("CycodeResultsService init")
     }
 
-    fun setSecretsResults(result: CliResult<SecretScanResult>) {
-        clearDetectedSegments()
-        secretsResults = result
+    fun setSecretResults(result: CliResult<SecretScanResult>) {
+        clearDetectedSegments(CliScanType.Secret)
+        secretResults = result
     }
 
-    fun getSecretsResults(): CliResult<SecretScanResult>? {
-        return secretsResults
+    fun getSecretResults(): CliResult<SecretScanResult>? {
+        return secretResults
+    }
+
+    fun setScaResults(result: CliResult<ScaScanResult>) {
+        clearDetectedSegments(CliScanType.Sca)
+        scaResults = result
+    }
+
+    fun getScaResults(): CliResult<ScaScanResult>? {
+        return scaResults
     }
 
     fun clear() {
-        secretsResults = null
+        secretResults = null
+        scaResults = null
+        clearDetectedSegments()
     }
 
     fun hasResults(): Boolean {
-        return secretsResults != null
+        return secretResults != null || scaResults != null
     }
 
     fun saveDetectedSegment(scanType: CliScanType, textRange: TextRange, value: String) {
@@ -42,15 +55,20 @@ class ScanResultsService {
         return detectedSegments[Pair(scanType, textRange)]
     }
 
-    private fun clearDetectedSegments() {
-        detectedSegments.clear()
+    private fun clearDetectedSegments(scanType: CliScanType? = null) {
+        if (scanType == null) {
+            detectedSegments.clear()
+            return
+        }
+
+        detectedSegments.filter { it.key.first == scanType }.forEach { detectedSegments.remove(it.key) }
     }
 
     fun excludeResults(byValue: String? = null, byPath: String? = null, byRuleId: String? = null) {
-        if (secretsResults is CliResult.Success) {
-            val filter = SecretScanResultsFilter((secretsResults as CliResult.Success<SecretScanResult>).result)
+        if (secretResults is CliResult.Success) {
+            val filter = SecretScanResultsFilter((secretResults as CliResult.Success<SecretScanResult>).result)
             filter.exclude(byValue, byPath, byRuleId)
-            secretsResults = CliResult.Success(filter.getFilteredScanResults())
+            secretResults = CliResult.Success(filter.getFilteredScanResults())
         }
         // more scan types to be added here
     }

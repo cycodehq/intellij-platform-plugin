@@ -2,6 +2,7 @@ package com.cycode.plugin.listeners
 
 import com.cycode.plugin.Consts
 import com.cycode.plugin.CycodeBundle
+import com.cycode.plugin.cli.isSupportedPackageFile
 import com.cycode.plugin.services.cli
 import com.cycode.plugin.services.pluginSettings
 import com.cycode.plugin.services.pluginState
@@ -27,27 +28,54 @@ class FileSaveListener(private val project: Project) : FileDocumentManagerListen
         scheduleScanPathsFlush()
     }
 
-    private fun scanPathsFlush() {
-        val pathsToScan = excludeNotExistingPaths(collectedPathsToScan.toMutableList())
-        collectedPathsToScan.clear()
-
-        if (pathsToScan.isEmpty() || !pluginState.cliAuthed) {
-            return
-        }
-
-        object : Task.Backgroundable(project, CycodeBundle.message("fileScanning"), true) {
+    private fun scanSecretFlush(pathsToScan: List<String>) {
+        object : Task.Backgroundable(project, CycodeBundle.message("secretScanning"), true) {
             override fun run(indicator: ProgressIndicator) {
                 cliService.cliShouldDestroyCallback = { indicator.isCanceled }
 
-                thisLogger().debug("Start scanning paths: $pathsToScan")
-                cliService.scanPathsSecrets(pathsToScan, false)
-                thisLogger().debug("Finish scanning paths: $pathsToScan")
+                thisLogger().debug("[Secret] Start scanning paths: $pathsToScan")
+                cliService.scanPathsSecrets(pathsToScan, onDemand = false)
+                thisLogger().debug("[Secret] Finish scanning paths: $pathsToScan")
             }
         }.queue()
     }
 
+    private fun scanScaFlush(pathsToScan: List<String>) {
+        object : Task.Backgroundable(project, CycodeBundle.message("scaScanning"), true) {
+            override fun run(indicator: ProgressIndicator) {
+                cliService.cliShouldDestroyCallback = { indicator.isCanceled }
+
+                thisLogger().debug("[SCA] Start scanning paths: $pathsToScan")
+                cliService.scanPathsSca(pathsToScan, onDemand = false)
+                thisLogger().debug("[SCA] Finish scanning paths: $pathsToScan")
+            }
+        }.queue()
+    }
+
+    private fun scanPathsFlush() {
+        val pathsToScan = excludeNotExistingPaths(collectedPathsToScan.toMutableList())
+        collectedPathsToScan.clear()
+
+        if (!pluginState.cliAuthed) {
+            return
+        }
+
+        if (pathsToScan.isNotEmpty()) {
+            scanSecretFlush(pathsToScan)
+        }
+
+        val scaPathsToScan = excludeNonScaRelatedPaths(pathsToScan)
+        if (scaPathsToScan.isNotEmpty()) {
+            scanScaFlush(scaPathsToScan)
+        }
+    }
+
     private fun excludeNotExistingPaths(paths: List<String>): List<String> {
         return paths.filter { File(it).exists() }
+    }
+
+    private fun excludeNonScaRelatedPaths(paths: List<String>): List<String> {
+        return paths.filter { isSupportedPackageFile(it) }
     }
 
     private fun scheduleScanPathsFlush() {

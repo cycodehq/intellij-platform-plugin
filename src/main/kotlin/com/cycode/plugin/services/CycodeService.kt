@@ -59,15 +59,28 @@ class CycodeService(val project: Project) {
         }.queue()
     }
 
-    fun startSecretScanForFile(filepath: String) {
-        object : Task.Backgroundable(project, CycodeBundle.message("fileScanning"), true) {
+    private fun startPathSecretScan(path: String) {
+        object : Task.Backgroundable(project, CycodeBundle.message("secretScanning"), true) {
             override fun run(indicator: ProgressIndicator) {
                 if (!pluginState.cliAuthed) {
                     return
                 }
 
                 cliService.cliShouldDestroyCallback = { indicator.isCanceled }
-                cliService.scanPathsSecrets(listOf(filepath))
+                cliService.scanPathsSecrets(listOf(path))
+            }
+        }.queue()
+    }
+
+    private fun startPathScaScan(path: String) {
+        object : Task.Backgroundable(project, CycodeBundle.message("scaScanning"), true) {
+            override fun run(indicator: ProgressIndicator) {
+                if (!pluginState.cliAuthed) {
+                    return
+                }
+
+                cliService.cliShouldDestroyCallback = { indicator.isCanceled }
+                cliService.scanPathsSca(listOf(path))
             }
         }.queue()
     }
@@ -95,6 +108,16 @@ class CycodeService(val project: Project) {
         val psiFile = PsiDocumentManager.getInstance(project).getPsiFile(currentOpenedDocument)
         val vFile = psiFile!!.originalFile.virtualFile
 
-        startSecretScanForFile(vFile.path)
+        startPathSecretScan(vFile.path)
+    }
+
+    fun startScaScanForCurrentProject() {
+        val projectRoot = cliService.getProjectRootDirectory()
+        if (projectRoot == null) {
+            CycodeNotifier.notifyInfo(project, CycodeBundle.message("noProjectRootErrorNotification"))
+            return
+        }
+
+        startPathScaScan(projectRoot)
     }
 }
