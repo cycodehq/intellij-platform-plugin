@@ -17,8 +17,25 @@ class CliDownloadService {
     private val downloadService = download()
 
     private val pluginState = pluginState()
+    private val pluginSettings = pluginSettings()
 
     private var githubReleaseInfo: GitHubRelease? = null
+
+    private val initCliLock = Any()
+
+    fun initCli() {
+        synchronized(initCliLock) {
+            // if the CLI path is not overriden and executable is auto managed, and need to download - download it.
+            if (
+                pluginSettings.cliPath == Consts.DEFAULT_CLI_PATH &&
+                pluginSettings.cliAutoManaged &&
+                shouldDownloadCli()
+            ) {
+                downloadCli()
+                thisLogger().info("CLI was successfully downloaded/updated")
+            }
+        }
+    }
 
     private fun getGitHubSupportedRelease(forceRefresh: Boolean = false): GitHubRelease? {
         // prevent sending many requests
@@ -112,7 +129,7 @@ class CliDownloadService {
         return false
     }
 
-    fun shouldDownloadCli(): Boolean {
+    private fun shouldDownloadCli(): Boolean {
         if (SystemInfo.isMac) {
             return shouldDownloadOnedirCli()
         }
@@ -218,7 +235,7 @@ class CliDownloadService {
         return Pair(executableAsset, expectedFileChecksum)
     }
 
-    fun downloadCli(): File? {
+    private fun downloadCli(): File? {
         if (SystemInfo.isMac) {
             return downloadOnedirCli()
         }

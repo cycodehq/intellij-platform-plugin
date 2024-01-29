@@ -36,7 +36,7 @@ class CliWrapper(val executablePath: String, val workDirectory: String? = null) 
 
     inline fun <reified T> executeCommand(
         vararg arguments: String,
-        noinline shouldDestroyCallback: (() -> Boolean)? = null
+        noinline cancelledCallback: (() -> Boolean)? = null
     ): CliResult<T> {
         val commandLine = GeneralCommandLine()
         commandLine.charset = Charset.forName("UTF-8")
@@ -66,7 +66,7 @@ class CliWrapper(val executablePath: String, val workDirectory: String? = null) 
         processHandler.startNotify()
 
         while (!processHandler.isProcessTerminated) {
-            if (shouldDestroyCallback != null && shouldDestroyCallback()) {
+            if (cancelledCallback != null && cancelledCallback()) {
                 processHandler.destroyProcess()
                 return CliResult.Panic(ExitCodes.TERMINATION, "Execution was canceled")
             }
