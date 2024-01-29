@@ -13,6 +13,7 @@ import com.intellij.openapi.fileEditor.FileDocumentManagerListener
 import com.intellij.openapi.progress.ProgressIndicator
 import com.intellij.openapi.progress.Task
 import com.intellij.openapi.project.Project
+import com.intellij.openapi.project.ProjectLocator
 import com.intellij.util.concurrency.AppExecutorUtil
 import java.io.File
 import java.util.concurrent.TimeUnit
@@ -25,16 +26,15 @@ class FileSaveListener(private val project: Project) : FileDocumentManagerListen
     private val collectedPathsToScan = mutableSetOf<String>() // we use a set to avoid duplicates
 
     init {
+        thisLogger().debug("FileSaveListener init for project: ${project.name}")
         scheduleScanPathsFlush()
     }
 
     private fun scanSecretFlush(pathsToScan: List<String>) {
         object : Task.Backgroundable(project, CycodeBundle.message("secretScanning"), true) {
             override fun run(indicator: ProgressIndicator) {
-                cliService.cliShouldDestroyCallback = { indicator.isCanceled }
-
                 thisLogger().debug("[Secret] Start scanning paths: $pathsToScan")
-                cliService.scanPathsSecrets(pathsToScan, onDemand = false)
+                cliService.scanPathsSecrets(pathsToScan, onDemand = false, cancelledCallback = { indicator.isCanceled })
                 thisLogger().debug("[Secret] Finish scanning paths: $pathsToScan")
             }
         }.queue()
@@ -43,10 +43,8 @@ class FileSaveListener(private val project: Project) : FileDocumentManagerListen
     private fun scanScaFlush(pathsToScan: List<String>) {
         object : Task.Backgroundable(project, CycodeBundle.message("scaScanning"), true) {
             override fun run(indicator: ProgressIndicator) {
-                cliService.cliShouldDestroyCallback = { indicator.isCanceled }
-
                 thisLogger().debug("[SCA] Start scanning paths: $pathsToScan")
-                cliService.scanPathsSca(pathsToScan, onDemand = false)
+                cliService.scanPathsSca(pathsToScan, onDemand = false, cancelledCallback = { indicator.isCanceled })
                 thisLogger().debug("[SCA] Finish scanning paths: $pathsToScan")
             }
         }.queue()
@@ -97,8 +95,14 @@ class FileSaveListener(private val project: Project) : FileDocumentManagerListen
         }
 
         val file = FileDocumentManager.getInstance().getFile(document) ?: return
-        val filePath = file.canonicalFile?.canonicalPath ?: return
+        val fileProject = ProjectLocator.getInstance().guessProjectForFile(file)
 
+        if (project != fileProject) {
+            thisLogger().debug("FileSaveListener.beforeDocumentSaving: project mismatch")
+            return
+        }
+
+        val filePath = file.canonicalFile?.canonicalPath ?: return
         collectedPathsToScan.add(filePath)
     }
 }

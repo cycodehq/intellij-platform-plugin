@@ -15,6 +15,8 @@ import com.intellij.openapi.module.ModuleManager
 import com.intellij.openapi.project.Project
 
 
+typealias TaskCancelledCallback = (() -> Boolean)?
+
 @Service(Service.Level.PROJECT)
 class CliService(private val project: Project) {
     private val pluginState = pluginState()
@@ -23,9 +25,6 @@ class CliService(private val project: Project) {
     private val scanResults = scanResults()
 
     private val cli = CliWrapper(pluginSettings.cliPath, getProjectRootDirectory())
-
-    // FIXME(MarshalX): should be scan related not global because now we can have multiple scan types
-    var cliShouldDestroyCallback: (() -> Boolean)? = null
 
     fun getProjectRootDirectory(): String? {
         val modules = ModuleManager.getInstance(project).modules
@@ -65,11 +64,11 @@ class CliService(private val project: Project) {
         return result
     }
 
-    fun healthCheck(): Boolean {
+    fun healthCheck(cancelledCallback: TaskCancelledCallback = null): Boolean {
         val result: CliResult<VersionResult> =
             cli.executeCommand(
                 "version",
-                shouldDestroyCallback = cliShouldDestroyCallback
+                cancelledCallback = cancelledCallback
             )
 
         val processedResult = processResult(result)
@@ -83,12 +82,12 @@ class CliService(private val project: Project) {
         return false
     }
 
-    fun checkAuth(): Boolean {
+    fun checkAuth(cancelledCallback: TaskCancelledCallback = null): Boolean {
         val result: CliResult<AuthCheckResult> =
             cli.executeCommand(
                 "auth",
                 "check",
-                shouldDestroyCallback = cliShouldDestroyCallback
+                cancelledCallback = cancelledCallback
             )
 
         val processedResult = processResult(result)
@@ -106,11 +105,11 @@ class CliService(private val project: Project) {
         return false
     }
 
-    fun doAuth(): Boolean {
+    fun doAuth(cancelledCallback: TaskCancelledCallback = null): Boolean {
         val result: CliResult<AuthResult> =
             cli.executeCommand(
                 "auth",
-                shouldDestroyCallback = cliShouldDestroyCallback
+                cancelledCallback = cancelledCallback
             )
 
         val processedResult = processResult(result)
@@ -125,12 +124,12 @@ class CliService(private val project: Project) {
         return false
     }
 
-    fun ignore(optionName: String, optionValue: String): Boolean {
+    fun ignore(optionName: String, optionValue: String, cancelledCallback: TaskCancelledCallback = null): Boolean {
         val result: CliResult<Unit> = cli.executeCommand(
             "ignore",
             optionName,
             optionValue,
-            shouldDestroyCallback = cliShouldDestroyCallback
+            cancelledCallback = cancelledCallback
         )
 
         val processedResult = processResult(result)
@@ -149,7 +148,11 @@ class CliService(private val project: Project) {
         }
     }
 
-    private inline fun <reified T> scanPaths(paths: List<String>, scanType: CliScanType): CliResult<T>? {
+    private inline fun <reified T> scanPaths(
+        paths: List<String>,
+        scanType: CliScanType,
+        noinline cancelledCallback: TaskCancelledCallback = null
+    ): CliResult<T>? {
         val scanTypeString = scanType.name.toLowerCase()
         val result = cli
             .executeCommand<T>(
@@ -158,7 +161,7 @@ class CliService(private val project: Project) {
                 scanTypeString,
                 "path",
                 *getPathsAsArguments(paths),
-                shouldDestroyCallback = cliShouldDestroyCallback
+                cancelledCallback = cancelledCallback
             )
 
         return processResult(result)
@@ -168,8 +171,12 @@ class CliService(private val project: Project) {
         return paths.toTypedArray()
     }
 
-    fun scanPathsSecrets(paths: List<String>, onDemand: Boolean = true) {
-        val results = scanPaths<SecretScanResult>(paths, CliScanType.Secret)
+    fun scanPathsSecrets(
+        paths: List<String>,
+        onDemand: Boolean = true,
+        cancelledCallback: TaskCancelledCallback = null
+    ) {
+        val results = scanPaths<SecretScanResult>(paths, CliScanType.Secret, cancelledCallback)
         if (results == null) {
             thisLogger().warn("Failed to scan paths: $paths")
             return
@@ -188,8 +195,8 @@ class CliService(private val project: Project) {
         DaemonCodeAnalyzer.getInstance(project).restart()
     }
 
-    fun scanPathsSca(paths: List<String>, onDemand: Boolean = true) {
-        val results = scanPaths<ScaScanResult>(paths, CliScanType.Sca)
+    fun scanPathsSca(paths: List<String>, onDemand: Boolean = true, cancelledCallback: TaskCancelledCallback = null) {
+        val results = scanPaths<ScaScanResult>(paths, CliScanType.Sca, cancelledCallback)
         if (results == null) {
             thisLogger().warn("Failed to scan paths: $paths")
             return

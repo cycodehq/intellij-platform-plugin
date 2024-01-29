@@ -12,10 +12,10 @@ import com.intellij.openapi.wm.ToolWindowManager
 
 class OpenProblemsTabAction : AnAction(CycodeBundle.message("openProblemsTabAction")) {
     override fun actionPerformed(e: AnActionEvent) {
-        val manager = e.project?.let { ToolWindowManager.getInstance(it) }
-        if (manager != null) {
-            manager.getToolWindow(PROBLEMS_TOOL_WINDOW_ID)?.activate(null)
-        }
+        val project = e.project ?: return
+        val toolWindowManager = ToolWindowManager.getInstance(project)
+        val toolWindow = toolWindowManager.getToolWindow(PROBLEMS_TOOL_WINDOW_ID)
+        toolWindow?.activate(null)
     }
 
     companion object {
