@@ -27,5 +27,7 @@ class Consts {
         const val CLI_CHECK_NEW_VERSION_EVERY_SEC = 24 * 60 * 60 // 24 hours
         const val PLUGIN_AUTO_SAVE_FLUSH_INITIAL_DELAY_SEC = 0L
         const val PLUGIN_AUTO_SAVE_FLUSH_DELAY_SEC = 5L
+
+        const val EXPERIMENTAL_SCA_SUPPORT = false
     }
 }

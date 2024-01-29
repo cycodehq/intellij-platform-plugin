@@ -70,14 +70,14 @@ class CycodeService(val project: Project) {
         }.queue()
     }
 
-    fun applyIgnoreFromFileAnnotation(optionName: String, optionValue: String) {
+    fun applyIgnoreFromFileAnnotation(optionScanType: String, optionName: String, optionValue: String) {
         object : Task.Backgroundable(project, CycodeBundle.message("ignoresApplying"), true) {
             override fun run(indicator: ProgressIndicator) {
                 if (!pluginState.cliAuthed) {
                     return
                 }
 
-                cliService.ignore(optionName, optionValue, cancelledCallback = { indicator.isCanceled })
+                cliService.ignore(optionScanType, optionName, optionValue, cancelledCallback = { indicator.isCanceled })
             }
         }.queue()
     }
