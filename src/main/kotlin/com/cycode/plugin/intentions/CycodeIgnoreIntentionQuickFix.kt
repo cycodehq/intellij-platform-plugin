@@ -1,5 +1,6 @@
 package com.cycode.plugin.intentions
 
+import com.cycode.plugin.cli.CliScanType
 import com.cycode.plugin.services.cycode
 import com.cycode.plugin.services.scanResults
 import com.intellij.codeInsight.daemon.DaemonCodeAnalyzer
@@ -19,7 +20,11 @@ enum class CycodeIgnoreType {
 }
 
 
-class CycodeIgnoreIntentionQuickFix(private val type: CycodeIgnoreType, private val value: String) :
+class CycodeIgnoreIntentionQuickFix(
+    private val scanType: CliScanType,
+    private val type: CycodeIgnoreType,
+    private val value: String
+) :
     BaseIntentionAction(), PriorityAction, Iconable {
     private val scanResults = scanResults()
 
@@ -67,7 +72,7 @@ class CycodeIgnoreIntentionQuickFix(private val type: CycodeIgnoreType, private 
         // we are removing is from UI first to show how it's blazing fast and then apply it in the background
         applyIgnoreInUi(project)
 
-        cycode(project).applyIgnoreFromFileAnnotation(mapTypeToOptionName(type), value)
+        cycode(project).applyIgnoreFromFileAnnotation(scanType.name.toLowerCase(), mapTypeToOptionName(type), value)
     }
 
     override fun getPriority(): PriorityAction.Priority {

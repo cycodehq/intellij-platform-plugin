@@ -132,9 +132,21 @@ class CycodeAnnotator : DumbAware, ExternalAnnotator<PsiFile, Unit>() {
             holder.newAnnotation(severity, title)
                 .range(textRange)
                 .tooltip(tooltip)
-                .withFix(CycodeIgnoreIntentionQuickFix(CycodeIgnoreType.PATH, detection.detectionDetails.getFilepath()))
-                .withFix(CycodeIgnoreIntentionQuickFix(CycodeIgnoreType.RULE, detection.detectionRuleId))
-                .withFix(CycodeIgnoreIntentionQuickFix(CycodeIgnoreType.VALUE, detectedValue))
+                .withFix(
+                    CycodeIgnoreIntentionQuickFix(
+                        CliScanType.Secret,
+                        CycodeIgnoreType.PATH,
+                        detection.detectionDetails.getFilepath()
+                    )
+                )
+                .withFix(
+                    CycodeIgnoreIntentionQuickFix(
+                        CliScanType.Secret,
+                        CycodeIgnoreType.RULE,
+                        detection.detectionRuleId
+                    )
+                )
+                .withFix(CycodeIgnoreIntentionQuickFix(CliScanType.Secret, CycodeIgnoreType.VALUE, detectedValue))
                 .create()
 
         }
@@ -203,7 +215,20 @@ class CycodeAnnotator : DumbAware, ExternalAnnotator<PsiFile, Unit>() {
             holder.newAnnotation(severity, title)
                 .range(textRange)
                 .tooltip(tooltip)
-                // TODO(MarshalX): add quick fix for SCA (ignoring)
+                .withFix(
+                    CycodeIgnoreIntentionQuickFix(
+                        CliScanType.Sca,
+                        CycodeIgnoreType.PATH,
+                        detection.detectionDetails.getFilepath()
+                    )
+                )
+                .withFix(
+                    CycodeIgnoreIntentionQuickFix(
+                        CliScanType.Sca,
+                        CycodeIgnoreType.RULE,
+                        detection.detectionRuleId
+                    )
+                )
                 .create()
         }
     }

@@ -124,9 +124,16 @@ class CliService(private val project: Project) {
         return false
     }
 
-    fun ignore(optionName: String, optionValue: String, cancelledCallback: TaskCancelledCallback = null): Boolean {
+    fun ignore(
+        optionScanType: String,
+        optionName: String,
+        optionValue: String,
+        cancelledCallback: TaskCancelledCallback = null
+    ): Boolean {
         val result: CliResult<Unit> = cli.executeCommand(
             "ignore",
+            "-t",
+            optionScanType,
             optionName,
             optionValue,
             cancelledCallback = cancelledCallback
