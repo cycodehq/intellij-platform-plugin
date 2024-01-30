@@ -9,9 +9,9 @@ import com.intellij.openapi.startup.StartupActivity
 class PostStartupActivity : StartupActivity.DumbAware {
     override fun runActivity(project: Project) {
         // we are using singleton here because runActivity is called for each project
-        CycodeAnnotator.INSTANCE.registerForAllLangs()
+        CycodeAnnotator.Util.INSTANCE.registerForAllLangs()
 
-        // synchronized method inside
+        // synchronized background method inside
         cycode(project).installCliIfNeededAndCheckAuthentication()
 
         thisLogger().info("PostStartupActivity finished.")
