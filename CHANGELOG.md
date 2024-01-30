@@ -4,6 +4,10 @@
 
 ## [Unreleased]
 
+## [1.1.3] - 2024-01-30
+
+- Fix work with many opened projects
+
 ## [1.1.2] - 2024-01-18
 
 - Fix performance on macOS
@@ -26,6 +30,8 @@
 
 The first public release of the plugin.
 
+[1.1.3]: https://github.com/cycodehq/intellij-platform-plugin/releases/tag/v1.1.3
+
 [1.1.2]: https://github.com/cycodehq/intellij-platform-plugin/releases/tag/v1.1.2
 
 [1.1.1]: https://github.com/cycodehq/intellij-platform-plugin/releases/tag/v1.1.1
@@ -36,4 +42,4 @@ The first public release of the plugin.
 
 [1.0.0]: https://github.com/cycodehq/intellij-platform-plugin/releases/tag/v1.0.0
 
-[Unreleased]: https://github.com/cycodehq/intellij-platform-plugin/compare/v1.0.0...HEAD
+[Unreleased]: https://github.com/cycodehq/intellij-platform-plugin/compare/v1.1.3...HEAD
