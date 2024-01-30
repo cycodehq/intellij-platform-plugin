@@ -8,6 +8,8 @@ import com.cycode.plugin.cli.isSupportedLockFile
 import com.cycode.plugin.intentions.CycodeIgnoreIntentionQuickFix
 import com.cycode.plugin.intentions.CycodeIgnoreType
 import com.cycode.plugin.services.scanResults
+import com.intellij.lang.ExternalLanguageAnnotators
+import com.intellij.lang.Language
 import com.intellij.lang.annotation.AnnotationHolder
 import com.intellij.lang.annotation.ExternalAnnotator
 import com.intellij.lang.annotation.HighlightSeverity
@@ -19,8 +21,24 @@ import com.intellij.psi.PsiFile
 class CycodeAnnotator : DumbAware, ExternalAnnotator<PsiFile, Unit>() {
     private val scanResults = scanResults()
 
+    companion object {
+        val INSTANCE: CycodeAnnotator by lazy {
+            CycodeAnnotator()
+        }
+    }
+
     override fun collectInformation(file: PsiFile): PsiFile = file
     override fun doAnnotate(psiFile: PsiFile?) {}
+
+    fun registerForAllLangs() {
+        // we want to annotate all languages because secrets can be detected in any file
+        // and SCA can be detected in any supported package and lock file.
+        // maintaining a list of supported languages is not flexible enough
+        // because of non JetBrains plugins
+        Language.getRegisteredLanguages().forEach {
+            ExternalLanguageAnnotators.INSTANCE.addExplicitExtension(it, this)
+        }
+    }
 
     override fun apply(psiFile: PsiFile, annotationResult: Unit, holder: AnnotationHolder) {
         applyAnnotationsForSecrets(psiFile, holder)

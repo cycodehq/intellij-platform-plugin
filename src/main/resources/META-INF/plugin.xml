@@ -7,17 +7,6 @@
     <depends>com.intellij.modules.platform</depends>
     <depends>com.intellij.modules.lang</depends>
 
-    <depends optional="true" config-file="only-java.xml">com.intellij.java</depends>
-    <depends optional="true" config-file="only-yaml.xml">org.jetbrains.plugins.yaml</depends>
-    <depends optional="true" config-file="only-json.xml">com.intellij.modules.json</depends>
-    <depends optional="true" config-file="only-xml.xml">com.intellij.modules.xml</depends>
-    <depends optional="true" config-file="only-kotlin.xml">org.jetbrains.kotlin</depends>
-    <depends optional="true" config-file="only-python.xml">com.intellij.modules.python</depends>
-    <depends optional="true" config-file="only-php.xml">com.jetbrains.php</depends>
-    <depends optional="true" config-file="only-go.xml">org.jetbrains.plugins.go</depends>
-    <depends optional="true" config-file="only-csharp.xml">com.intellij.modules.rider</depends>
-    <depends optional="true" config-file="only-javascript.xml">JavaScript</depends>
-
     <resource-bundle>messages.CycodeBundle</resource-bundle>
 
     <extensions defaultExtensionNs="com.intellij">

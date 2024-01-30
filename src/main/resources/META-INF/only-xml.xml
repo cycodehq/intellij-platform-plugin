@@ -1,6 +1,0 @@
-<idea-plugin>
-    <extensions defaultExtensionNs="com.intellij">
-        <externalAnnotator language="XML" implementationClass="com.cycode.plugin.annotators.CycodeAnnotator"/>
-        <externalAnnotator language="DTD" implementationClass="com.cycode.plugin.annotators.CycodeAnnotator"/>
-    </extensions>
-</idea-plugin>
