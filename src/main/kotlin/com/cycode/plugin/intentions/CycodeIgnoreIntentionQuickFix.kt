@@ -66,6 +66,17 @@ class CycodeIgnoreIntentionQuickFix(
     }
 
     override fun invoke(project: Project, editor: Editor?, file: PsiFile?) {
+        if (file == null || file != file.originalFile) {
+            /**
+             * since 2022.3, JB introduced "Intention Action Preview" feature
+             * which breaks our ignore options
+             * because it performs quick fix intention on a copy of the file on hover
+             * see https://plugins.jetbrains.com/docs/intellij/code-intentions-preview.html
+             */
+            thisLogger().debug("skip quick fix intention for virtually copied files")
+            return
+        }
+
         thisLogger().warn("Ignore quick fix intention has been invoked")
 
         // we are removing is from UI first to show how it's blazing fast and then apply it in the background
