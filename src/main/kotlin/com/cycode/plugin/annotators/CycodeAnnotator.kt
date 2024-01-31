@@ -20,6 +20,9 @@ import com.intellij.openapi.util.TextRange
 import com.intellij.psi.PsiFile
 
 class CycodeAnnotator : DumbAware, ExternalAnnotator<PsiFile, Unit>() {
+    private val registeredForLanguages = mutableSetOf<Language>()
+    private val psiFileCallsCounter = mutableMapOf<PsiFile, Int>()
+
     private fun getScanResults(psiFile: PsiFile): ScanResultsService {
         return scanResults(psiFile.project)
     }
@@ -34,16 +37,88 @@ class CycodeAnnotator : DumbAware, ExternalAnnotator<PsiFile, Unit>() {
     override fun doAnnotate(psiFile: PsiFile?) {}
 
     fun registerForAllLangs() {
-        // we want to annotate all languages because secrets can be detected in any file
-        // and SCA can be detected in any supported package and lock file.
-        // maintaining a list of supported languages is not flexible enough
-        // because of non JetBrains plugins
+        /**
+         * we want to annotate all languages because secrets can be detected in any file
+         * and SCA can be detected in any supported package and lock file.
+         * maintaining a list of supported languages is not flexible enough
+         * because of non JetBrains plugins
+         */
         Language.getRegisteredLanguages().forEach {
+            if (registeredForLanguages.contains(it)) {
+                return@forEach
+            }
+
             ExternalLanguageAnnotators.INSTANCE.addExplicitExtension(it, this)
+            registeredForLanguages.add(it)
         }
     }
 
+    private fun countExpectedApplyCalls(psiFile: PsiFile): Int {
+        var expectedCallsCount = 0
+
+        val viewProvider = psiFile.viewProvider
+        for (language in viewProvider.languages) {
+            val psiRoot = viewProvider.getPsi(language)
+            val annotators = ExternalLanguageAnnotators.allForFile(language, psiRoot)
+            expectedCallsCount += annotators.filterIsInstance<CycodeAnnotator>().count()
+        }
+
+        return expectedCallsCount
+    }
+
+    private fun getCallCount(psiFile: PsiFile): Int {
+        synchronized(psiFileCallsCounter) {
+            if (psiFileCallsCounter.containsKey(psiFile)) {
+                return psiFileCallsCounter[psiFile]!!
+            }
+        }
+
+        return 0
+    }
+
+    private fun incrementCallCount(psiFile: PsiFile) {
+        synchronized(psiFileCallsCounter) {
+            val callCount = getCallCount(psiFile)
+            psiFileCallsCounter[psiFile] = callCount + 1
+        }
+    }
+
+    private fun resetCallCount(psiFile: PsiFile) {
+        synchronized(psiFileCallsCounter) {
+            // we are deleting instead of setting to 0 to save memory
+            psiFileCallsCounter.remove(psiFile)
+        }
+    }
+
+    private fun shouldIgnoreApplyCall(psiFile: PsiFile): Boolean {
+        /**
+         * Our annotator is registered for all available languages.
+         * One file could contain multiple languages.
+         * Also, it's possible that multiple languages are registered for the same file extension or mime type.
+         * As a result, our annotator will be called multiple times for the same file, but for different languages.
+         * Our goal is to ignore all calls except one (any of them) to prevent duplications.
+         * In the current implementation, we are applying annotations only on the last call.
+         * This method counts calls and returns true if we should ignore the current one.
+         */
+
+        incrementCallCount(psiFile)
+
+        if (getCallCount(psiFile) < countExpectedApplyCalls(psiFile)) {
+            // we are waiting for all annotators to trigger
+            thisLogger().debug("Ignore this apply. Calls ${getCallCount(psiFile)}/${countExpectedApplyCalls(psiFile)}")
+            return true
+        }
+
+        thisLogger().debug("Apply called. This is the last call.")
+        resetCallCount(psiFile)
+        return false
+    }
+
     override fun apply(psiFile: PsiFile, annotationResult: Unit, holder: AnnotationHolder) {
+        if (shouldIgnoreApplyCall(psiFile)) {
+            return
+        }
+
         applyAnnotationsForSecrets(psiFile, holder)
         applyAnnotationsForSca(psiFile, holder)
     }
