@@ -26,8 +26,6 @@ class CycodeIgnoreIntentionQuickFix(
     private val value: String
 ) :
     BaseIntentionAction(), PriorityAction, Iconable {
-    private val scanResults = scanResults()
-
     override fun getText(): String {
         with(type) {
             return when (this) {
@@ -57,6 +55,7 @@ class CycodeIgnoreIntentionQuickFix(
     private fun applyIgnoreInUi(project: Project) {
         // exclude results from the local DB and restart the code analyzer
 
+        val scanResults = scanResults(project)
         when (type) {
             CycodeIgnoreType.VALUE -> scanResults.excludeResults(byValue = value)
             CycodeIgnoreType.RULE -> scanResults.excludeResults(byRuleId = value)

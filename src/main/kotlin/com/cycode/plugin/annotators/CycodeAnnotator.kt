@@ -7,6 +7,7 @@ import com.cycode.plugin.cli.getPackageFileForLockFile
 import com.cycode.plugin.cli.isSupportedLockFile
 import com.cycode.plugin.intentions.CycodeIgnoreIntentionQuickFix
 import com.cycode.plugin.intentions.CycodeIgnoreType
+import com.cycode.plugin.services.ScanResultsService
 import com.cycode.plugin.services.scanResults
 import com.intellij.lang.annotation.AnnotationHolder
 import com.intellij.lang.annotation.ExternalAnnotator
@@ -17,7 +18,9 @@ import com.intellij.openapi.util.TextRange
 import com.intellij.psi.PsiFile
 
 class CycodeAnnotator : DumbAware, ExternalAnnotator<PsiFile, Unit>() {
-    private val scanResults = scanResults()
+    private fun getScanResults(psiFile: PsiFile): ScanResultsService {
+        return scanResults(psiFile.project)
+    }
 
     override fun collectInformation(file: PsiFile): PsiFile = file
     override fun doAnnotate(psiFile: PsiFile?) {}
@@ -38,6 +41,7 @@ class CycodeAnnotator : DumbAware, ExternalAnnotator<PsiFile, Unit>() {
     }
 
     private fun validateSecretTextRange(textRange: TextRange, psiFile: PsiFile): Boolean {
+        val scanResults = getScanResults(psiFile)
         val detectedSubstr = psiFile.text.substring(textRange.startOffset, textRange.endOffset)
         val detectedSegment = scanResults.getDetectedSegment(CliScanType.Secret, textRange)
         if (detectedSegment == null) {
@@ -83,6 +87,7 @@ class CycodeAnnotator : DumbAware, ExternalAnnotator<PsiFile, Unit>() {
     }
 
     private fun applyAnnotationsForSecrets(psiFile: PsiFile, holder: AnnotationHolder) {
+        val scanResults = getScanResults(psiFile)
         val latestScanResult = scanResults.getSecretResults()
         if (latestScanResult !is CliResult.Success) {
             return
@@ -153,6 +158,7 @@ class CycodeAnnotator : DumbAware, ExternalAnnotator<PsiFile, Unit>() {
     }
 
     private fun applyAnnotationsForSca(psiFile: PsiFile, holder: AnnotationHolder) {
+        val scanResults = getScanResults(psiFile)
         val latestScanResult = scanResults.getScaResults()
         if (latestScanResult !is CliResult.Success) {
             return
