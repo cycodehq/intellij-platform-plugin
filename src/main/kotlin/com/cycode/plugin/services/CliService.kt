@@ -22,7 +22,7 @@ class CliService(private val project: Project) {
     private val pluginState = pluginState()
     private val pluginSettings = pluginSettings()
 
-    private val scanResults = scanResults()
+    private val scanResults = scanResults(project)
 
     private val cli = CliWrapper(pluginSettings.cliPath, getProjectRootDirectory())
 
