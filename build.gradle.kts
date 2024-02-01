@@ -110,6 +110,10 @@ tasks {
         systemProperty("jb.consents.confirmation.enabled", "false")
     }
 
+    runIde {
+        systemProperty("idea.log.debug.categories", "com.cycode.plugin")
+    }
+
     signPlugin {
         certificateChain = environment("CERTIFICATE_CHAIN")
         privateKey = environment("PRIVATE_KEY")

@@ -14,10 +14,12 @@ import com.intellij.lang.Language
 import com.intellij.lang.annotation.AnnotationHolder
 import com.intellij.lang.annotation.ExternalAnnotator
 import com.intellij.lang.annotation.HighlightSeverity
-import com.intellij.openapi.diagnostic.thisLogger
+import com.intellij.openapi.diagnostic.logger
 import com.intellij.openapi.project.DumbAware
 import com.intellij.openapi.util.TextRange
 import com.intellij.psi.PsiFile
+
+private val LOG = logger<CycodeAnnotator>()
 
 class CycodeAnnotator : DumbAware, ExternalAnnotator<PsiFile, Unit>() {
     private val registeredForLanguages = mutableSetOf<Language>()
@@ -105,11 +107,11 @@ class CycodeAnnotator : DumbAware, ExternalAnnotator<PsiFile, Unit>() {
 
         if (getCallCount(psiFile) < countExpectedApplyCalls(psiFile)) {
             // we are waiting for all annotators to trigger
-            thisLogger().debug("Ignore this apply. Calls ${getCallCount(psiFile)}/${countExpectedApplyCalls(psiFile)}")
+            LOG.debug("Ignore this apply. Calls ${getCallCount(psiFile)}/${countExpectedApplyCalls(psiFile)}")
             return true
         }
 
-        thisLogger().debug("Apply called. This is the last call.")
+        LOG.debug("Apply called. This is the last call.")
         resetCallCount(psiFile)
         return false
     }
@@ -141,7 +143,7 @@ class CycodeAnnotator : DumbAware, ExternalAnnotator<PsiFile, Unit>() {
             scanResults.saveDetectedSegment(CliScanType.Secret, textRange, detectedSubstr)
         } else if (detectedSegment != detectedSubstr) {
             // case: the code has been added or deleted before the detection
-            thisLogger().warn(
+            LOG.debug(
                 "[Secret] Text range of detection has been shifted. " +
                         "Annotation is not relevant to this state of the file content anymore"
             )
@@ -157,7 +159,7 @@ class CycodeAnnotator : DumbAware, ExternalAnnotator<PsiFile, Unit>() {
         // instead, we check if the package name is still in the text range
         val detectedSubstr = psiFile.text.substring(textRange.startOffset, textRange.endOffset)
         if (!detectedSubstr.contains(expectedPackageName)) {
-            thisLogger().warn(
+            LOG.debug(
                 "[SCA] Text range of detection has been shifted. " +
                         "Annotation is not relevant to this state of the file content anymore"
             )
@@ -172,7 +174,7 @@ class CycodeAnnotator : DumbAware, ExternalAnnotator<PsiFile, Unit>() {
             // check if text range fits in file
 
             // case: row with detections has been deleted, but detection is still in the local results DB
-            thisLogger().warn("Text range of detection is out of file bounds")
+            LOG.debug("Text range of detection is out of file bounds")
             return false
         }
 
