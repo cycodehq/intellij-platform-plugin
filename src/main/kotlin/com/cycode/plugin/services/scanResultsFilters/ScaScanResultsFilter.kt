@@ -14,7 +14,7 @@ class ScaScanResultsFilter(scanResults: ScaScanResult) : ScanResultsFilterBase<S
     }
 
     override fun excludeByValue(value: String) {
-        throw NotImplementedError("ScaScanResultsFilter.excludeByValue is not supported")
+        // do nothing because we don't have a value field in SCA
     }
 
     override fun excludeByPath(path: String) {
