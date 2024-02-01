@@ -63,7 +63,7 @@ class FileSaveListener(private val project: Project) : FileDocumentManagerListen
         }
 
         val scaPathsToScan = excludeNonScaRelatedPaths(pathsToScan)
-        if (Consts.EXPERIMENTAL_SCA_SUPPORT && scaPathsToScan.isNotEmpty()) {
+        if (scaPathsToScan.isNotEmpty()) {
             scanScaFlush(scaPathsToScan)
         }
     }
