@@ -4,6 +4,11 @@
 
 ## [Unreleased]
 
+## [1.1.5] - 2024-02-01
+
+- Fix external annotator for registered languages
+- Fix performing of intention action on hover
+
 ## [1.1.4] - 2024-01-31
 
 - Fix scan results sharing across projects
@@ -34,6 +39,8 @@
 
 The first public release of the plugin.
 
+[1.1.5]: https://github.com/cycodehq/intellij-platform-plugin/releases/tag/v1.1.5
+
 [1.1.4]: https://github.com/cycodehq/intellij-platform-plugin/releases/tag/v1.1.4
 
 [1.1.3]: https://github.com/cycodehq/intellij-platform-plugin/releases/tag/v1.1.3
@@ -48,4 +55,4 @@ The first public release of the plugin.
 
 [1.0.0]: https://github.com/cycodehq/intellij-platform-plugin/releases/tag/v1.0.0
 
-[Unreleased]: https://github.com/cycodehq/intellij-platform-plugin/compare/v1.1.4...HEAD
+[Unreleased]: https://github.com/cycodehq/intellij-platform-plugin/compare/v1.1.5...HEAD

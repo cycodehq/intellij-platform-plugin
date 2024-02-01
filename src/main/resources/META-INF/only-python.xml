@@ -1,5 +1,0 @@
-<idea-plugin>
-    <extensions defaultExtensionNs="com.intellij">
-        <externalAnnotator language="Python" implementationClass="com.cycode.plugin.annotators.CycodeAnnotator"/>
-    </extensions>
-</idea-plugin>
