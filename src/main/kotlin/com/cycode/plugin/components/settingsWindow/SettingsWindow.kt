@@ -20,6 +20,8 @@ class SettingsWindow {
 
     private var scanOnSaveCheckbox = JBCheckBox(null, pluginSettings.scanOnSave)
 
+    private var scaSyncFlowCheckbox = JBCheckBox(null, pluginSettings.scaSyncFlow)
+
     fun getComponent(): DialogPanel {
         val contentPanel = panel {
             titledRow(CycodeBundle.message("settingsCliSectionTitle")) {
@@ -58,6 +60,13 @@ class SettingsWindow {
                     }
                 }
             }
+            titledRow(CycodeBundle.message("settingsExperimentalSectionTitle")) {
+                row(label = CycodeBundle.message("settingsScaSyncFlowCheckbox")) {
+                    cell {
+                        scaSyncFlowCheckbox()
+                    }
+                }
+            }
         }
 
         return contentPanel
@@ -71,10 +80,11 @@ class SettingsWindow {
             cliAppUrlTextField.text,
             cliAdditionalParamsTextField.text,
             scanOnSaveCheckbox.isSelected,
+            scaSyncFlowCheckbox.isSelected,
         )
     }
 
     companion object {
-        const val FIELD_COLUMNS_COUNT = 40  // max on the smallest settings window
+        const val FIELD_COLUMNS_COUNT = 35  // max on the smallest settings window
     }
 }
