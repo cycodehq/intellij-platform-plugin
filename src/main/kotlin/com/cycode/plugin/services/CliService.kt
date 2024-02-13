@@ -155,6 +155,15 @@ class CliService(private val project: Project) {
         }
     }
 
+    private fun getCliScanOptions(scanType: CliScanType): Array<String> {
+        val options = mutableListOf<String>()
+        if (scanType == CliScanType.Sca && pluginSettings.scaSyncFlow) {
+            options.add("--sync")
+            options.add("--no-restore")
+        }
+        return options.toTypedArray()
+    }
+
     private inline fun <reified T> scanPaths(
         paths: List<String>,
         scanType: CliScanType,
@@ -166,6 +175,7 @@ class CliService(private val project: Project) {
                 "scan",
                 "-t",
                 scanTypeString,
+                *getCliScanOptions(scanType),
                 "path",
                 *getPathsAsArguments(paths),
                 cancelledCallback = cancelledCallback

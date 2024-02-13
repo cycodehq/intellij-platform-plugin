@@ -6,5 +6,6 @@ data class Settings(
     val cliApiUrl: String,
     val cliAppUrl: String,
     val cliAdditionalParams: String,
-    val scanOnSave: Boolean
+    val scanOnSave: Boolean,
+    val scaSyncFlow: Boolean,
 )

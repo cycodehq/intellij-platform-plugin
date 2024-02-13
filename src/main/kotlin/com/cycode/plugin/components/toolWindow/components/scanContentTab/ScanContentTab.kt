@@ -1,6 +1,5 @@
 package com.cycode.plugin.components.toolWindow.components.scanContentTab
 
-import com.cycode.plugin.Consts
 import com.cycode.plugin.CycodeBundle
 import com.cycode.plugin.components.Component
 import com.cycode.plugin.components.common.BorderedPanel
