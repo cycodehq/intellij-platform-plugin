@@ -21,19 +21,19 @@ class CliDownloadService {
 
     private var githubReleaseInfo: GitHubRelease? = null
 
-    private val initCliLock = Any()
+    // shared lock for the entire application (all projects)
+    // used with calling of initCli() method
+    val initCliLock = Any()
 
     fun initCli() {
-        synchronized(initCliLock) {
-            // if the CLI path is not overriden and executable is auto managed, and need to download - download it.
-            if (
-                pluginSettings.cliPath == Consts.DEFAULT_CLI_PATH &&
-                pluginSettings.cliAutoManaged &&
-                shouldDownloadCli()
-            ) {
-                downloadCli()
-                thisLogger().info("CLI was successfully downloaded/updated")
-            }
+        // if the CLI path is not overriden and executable is auto managed, and need to download - download it.
+        if (
+            pluginSettings.cliPath == Consts.DEFAULT_CLI_PATH &&
+            pluginSettings.cliAutoManaged &&
+            shouldDownloadCli()
+        ) {
+            downloadCli()
+            thisLogger().info("CLI was successfully downloaded/updated")
         }
     }
 
@@ -130,6 +130,11 @@ class CliDownloadService {
     }
 
     private fun shouldDownloadCli(): Boolean {
+        if (pluginState.cliVer != Consts.REQUIRED_CLI_VERSION) {
+            thisLogger().warn("Should download CLI because version missmatch")
+            return true
+        }
+
         if (SystemInfo.isMac) {
             return shouldDownloadOnedirCli()
         }

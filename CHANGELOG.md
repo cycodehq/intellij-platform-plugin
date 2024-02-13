@@ -4,7 +4,11 @@
 
 ## [Unreleased]
 
-## [1.3.0] - 2024-02-12
+## [1.3.1] - 2024-02-13
+
+- Fix CLI upgrading when the cache of remote checksums is not expired
+
+## [1.3.0] - 2024-02-13
 
 - Add new SCA flow which decreases execution time
 
@@ -46,6 +50,8 @@
 ## [1.0.0] - 2023-12-05
 
 The first public release of the plugin.
+
+[1.3.1]: https://github.com/cycodehq/intellij-platform-plugin/releases/tag/v1.3.1
 
 [1.3.0]: https://github.com/cycodehq/intellij-platform-plugin/releases/tag/v1.3.0
 
