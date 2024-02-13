@@ -21,14 +21,18 @@ class CycodeService(val project: Project) {
     fun installCliIfNeededAndCheckAuthentication() {
         object : Task.Backgroundable(project, CycodeBundle.message("pluginLoading"), false) {
             override fun run(indicator: ProgressIndicator) {
-                cliDownloadService.initCli()
+                // we are using lock of download service because it shared per application
+                // the current service is per project so, we can't create a lock here
+                synchronized(cliDownloadService.initCliLock) {
+                    cliDownloadService.initCli()
 
-                // required to know CLI version.
-                // unfortunately, we don't have a universal command that will cover the auth state and CLI version yet
-                cliService.healthCheck()
+                    // required to know CLI version.
+                    // we don't have a universal command that will cover the auth state and CLI version yet
+                    cliService.healthCheck()
 
-                cliService.checkAuth()
-                updateToolWindowState(project)
+                    cliService.checkAuth()
+                    updateToolWindowState(project)
+                }
             }
         }.queue()
     }

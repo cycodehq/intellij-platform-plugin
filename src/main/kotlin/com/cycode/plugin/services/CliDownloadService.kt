@@ -21,19 +21,19 @@ class CliDownloadService {
 
     private var githubReleaseInfo: GitHubRelease? = null
 
-    private val initCliLock = Any()
+    // shared lock for the entire application (all projects)
+    // used with calling of initCli() method
+    val initCliLock = Any()
 
     fun initCli() {
-        synchronized(initCliLock) {
-            // if the CLI path is not overriden and executable is auto managed, and need to download - download it.
-            if (
-                pluginSettings.cliPath == Consts.DEFAULT_CLI_PATH &&
-                pluginSettings.cliAutoManaged &&
-                shouldDownloadCli()
-            ) {
-                downloadCli()
-                thisLogger().info("CLI was successfully downloaded/updated")
-            }
+        // if the CLI path is not overriden and executable is auto managed, and need to download - download it.
+        if (
+            pluginSettings.cliPath == Consts.DEFAULT_CLI_PATH &&
+            pluginSettings.cliAutoManaged &&
+            shouldDownloadCli()
+        ) {
+            downloadCli()
+            thisLogger().info("CLI was successfully downloaded/updated")
         }
     }
 
@@ -87,6 +87,11 @@ class CliDownloadService {
     }
 
     private fun shouldDownloadNewRemoteCli(localPath: String, isDir: Boolean): Boolean {
+        if (pluginState.cliVer != Consts.REQUIRED_CLI_VERSION) {
+            thisLogger().warn("Should download CLI because version missmatch")
+            return true
+        }
+
         val timeNow = System.currentTimeMillis()
 
         if (pluginState.cliLastUpdateCheckedAt == null) {
@@ -148,7 +153,7 @@ class CliDownloadService {
             return true
         }
 
-        if (shouldDownloadNewRemoteCli(Consts.DEFAULT_CLI_PATH, false)) {
+        if (shouldDownloadNewRemoteCli(Consts.DEFAULT_CLI_PATH, isDir=false)) {
             return true
         }
 
@@ -167,7 +172,7 @@ class CliDownloadService {
             return true
         }
 
-        if (shouldDownloadNewRemoteCli(Consts.PLUGIN_PATH, true)) {
+        if (shouldDownloadNewRemoteCli(Consts.PLUGIN_PATH, isDir=true)) {
             return true
         }
 
