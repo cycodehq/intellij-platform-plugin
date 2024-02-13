@@ -87,6 +87,11 @@ class CliDownloadService {
     }
 
     private fun shouldDownloadNewRemoteCli(localPath: String, isDir: Boolean): Boolean {
+        if (pluginState.cliVer != Consts.REQUIRED_CLI_VERSION) {
+            thisLogger().warn("Should download CLI because version missmatch")
+            return true
+        }
+
         val timeNow = System.currentTimeMillis()
 
         if (pluginState.cliLastUpdateCheckedAt == null) {
@@ -130,11 +135,6 @@ class CliDownloadService {
     }
 
     private fun shouldDownloadCli(): Boolean {
-        if (pluginState.cliVer != Consts.REQUIRED_CLI_VERSION) {
-            thisLogger().warn("Should download CLI because version missmatch")
-            return true
-        }
-
         if (SystemInfo.isMac) {
             return shouldDownloadOnedirCli()
         }
@@ -153,7 +153,7 @@ class CliDownloadService {
             return true
         }
 
-        if (shouldDownloadNewRemoteCli(Consts.DEFAULT_CLI_PATH, false)) {
+        if (shouldDownloadNewRemoteCli(Consts.DEFAULT_CLI_PATH, isDir=false)) {
             return true
         }
 
@@ -172,7 +172,7 @@ class CliDownloadService {
             return true
         }
 
-        if (shouldDownloadNewRemoteCli(Consts.PLUGIN_PATH, true)) {
+        if (shouldDownloadNewRemoteCli(Consts.PLUGIN_PATH, isDir=true)) {
             return true
         }
 
