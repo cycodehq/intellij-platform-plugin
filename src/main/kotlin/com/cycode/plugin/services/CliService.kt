@@ -7,6 +7,7 @@ import com.cycode.plugin.cli.models.AuthResult
 import com.cycode.plugin.cli.models.VersionResult
 import com.cycode.plugin.cli.models.scanResult.sca.ScaScanResult
 import com.cycode.plugin.cli.models.scanResult.secret.SecretScanResult
+import com.cycode.plugin.components.toolWindow.updateToolWindowState
 import com.cycode.plugin.utils.CycodeNotifier
 import com.intellij.codeInsight.daemon.DaemonCodeAnalyzer
 import com.intellij.openapi.components.Service
@@ -210,6 +211,7 @@ class CliService(private val project: Project) {
         // save results and rerun annotators
         scanResults.setSecretResults(results)
         DaemonCodeAnalyzer.getInstance(project).restart()
+        updateToolWindowState(project)
     }
 
     fun scanPathsSca(paths: List<String>, onDemand: Boolean = true, cancelledCallback: TaskCancelledCallback = null) {
@@ -228,5 +230,6 @@ class CliService(private val project: Project) {
 
         scanResults.setScaResults(results)
         DaemonCodeAnalyzer.getInstance(project).restart()
+        updateToolWindowState(project)
     }
 }

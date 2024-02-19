@@ -208,8 +208,8 @@ class CycodeAnnotator : DumbAware, ExternalAnnotator<PsiFile, Unit>() {
             val detectedValue = psiFile.text.substring(textRange.startOffset, textRange.endOffset)
             detectionDetails.detectedValue = detectedValue
 
-            val message = detection.message.replace("within '' repository", "")  // BE bug
-            val title = CycodeBundle.message("secretsAnnotationTitle", detection.type, message)
+            val message = detection.getFormattedMessage()
+            val title = CycodeBundle.message("annotationTitle", detection.getFormattedTitle())
 
             var companyGuidelineMessage = ""
             if (detectionDetails.customRemediationGuidelines != null) {
@@ -283,13 +283,7 @@ class CycodeAnnotator : DumbAware, ExternalAnnotator<PsiFile, Unit>() {
                 return@forEach
             }
 
-            val title = CycodeBundle.message(
-                "scaAnnotationTitle",
-                detectionDetails.packageName,
-                detectionDetails.packageVersion,
-                // using the message as fallback for non-premise license detections
-                detectionDetails.vulnerabilityDescription ?: detection.message
-            )
+            val title = CycodeBundle.message("annotationTitle", detection.getFormattedTitle())
 
             var firstPatchedVersionMessage = ""
             if (detectionDetails.alert?.firstPatchedVersion != null) {
