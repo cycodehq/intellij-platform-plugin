@@ -11,15 +11,17 @@ import com.cycode.plugin.components.toolWindow.components.treeView.nodes.*
 import com.cycode.plugin.icons.PluginIcons
 import com.cycode.plugin.services.scanResults
 import com.intellij.openapi.project.Project
+import com.intellij.ui.JBColor
+import com.intellij.ui.JBSplitter
+import com.intellij.ui.SideBorder
 import com.intellij.ui.components.JBScrollPane
 import com.intellij.ui.treeStructure.Tree
-import java.awt.Component
 import java.awt.Dimension
 import java.awt.GridLayout
 import java.io.File
 import javax.swing.Icon
+import javax.swing.JComponent
 import javax.swing.JPanel
-import javax.swing.JSplitPane
 import javax.swing.event.TreeSelectionEvent
 import javax.swing.event.TreeSelectionListener
 import javax.swing.tree.DefaultMutableTreeNode
@@ -28,7 +30,7 @@ import javax.swing.tree.TreeSelectionModel
 const val DIFFERENCE_BETWEEN_SCA_LINE_NUMBERS = 1
 
 class TreeView(
-    val project: Project, defaultRightPane: Component? = null
+    val project: Project, defaultRightPane: JComponent? = null
 ) : JPanel(GridLayout(1, 0)), TreeSelectionListener {
     private val tree: Tree
 
@@ -36,7 +38,7 @@ class TreeView(
     private val dummyRootNode = createNode(DummyNode())
     private val rootNodes: RootNodes = RootNodes()
 
-    private val splitPane: JSplitPane = JSplitPane(JSplitPane.HORIZONTAL_SPLIT)
+    private val splitPane: JBSplitter = JBSplitter()
 
     private val scanResults = scanResults(project)
 
@@ -50,17 +52,18 @@ class TreeView(
         tree.selectionModel.selectionMode = TreeSelectionModel.SINGLE_TREE_SELECTION
         tree.addTreeSelectionListener(this)  // we want to listen for when the user selects a node
 
-        val treeView = JBScrollPane(tree)
-
-        flattenJSplitPane(splitPane)
-        splitPane.leftComponent = treeView
-        splitPane.resizeWeight = 0.5
-
         val minimumSize = Dimension(400, 100)
+
+        val treeView = JBScrollPane(tree)
+        treeView.border = SideBorder(JBColor.GRAY, SideBorder.RIGHT)
         treeView.minimumSize = minimumSize
 
+        splitPane.firstComponent = treeView
+        splitPane.isShowDividerControls = true
+        splitPane.isShowDividerIcon = true
+
         if (defaultRightPane != null) {
-            splitPane.rightComponent = defaultRightPane
+            splitPane.secondComponent = defaultRightPane
             defaultRightPane.minimumSize = minimumSize
         }
 
@@ -175,8 +178,8 @@ class TreeView(
         createDetectionNodes(CliScanType.Sca, scaDetections.result, ::createScaDetectionNode)
     }
 
-    fun replaceRightPanel(newRightPanel: Component): TreeView {
-        splitPane.rightComponent = newRightPanel
+    fun replaceRightPanel(newRightPanel: JComponent): TreeView {
+        splitPane.secondComponent = newRightPanel
         return this
     }
 
