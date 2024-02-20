@@ -1,5 +1,6 @@
 package com.cycode.plugin.components.toolWindow.components.scanContentTab.components.treeView
 
+import com.cycode.plugin.CycodeBundle
 import com.cycode.plugin.cli.CliResult
 import com.cycode.plugin.cli.CliScanType
 import com.cycode.plugin.cli.models.scanResult.DetectionBase
@@ -24,9 +25,11 @@ import javax.swing.event.TreeSelectionListener
 import javax.swing.tree.DefaultMutableTreeNode
 import javax.swing.tree.TreeSelectionModel
 
+const val DIFFERENCE_BETWEEN_SCA_LINE_NUMBERS = 1
 
 class TreeView(val project: Project, defaultRightPane: Component) : JPanel(GridLayout(1, 0)), TreeSelectionListener {
     private val tree: Tree
+    private val rootNodes: RootNodes = RootNodes()
     private val scanResults = scanResults(project)
 
     init {
@@ -80,7 +83,7 @@ class TreeView(val project: Project, defaultRightPane: Component) : JPanel(GridL
 
     private fun openScaDetectionInFile(node: ScaDetectionNode) {
         val filePath = node.detection.detectionDetails.getFilepath()
-        val line = node.detection.detectionDetails.lineInFile - 1
+        val line = node.detection.detectionDetails.lineInFile - DIFFERENCE_BETWEEN_SCA_LINE_NUMBERS
         openFileInEditor(project, filePath, line)
     }
 
@@ -118,11 +121,12 @@ class TreeView(val project: Project, defaultRightPane: Component) : JPanel(GridL
 
         for ((filePath, detections) in detectionsByFile) {
             val fileName = File(filePath).name
-            val fileNode = createNode(FileNode(fileName))
+            val summary = CycodeBundle.message("fileNodeSummary", detections.size)
+            val fileNode = createNode(FileNode(fileName, summary))
             for (detection in detections) {
                 fileNode.add(createNodeCallback(detection))
             }
-            RootNodes.getScanTypeNode(scanType).add(fileNode)
+            rootNodes.getScanTypeNode(scanType).add(fileNode)
         }
     }
 
@@ -165,7 +169,7 @@ class TreeView(val project: Project, defaultRightPane: Component) : JPanel(GridL
     }
 
     private fun createNodes(top: DefaultMutableTreeNode) {
-        RootNodes.createNodes(top)
+        rootNodes.createNodes(top)
         createSecretDetectionNodes()
         createScaDetectionNodes()
     }

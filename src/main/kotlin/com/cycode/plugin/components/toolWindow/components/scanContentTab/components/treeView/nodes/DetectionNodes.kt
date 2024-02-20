@@ -8,10 +8,12 @@ data class SecretDetectionNode(
     override var name: String,
     override var icon: Icon?,
     val detection: SecretDetection,
+    override var summary: String? = null,
 ) : AbstractNode()
 
 data class ScaDetectionNode(
     override var name: String,
     override var icon: Icon?,
     val detection: ScaDetection,
+    override var summary: String? = null,
 ) : AbstractNode()

@@ -5,6 +5,6 @@ import javax.swing.Icon
 
 data class DummyNode(
     override var name: String = CycodeBundle.message("name"),
+    override var summary: String? = null,
     override var icon: Icon? = null,
-    val summary: String? = null
 ) : AbstractNode()

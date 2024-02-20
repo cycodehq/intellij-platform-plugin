@@ -2,8 +2,13 @@ package com.cycode.plugin.components.toolWindow.components.scanContentTab.compon
 
 import com.cycode.plugin.components.toolWindow.components.scanContentTab.components.treeView.nodes.AbstractNode
 import com.intellij.ui.ColoredTreeCellRenderer
+import com.intellij.ui.JBColor
+import com.intellij.ui.SimpleTextAttributes
 import javax.swing.JTree
 import javax.swing.tree.DefaultMutableTreeNode
+
+const val NODE_DELIMITER = " "
+val SUMMARY_ATTRIBUTES = SimpleTextAttributes(null, JBColor.GRAY, null, SimpleTextAttributes.STYLE_PLAIN)
 
 class TreeCellRenderer : ColoredTreeCellRenderer() {
     override fun customizeCellRenderer(
@@ -17,11 +22,17 @@ class TreeCellRenderer : ColoredTreeCellRenderer() {
     ) {
         if (value !is DefaultMutableTreeNode) return
         val nodeData = value.userObject as AbstractNode
-        icon = nodeData.icon
-        append(nodeData.name)
 
+        append(nodeData.name)
+        if (nodeData.summary != null) {
+            append(NODE_DELIMITER)
+            append(nodeData.summary!!, SUMMARY_ATTRIBUTES)
+        }
+
+        icon = nodeData.icon
         isIconOpaque = false
         isTransparentIconBackground = true
+
         isOpaque = false
     }
 }

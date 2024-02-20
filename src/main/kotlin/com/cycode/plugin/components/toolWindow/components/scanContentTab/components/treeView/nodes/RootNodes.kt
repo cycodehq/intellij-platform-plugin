@@ -6,45 +6,64 @@ import com.cycode.plugin.icons.PluginIcons
 import javax.swing.tree.DefaultMutableTreeNode
 
 class RootNodes {
-    companion object {
-        private val SecretsNode = createNode(
-            ScanTypeNode(CycodeBundle.message("secretDisplayName"), PluginIcons.SCAN_TYPE_SECRETS)
+    private val secretNode = createNode(
+        ScanTypeNode(
+            CycodeBundle.message("secretDisplayName"),
+            CycodeBundle.message("secretNodeSummary"),
+            PluginIcons.SCAN_TYPE_SECRETS
         )
+    )
 
-        private val SastNode = createNode(
-            ScanTypeNode(CycodeBundle.message("sastDisplayName"), PluginIcons.SCAN_TYPE_SAST)
+    private val scaNode = createNode(
+        ScanTypeNode(
+            CycodeBundle.message("scaDisplayName"),
+            CycodeBundle.message("scaNodeSummary"),
+            PluginIcons.SCAN_TYPE_SCA
         )
+    )
 
-        private val ScaNode = createNode(
-            ScanTypeNode(CycodeBundle.message("scaDisplayName"), PluginIcons.SCAN_TYPE_SCA)
+    private val sastNode = createNode(
+        ScanTypeNode(
+            CycodeBundle.message("sastDisplayName"),
+            CycodeBundle.message("sastNodeSummary"),
+            PluginIcons.SCAN_TYPE_SAST
         )
+    )
 
-        private val IacNode = createNode(
-            ScanTypeNode(CycodeBundle.message("iacDisplayName"), PluginIcons.SCAN_TYPE_IAC)
+    private val iacNode = createNode(
+        ScanTypeNode(
+            CycodeBundle.message("iacDisplayName"),
+            CycodeBundle.message("iacNodeSummary"),
+            PluginIcons.SCAN_TYPE_IAC
         )
+    )
 
-        private val scanTypeToNode = mapOf(
-            CliScanType.Secret to SecretsNode,
-            CliScanType.Sast to SastNode,
-            CliScanType.Sca to ScaNode,
-            CliScanType.Iac to IacNode
-        )
+    private val scanTypeToNode = mapOf(
+        CliScanType.Secret to secretNode,
+        CliScanType.Sast to sastNode,
+        CliScanType.Sca to scaNode,
+        CliScanType.Iac to iacNode
+    )
 
-        fun createNodes(top: DefaultMutableTreeNode) {
-            SecretsNode.removeAllChildren()
-            ScaNode.removeAllChildren()
-            SastNode.removeAllChildren()
-            IacNode.removeAllChildren()
+    fun setNodeSummary(scanType: CliScanType, summary: String) {
+        val node = getScanTypeNode(scanType)
+        (node.userObject as ScanTypeNode).summary = summary
+    }
 
-            // the order of adding nodes is important
-            top.add(SecretsNode)
-            top.add(ScaNode)
-            top.add(SastNode)
-            top.add(IacNode)
-        }
+    fun createNodes(top: DefaultMutableTreeNode) {
+        secretNode.removeAllChildren()
+        scaNode.removeAllChildren()
+        sastNode.removeAllChildren()
+        iacNode.removeAllChildren()
 
-        fun getScanTypeNode(scanType: CliScanType): DefaultMutableTreeNode {
-            return scanTypeToNode[scanType] ?: throw IllegalArgumentException("Unknown scan type: $scanType")
-        }
+        // the order of adding nodes is important
+        top.add(secretNode)
+        top.add(scaNode)
+        top.add(sastNode)
+        top.add(iacNode)
+    }
+
+    fun getScanTypeNode(scanType: CliScanType): DefaultMutableTreeNode {
+        return scanTypeToNode[scanType] ?: throw IllegalArgumentException("Unknown scan type: $scanType")
     }
 }
