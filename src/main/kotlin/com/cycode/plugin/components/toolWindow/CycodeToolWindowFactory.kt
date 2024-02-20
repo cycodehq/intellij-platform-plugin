@@ -10,6 +10,7 @@ import com.intellij.openapi.application.ApplicationManager
 import com.intellij.openapi.application.WriteAction
 import com.intellij.openapi.project.DumbAware
 import com.intellij.openapi.project.Project
+import com.intellij.openapi.project.ProjectManager
 import com.intellij.openapi.util.Disposer
 import com.intellij.openapi.wm.ToolWindow
 import com.intellij.openapi.wm.ToolWindowFactory
@@ -63,6 +64,17 @@ private fun replaceToolWindowRightPanel(project: Project, panel: JPanel) {
 
 private fun createToolWindowContent(component: JPanel): Content {
     return ContentFactory.SERVICE.getInstance().createContent(component, null, false)
+}
+
+fun updateToolWindowStateForAllProjects() {
+    // we are using this method to sync the state of the tool window for all open projects
+    // for example, after changing the auth state
+    ApplicationManager.getApplication().runReadAction {
+        val projects = ProjectManager.getInstance().openProjects
+        projects.forEach { project ->
+            updateToolWindowState(project)
+        }
+    }
 }
 
 

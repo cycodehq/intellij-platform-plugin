@@ -3,6 +3,7 @@ package com.cycode.plugin.services
 import com.cycode.plugin.CycodeBundle
 import com.cycode.plugin.components.toolWindow.CycodeToolWindowFactory
 import com.cycode.plugin.components.toolWindow.updateToolWindowState
+import com.cycode.plugin.components.toolWindow.updateToolWindowStateForAllProjects
 import com.cycode.plugin.utils.CycodeNotifier
 import com.intellij.openapi.Disposable
 import com.intellij.openapi.components.Service
@@ -46,7 +47,7 @@ class CycodeService(val project: Project) : Disposable {
                     val successLogin = cliService.doAuth { indicator.isCanceled }
                     pluginState.cliAuthed = successLogin
 
-                    updateToolWindowState(project)
+                    updateToolWindowStateForAllProjects()
                 }
             }
         }.queue()
