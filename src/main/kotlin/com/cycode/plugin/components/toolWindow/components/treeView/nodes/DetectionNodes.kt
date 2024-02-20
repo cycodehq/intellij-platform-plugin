@@ -1,4 +1,4 @@
-package com.cycode.plugin.components.toolWindow.components.scanContentTab.components.treeView.nodes
+package com.cycode.plugin.components.toolWindow.components.treeView.nodes
 
 import com.cycode.plugin.cli.models.scanResult.sca.ScaDetection
 import com.cycode.plugin.cli.models.scanResult.secret.SecretDetection

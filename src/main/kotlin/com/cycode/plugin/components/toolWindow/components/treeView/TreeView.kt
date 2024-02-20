@@ -1,4 +1,4 @@
-package com.cycode.plugin.components.toolWindow.components.scanContentTab.components.treeView
+package com.cycode.plugin.components.toolWindow.components.treeView
 
 import com.cycode.plugin.CycodeBundle
 import com.cycode.plugin.cli.CliResult
@@ -7,7 +7,7 @@ import com.cycode.plugin.cli.models.scanResult.DetectionBase
 import com.cycode.plugin.cli.models.scanResult.ScanResultBase
 import com.cycode.plugin.cli.models.scanResult.sca.ScaDetection
 import com.cycode.plugin.cli.models.scanResult.secret.SecretDetection
-import com.cycode.plugin.components.toolWindow.components.scanContentTab.components.treeView.nodes.*
+import com.cycode.plugin.components.toolWindow.components.treeView.nodes.*
 import com.cycode.plugin.icons.PluginIcons
 import com.cycode.plugin.services.scanResults
 import com.intellij.openapi.project.Project
@@ -27,16 +27,23 @@ import javax.swing.tree.TreeSelectionModel
 
 const val DIFFERENCE_BETWEEN_SCA_LINE_NUMBERS = 1
 
-class TreeView(val project: Project, defaultRightPane: Component) : JPanel(GridLayout(1, 0)), TreeSelectionListener {
+class TreeView(
+    val project: Project, defaultRightPane: Component? = null
+) : JPanel(GridLayout(1, 0)), TreeSelectionListener {
     private val tree: Tree
+
+    // dummyRootNode is a workaround to allow us to hide the root node of the tree
+    private val dummyRootNode = createNode(DummyNode())
     private val rootNodes: RootNodes = RootNodes()
+
+    private val splitPane: JSplitPane = JSplitPane(JSplitPane.HORIZONTAL_SPLIT)
+
     private val scanResults = scanResults(project)
 
     init {
-        val top = createNode(DummyNode())
-        createNodes(top)
+        createNodes(dummyRootNode)
 
-        tree = Tree(top)
+        tree = Tree(dummyRootNode)
         tree.setRootVisible(false)
         tree.setCellRenderer(TreeCellRenderer())
 
@@ -45,17 +52,17 @@ class TreeView(val project: Project, defaultRightPane: Component) : JPanel(GridL
 
         val treeView = JBScrollPane(tree)
 
-        val splitPane = JSplitPane(JSplitPane.HORIZONTAL_SPLIT)
         flattenJSplitPane(splitPane)
-
         splitPane.leftComponent = treeView
-        splitPane.rightComponent = defaultRightPane
+        splitPane.resizeWeight = 0.5
 
         val minimumSize = Dimension(400, 100)
-        defaultRightPane.minimumSize = minimumSize
         treeView.minimumSize = minimumSize
 
-        splitPane.resizeWeight = 0.5
+        if (defaultRightPane != null) {
+            splitPane.rightComponent = defaultRightPane
+            defaultRightPane.minimumSize = minimumSize
+        }
 
         add(splitPane)
     }
@@ -166,6 +173,18 @@ class TreeView(val project: Project, defaultRightPane: Component) : JPanel(GridL
         }
 
         createDetectionNodes(CliScanType.Sca, scaDetections.result, ::createScaDetectionNode)
+    }
+
+    fun replaceRightPanel(newRightPanel: Component): TreeView {
+        splitPane.rightComponent = newRightPanel
+        return this
+    }
+
+    fun refreshTree() {
+        // TODO(MarshalX): is possible to optimize this to only update the nodes that have changed
+        dummyRootNode.removeAllChildren()
+        createNodes(dummyRootNode)
+        tree.updateUI()
     }
 
     private fun createNodes(top: DefaultMutableTreeNode) {

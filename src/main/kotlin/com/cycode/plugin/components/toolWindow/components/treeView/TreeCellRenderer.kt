@@ -1,6 +1,6 @@
-package com.cycode.plugin.components.toolWindow.components.scanContentTab.components.treeView
+package com.cycode.plugin.components.toolWindow.components.treeView
 
-import com.cycode.plugin.components.toolWindow.components.scanContentTab.components.treeView.nodes.AbstractNode
+import com.cycode.plugin.components.toolWindow.components.treeView.nodes.AbstractNode
 import com.intellij.ui.ColoredTreeCellRenderer
 import com.intellij.ui.JBColor
 import com.intellij.ui.SimpleTextAttributes

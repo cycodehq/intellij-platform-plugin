@@ -1,8 +1,10 @@
 package com.cycode.plugin.services
 
 import com.cycode.plugin.CycodeBundle
+import com.cycode.plugin.components.toolWindow.CycodeToolWindowFactory
 import com.cycode.plugin.components.toolWindow.updateToolWindowState
 import com.cycode.plugin.utils.CycodeNotifier
+import com.intellij.openapi.Disposable
 import com.intellij.openapi.components.Service
 import com.intellij.openapi.fileEditor.FileEditorManager
 import com.intellij.openapi.progress.ProgressIndicator
@@ -12,7 +14,7 @@ import com.intellij.psi.PsiDocumentManager
 
 
 @Service(Service.Level.PROJECT)
-class CycodeService(val project: Project) {
+class CycodeService(val project: Project) : Disposable {
     private val cliService = cli(project)
     private val cliDownloadService = cliDownload()
 
@@ -107,5 +109,9 @@ class CycodeService(val project: Project) {
         }
 
         startPathScaScan(projectRoot)
+    }
+
+    override fun dispose() {
+        CycodeToolWindowFactory.TabManager.removeTab(project)
     }
 }

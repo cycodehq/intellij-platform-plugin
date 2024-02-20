@@ -1,4 +1,4 @@
-package com.cycode.plugin.components.toolWindow.components.scanContentTab.components.treeView
+package com.cycode.plugin.components.toolWindow.components.treeView
 
 import com.intellij.openapi.fileEditor.FileEditorManager
 import com.intellij.openapi.fileEditor.OpenFileDescriptor

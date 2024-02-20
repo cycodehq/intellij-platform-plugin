@@ -3,7 +3,6 @@ package com.cycode.plugin.components.toolWindow.components.scanContentTab
 import com.cycode.plugin.CycodeBundle
 import com.cycode.plugin.components.Component
 import com.cycode.plugin.components.common.createClickableLabel
-import com.cycode.plugin.components.toolWindow.components.scanContentTab.components.treeView.TreeView
 import com.cycode.plugin.services.CycodeService
 import com.intellij.util.ui.JBUI
 import java.awt.GridBagConstraints
@@ -13,7 +12,7 @@ import javax.swing.JPanel
 
 class ScanContentTab : Component<CycodeService>() {
     override fun getContent(service: CycodeService): JPanel {
-        val rightPanel = JPanel().apply {
+        return JPanel().apply {
             layout = GridBagLayout()
             add(add(JPanel().apply {
                 add(createClickableLabel(CycodeBundle.message("scanTabTitleLabel")))
@@ -62,7 +61,5 @@ class ScanContentTab : Component<CycodeService>() {
                 anchor = GridBagConstraints.NORTHWEST
             })
         }
-
-        return TreeView(service.project, rightPanel)
     }
 }
