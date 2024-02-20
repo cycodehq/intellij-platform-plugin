@@ -14,12 +14,8 @@ class OpenProblemsTabAction : AnAction(CycodeBundle.message("openProblemsTabActi
     override fun actionPerformed(e: AnActionEvent) {
         val project = e.project ?: return
         val toolWindowManager = ToolWindowManager.getInstance(project)
-        val toolWindow = toolWindowManager.getToolWindow(PROBLEMS_TOOL_WINDOW_ID)
+        val toolWindow = toolWindowManager.getToolWindow(CycodeBundle.message("toolWindowId"))
         toolWindow?.activate(null)
-    }
-
-    companion object {
-        const val PROBLEMS_TOOL_WINDOW_ID = "Problems View"
     }
 }
 
