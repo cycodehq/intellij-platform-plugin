@@ -30,8 +30,8 @@ class CycodeToolWindowFactory : DumbAware, ToolWindowFactory {
         val contentTab = CycodeContentTab(project)
         TabManager.addTab(project, contentTab)
 
-        val defaultRightPanel = LoadingContentTab().getContent(service)
-        val toolWindowContent = createToolWindowContent(contentTab.updateContent(defaultRightPanel))
+        val initRightPanel = getRightPanelDependingOnState(project)
+        val toolWindowContent = createToolWindowContent(contentTab.updateContent(initRightPanel))
         toolWindow.contentManager.addContent(toolWindowContent)
 
         Disposer.register(service, toolWindowContent)
@@ -66,6 +66,21 @@ private fun createToolWindowContent(component: JPanel): Content {
     return ContentFactory.SERVICE.getInstance().createContent(component, null, false)
 }
 
+private fun getRightPanelDependingOnState(project: Project): JPanel {
+    val service = cycode(project)
+    val pluginState = pluginState()
+
+    if (!pluginState.cliInstalled) {
+        return LoadingContentTab().getContent(service)
+    }
+
+    return if (pluginState.cliAuthed) {
+        ScanContentTab().getContent(service)
+    } else {
+        AuthContentTab().getContent(service)
+    }
+}
+
 fun updateToolWindowStateForAllProjects() {
     // we are using this method to sync the state of the tool window for all open projects
     // for example, after changing the auth state
@@ -79,16 +94,9 @@ fun updateToolWindowStateForAllProjects() {
 
 
 fun updateToolWindowState(project: Project) {
-    val pluginState = pluginState()
-    val service = cycode(project)
-
     ApplicationManager.getApplication().invokeLater {
         WriteAction.run<Error> {
-            if (pluginState.cliAuthed) {
-                replaceToolWindowRightPanel(project, ScanContentTab().getContent(service))
-            } else {
-                replaceToolWindowRightPanel(project, AuthContentTab().getContent(service))
-            }
+            replaceToolWindowRightPanel(project, getRightPanelDependingOnState(project))
         }
     }
 }
