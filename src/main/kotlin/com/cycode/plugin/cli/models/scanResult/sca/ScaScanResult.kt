@@ -1,8 +1,9 @@
 package com.cycode.plugin.cli.models.scanResult.sca
 
 import com.cycode.plugin.cli.models.CliError
+import com.cycode.plugin.cli.models.scanResult.ScanResultBase
 
 data class ScaScanResult(
-    val detections: List<ScaDetection>,
+    override val detections: List<ScaDetection>,
     val errors: List<CliError>,
-)
+) : ScanResultBase

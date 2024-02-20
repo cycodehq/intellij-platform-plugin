@@ -31,5 +31,9 @@ class CycodePersistentStateService : PersistentStateComponent<CycodePersistentSt
         Files.createDirectories(Paths.get(Consts.PLUGIN_PATH))
 
         XmlSerializerUtil.copyBean(state, this)
+
+        // TODO(MarshalX): should not be persistent state
+        cliInstalled = false
+        cliAuthed = false
     }
 }

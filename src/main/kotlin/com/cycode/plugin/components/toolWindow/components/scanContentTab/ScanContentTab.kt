@@ -2,11 +2,9 @@ package com.cycode.plugin.components.toolWindow.components.scanContentTab
 
 import com.cycode.plugin.CycodeBundle
 import com.cycode.plugin.components.Component
-import com.cycode.plugin.components.common.BorderedPanel
 import com.cycode.plugin.components.common.createClickableLabel
 import com.cycode.plugin.services.CycodeService
 import com.intellij.util.ui.JBUI
-import java.awt.BorderLayout
 import java.awt.GridBagConstraints
 import java.awt.GridBagLayout
 import javax.swing.JButton
@@ -14,7 +12,7 @@ import javax.swing.JPanel
 
 class ScanContentTab : Component<CycodeService>() {
     override fun getContent(service: CycodeService): JPanel {
-        val panel = JPanel().apply {
+        return JPanel().apply {
             layout = GridBagLayout()
             add(add(JPanel().apply {
                 add(createClickableLabel(CycodeBundle.message("scanTabTitleLabel")))
@@ -62,10 +60,6 @@ class ScanContentTab : Component<CycodeService>() {
                 insets = JBUI.insetsBottom(10)
                 anchor = GridBagConstraints.NORTHWEST
             })
-        }
-
-        return BorderedPanel().apply {
-            add(panel, BorderLayout.NORTH)
         }
     }
 }

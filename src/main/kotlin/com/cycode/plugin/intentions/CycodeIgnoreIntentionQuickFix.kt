@@ -1,6 +1,7 @@
 package com.cycode.plugin.intentions
 
 import com.cycode.plugin.cli.CliScanType
+import com.cycode.plugin.components.toolWindow.updateToolWindowState
 import com.cycode.plugin.services.cycode
 import com.cycode.plugin.services.scanResults
 import com.intellij.codeInsight.daemon.DaemonCodeAnalyzer
@@ -63,6 +64,7 @@ class CycodeIgnoreIntentionQuickFix(
         }
 
         DaemonCodeAnalyzer.getInstance(project).restart()
+        updateToolWindowState(project)
     }
 
     override fun invoke(project: Project, editor: Editor?, file: PsiFile?) {

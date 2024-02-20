@@ -153,7 +153,7 @@ class CliDownloadService {
             return true
         }
 
-        if (shouldDownloadNewRemoteCli(Consts.DEFAULT_CLI_PATH, isDir=false)) {
+        if (shouldDownloadNewRemoteCli(Consts.DEFAULT_CLI_PATH, isDir = false)) {
             return true
         }
 
@@ -172,7 +172,7 @@ class CliDownloadService {
             return true
         }
 
-        if (shouldDownloadNewRemoteCli(Consts.PLUGIN_PATH, isDir=true)) {
+        if (shouldDownloadNewRemoteCli(Consts.PLUGIN_PATH, isDir = true)) {
             return true
         }
 
