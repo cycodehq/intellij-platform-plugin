@@ -1,4 +1,4 @@
-# Cycode IntelliJ Platform Plugin (beta)
+# Cycode IntelliJ Platform Plugin
 
 <!-- Plugin description -->
 
