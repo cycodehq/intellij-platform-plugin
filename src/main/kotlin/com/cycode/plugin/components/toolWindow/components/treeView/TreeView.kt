@@ -121,6 +121,13 @@ class TreeView(
         }
     }
 
+    private fun getDetectionSummary(sortedDetections: List<DetectionBase>): String {
+        // detections must be sorted by severity
+        return sortedDetections.groupBy { it.severity }
+            .map { (severity, detections) -> "$severity - ${detections.size}" }
+            .joinToString(" | ")
+    }
+
     private fun createDetectionNodes(
         scanType: CliScanType,
         scanResults: ScanResultBase,
@@ -129,13 +136,17 @@ class TreeView(
         val sortedDetections = scanResults.detections.sortedByDescending { getSeverityWeight(it.severity) }
         val detectionsByFile = sortedDetections.groupBy { it.detectionDetails.getFilepath() }
 
+        rootNodes.setNodeSummary(scanType, getDetectionSummary(sortedDetections))
+
         for ((filePath, detections) in detectionsByFile) {
             val fileName = File(filePath).name
             val summary = CycodeBundle.message("fileNodeSummary", detections.size)
+
             val fileNode = createNode(FileNode(fileName, summary))
             for (detection in detections) {
                 fileNode.add(createNodeCallback(detection))
             }
+
             rootNodes.getScanTypeNode(scanType).add(fileNode)
         }
     }

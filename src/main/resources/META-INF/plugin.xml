@@ -11,10 +11,10 @@
 
     <extensions defaultExtensionNs="com.intellij">
         <postStartupActivity implementation="com.cycode.plugin.activities.PostStartupActivity"/>
-        <toolWindow factoryClass="com.cycode.plugin.components.toolWindow.CycodeToolWindowFactory" id="Cycode (beta)"
+        <toolWindow factoryClass="com.cycode.plugin.components.toolWindow.CycodeToolWindowFactory" id="Cycode"
                     anchor="bottom"/>
         <projectConfigurable instance="com.cycode.plugin.settings.ApplicationSettingsConfigurable" groupId="tools"
-                             displayName="Cycode (beta)"/>
+                             displayName="Cycode"/>
         <notificationGroup id="Cycode" displayType="BALLOON"/>
     </extensions>
 
