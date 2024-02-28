@@ -123,6 +123,7 @@ class DetectionNodeContextMenu(private val project: Project, private val treePat
             })
             .setNamerForFiltering { it }
             .setAutoPackHeightOnFiltering(false)
-            .createPopup().show(e.component)
+            .createPopup()
+            .show(e.component)
     }
 }
