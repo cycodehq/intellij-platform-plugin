@@ -4,6 +4,10 @@
 
 ## [Unreleased]
 
+## [1.4.0] - 2024-02-XX
+
+- Add Tree View
+
 ## [1.3.1] - 2024-02-13
 
 - Fix CLI upgrading when the cache of remote checksums is not expired
@@ -51,6 +55,8 @@
 
 The first public release of the plugin.
 
+[1.4.0]: https://github.com/cycodehq/intellij-platform-plugin/releases/tag/v1.4.0
+
 [1.3.1]: https://github.com/cycodehq/intellij-platform-plugin/releases/tag/v1.3.1
 
 [1.3.0]: https://github.com/cycodehq/intellij-platform-plugin/releases/tag/v1.3.0
@@ -73,4 +79,4 @@ The first public release of the plugin.
 
 [1.0.0]: https://github.com/cycodehq/intellij-platform-plugin/releases/tag/v1.0.0
 
-[Unreleased]: https://github.com/cycodehq/intellij-platform-plugin/compare/v1.2.0...HEAD
+[Unreleased]: https://github.com/cycodehq/intellij-platform-plugin/compare/v1.4.0...HEAD
