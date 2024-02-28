@@ -4,9 +4,10 @@
 
 ## [Unreleased]
 
-## [1.4.0] - 2024-02-XX
+## [1.4.0] - 2024-02-28
 
 - Add Tree View
+- Improve loading tab
 
 ## [1.3.1] - 2024-02-13
 

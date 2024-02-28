@@ -35,10 +35,12 @@ To install the Cycode IntelliJ Platform Plugin, follow these steps:
     1. In the "Plugins" section, you'll see a "Marketplace" tab.
        Click on this tab, and then use the search bar at the top to search for the plugin you wish to install.
 4. Click on the "Install" button next to the Cycode plugin.
-5. Wait for the installation to complete.
+5. Wait for the installation to complete (plugin downloading, verifying and running core engine).
 6. Restart the JetBrains editor.
 
 Alternatively, you can install the plugin from the plugin page: https://plugins.jetbrains.com/plugin/23079-cycode
+
+Note: If it's your first time using the plugin, it may take a bit longer to download the core.
 
 ## Authentication
 
