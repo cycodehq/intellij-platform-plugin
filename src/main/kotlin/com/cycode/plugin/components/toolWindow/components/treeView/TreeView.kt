@@ -18,6 +18,8 @@ import com.intellij.ui.components.JBScrollPane
 import com.intellij.ui.treeStructure.Tree
 import java.awt.Dimension
 import java.awt.GridLayout
+import java.awt.event.MouseAdapter
+import java.awt.event.MouseEvent
 import java.io.File
 import javax.swing.Icon
 import javax.swing.JComponent
@@ -25,6 +27,7 @@ import javax.swing.JPanel
 import javax.swing.event.TreeSelectionEvent
 import javax.swing.event.TreeSelectionListener
 import javax.swing.tree.DefaultMutableTreeNode
+import javax.swing.tree.TreePath
 import javax.swing.tree.TreeSelectionModel
 
 const val DIFFERENCE_BETWEEN_SCA_LINE_NUMBERS = 1
@@ -51,6 +54,7 @@ class TreeView(
 
         tree.selectionModel.selectionMode = TreeSelectionModel.SINGLE_TREE_SELECTION
         tree.addTreeSelectionListener(this)  // we want to listen for when the user selects a node
+        tree.addMouseListener(createMouseListeners())
 
         val minimumSize = Dimension(400, 100)
 
@@ -76,25 +80,28 @@ class TreeView(
         val node = tree.getLastSelectedPathComponent() as DefaultMutableTreeNode
 
         if (node.userObject is SecretDetectionNode) {
-            openSecretDetectionInFile(node.userObject as SecretDetectionNode)
+            openSecretDetectionInFile(project, node.userObject as SecretDetectionNode)
         }
 
         if (node.userObject is ScaDetectionNode) {
-            openScaDetectionInFile(node.userObject as ScaDetectionNode)
+            openScaDetectionInFile(project, node.userObject as ScaDetectionNode)
             displayScaViolationCard(node.userObject as ScaDetectionNode)
         }
     }
 
-    private fun openSecretDetectionInFile(node: SecretDetectionNode) {
-        val filePath = node.detection.detectionDetails.getFilepath()
-        val line = node.detection.detectionDetails.line
-        openFileInEditor(project, filePath, line)
-    }
-
-    private fun openScaDetectionInFile(node: ScaDetectionNode) {
-        val filePath = node.detection.detectionDetails.getFilepath()
-        val line = node.detection.detectionDetails.lineInFile - DIFFERENCE_BETWEEN_SCA_LINE_NUMBERS
-        openFileInEditor(project, filePath, line)
+    private fun createMouseListeners(): MouseAdapter {
+        return object : MouseAdapter() {
+            override fun mousePressed(e: MouseEvent) {
+                val selRow: Int = tree.getRowForLocation(e.x, e.y)
+                val selPath: TreePath? = tree.getPathForLocation(e.x, e.y)
+                if (selRow != -1 && selPath != null) {
+                    // single right mouse click
+                    if (e.button == MouseEvent.BUTTON3 && e.clickCount == 1) {
+                        DetectionNodeContextMenu(project, selPath).showPopup(e)
+                    }
+                }
+            }
+        }
     }
 
     private fun displayScaViolationCard(node: ScaDetectionNode) {

@@ -7,6 +7,7 @@ import com.cycode.plugin.components.toolWindow.updateToolWindowStateForAllProjec
 import com.cycode.plugin.utils.CycodeNotifier
 import com.intellij.openapi.Disposable
 import com.intellij.openapi.components.Service
+import com.intellij.openapi.diagnostic.thisLogger
 import com.intellij.openapi.fileEditor.FileEditorManager
 import com.intellij.openapi.progress.ProgressIndicator
 import com.intellij.openapi.progress.Task
@@ -53,26 +54,45 @@ class CycodeService(val project: Project) : Disposable {
         }.queue()
     }
 
-    private fun startPathSecretScan(path: String) {
+    fun startPathSecretScan(path: String, onDemand: Boolean = false) {
+        startPathSecretScan(listOf(path), onDemand = onDemand)
+    }
+
+    fun startPathSecretScan(pathsToScan: List<String>, onDemand: Boolean = false) {
         object : Task.Backgroundable(project, CycodeBundle.message("secretScanning"), true) {
             override fun run(indicator: ProgressIndicator) {
                 if (!pluginState.cliAuthed) {
                     return
                 }
 
-                cliService.scanPathsSecrets(listOf(path), cancelledCallback = { indicator.isCanceled })
+                thisLogger().debug("[Secret] Start scanning paths: $pathsToScan")
+                cliService.scanPathsSecrets(
+                    pathsToScan,
+                    onDemand = onDemand,
+                    cancelledCallback = { indicator.isCanceled })
+                thisLogger().debug("[Secret] Finish scanning paths: $pathsToScan")
             }
         }.queue()
     }
 
-    private fun startPathScaScan(path: String) {
+    fun startPathScaScan(path: String, onDemand: Boolean = false) {
+        startPathScaScan(listOf(path), onDemand = onDemand)
+    }
+
+    fun startPathScaScan(pathsToScan: List<String>, onDemand: Boolean = false) {
         object : Task.Backgroundable(project, CycodeBundle.message("scaScanning"), true) {
             override fun run(indicator: ProgressIndicator) {
                 if (!pluginState.cliAuthed) {
                     return
                 }
 
-                cliService.scanPathsSca(listOf(path), cancelledCallback = { indicator.isCanceled })
+                thisLogger().debug("[SCA] Start scanning paths: $pathsToScan")
+                cliService.scanPathsSca(
+                    pathsToScan,
+                    onDemand = onDemand,
+                    cancelledCallback = { indicator.isCanceled }
+                )
+                thisLogger().debug("[SCA] Finish scanning paths: $pathsToScan")
             }
         }.queue()
     }
@@ -99,7 +119,7 @@ class CycodeService(val project: Project) : Disposable {
         val psiFile = PsiDocumentManager.getInstance(project).getPsiFile(currentOpenedDocument)
         val vFile = psiFile!!.originalFile.virtualFile
 
-        startPathSecretScan(vFile.path)
+        startPathSecretScan(vFile.path, onDemand = true)
     }
 
     fun startScaScanForCurrentProject() {
@@ -109,7 +129,7 @@ class CycodeService(val project: Project) : Disposable {
             return
         }
 
-        startPathScaScan(projectRoot)
+        startPathScaScan(projectRoot, onDemand = true)
     }
 
     override fun dispose() {
