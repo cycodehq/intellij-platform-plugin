@@ -1,9 +1,12 @@
-package com.cycode.plugin.components.toolWindow.components.treeView
+package com.cycode.plugin.components.toolWindow.components.treeView.components.detectionNodeContextMenu
 
 import com.cycode.plugin.CycodeBundle
+import com.cycode.plugin.components.toolWindow.components.treeView.TreeView
 import com.cycode.plugin.components.toolWindow.components.treeView.nodes.ScaDetectionNode
 import com.cycode.plugin.components.toolWindow.components.treeView.nodes.ScanTypeNode
 import com.cycode.plugin.components.toolWindow.components.treeView.nodes.SecretDetectionNode
+import com.cycode.plugin.components.toolWindow.components.treeView.openScaDetectionInFile
+import com.cycode.plugin.components.toolWindow.components.treeView.openSecretDetectionInFile
 import com.cycode.plugin.services.cycode
 import com.intellij.openapi.editor.actions.ContentChooser.RETURN_SYMBOL
 import com.intellij.openapi.project.Project
@@ -26,7 +29,11 @@ val RESCAN_OPTION = CycodeBundle.message("rescanOption")
 val OPEN_IN_EDITOR_OPTION = CycodeBundle.message("openInEditorOption")
 val OPEN_VIOLATION_CARD_OPTION = CycodeBundle.message("openViolationCardOption")
 
-class DetectionNodeContextMenu(private val project: Project, private val treePath: TreePath) {
+class DetectionNodeContextMenu(
+    private val treeView: TreeView,
+    private val project: Project,
+    private val treePath: TreePath
+) {
     private val service = cycode(project)
 
     private fun getUnknownNode(): Any {
@@ -41,7 +48,7 @@ class DetectionNodeContextMenu(private val project: Project, private val treePat
         return when (getUnknownNode()) {
             is ScanTypeNode -> listOf(RUN_OPTION)
             is SecretDetectionNode -> listOf(OPEN_IN_EDITOR_OPTION, RESCAN_OPTION)
-            is ScaDetectionNode -> listOf(OPEN_IN_EDITOR_OPTION, RESCAN_OPTION) // TODO (MarshalX): open violation card
+            is ScaDetectionNode -> listOf(OPEN_VIOLATION_CARD_OPTION, OPEN_IN_EDITOR_OPTION, RESCAN_OPTION)
             else -> listOf()
         }
     }
@@ -90,7 +97,13 @@ class DetectionNodeContextMenu(private val project: Project, private val treePat
     }
 
     private fun onOpenViolationCardOptionClicked() {
-        // TODO(MarshalX): implement
+        val node = getUnknownNode()
+        if (node !is ScaDetectionNode) {
+            // remove to implement more cards
+            return
+        }
+
+        treeView.displayScaViolationCard(node)
     }
 
     fun showPopup(e: MouseEvent) {

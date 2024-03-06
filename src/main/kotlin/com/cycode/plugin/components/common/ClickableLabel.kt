@@ -1,6 +1,6 @@
 package com.cycode.plugin.components.common
 
-import com.intellij.ide.BrowserUtil
+import com.cycode.plugin.components.openURL
 import com.intellij.ui.HyperlinkLabel
 
 fun createClickableLabel(htmlContent: String): HyperlinkLabel {
@@ -23,8 +23,4 @@ fun extractUrlFromHtml(html: String): String? {
     val regex = """<a\s+[^>]*href="([^"]*)"[^>]*>.*</a>""".toRegex()
     val match = regex.find(html)
     return match?.groupValues?.getOrNull(1)
-}
-
-fun openURL(url: String) {
-    BrowserUtil.browse(url)
 }
