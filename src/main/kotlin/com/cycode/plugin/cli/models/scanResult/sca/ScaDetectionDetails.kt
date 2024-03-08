@@ -9,7 +9,7 @@ data class ScaDetectionDetails(
     val line: Int,
     val lineInFile: Int,
     val dependencyPaths: String,
-    val licence: String?,
+    val license: String?,
     val packageName: String,
     val packageVersion: String,
     val vulnerabilityDescription: String?,

@@ -7,6 +7,8 @@ import com.cycode.plugin.cli.models.scanResult.DetectionBase
 import com.cycode.plugin.cli.models.scanResult.ScanResultBase
 import com.cycode.plugin.cli.models.scanResult.sca.ScaDetection
 import com.cycode.plugin.cli.models.scanResult.secret.SecretDetection
+import com.cycode.plugin.components.toolWindow.components.scaViolationCardContentTab.ScaViolationCardContentTab
+import com.cycode.plugin.components.toolWindow.components.treeView.components.detectionNodeContextMenu.DetectionNodeContextMenu
 import com.cycode.plugin.components.toolWindow.components.treeView.nodes.*
 import com.cycode.plugin.icons.PluginIcons
 import com.cycode.plugin.services.scanResults
@@ -64,7 +66,6 @@ class TreeView(
 
         splitPane.firstComponent = treeView
         splitPane.isShowDividerControls = true
-        splitPane.isShowDividerIcon = true
 
         if (defaultRightPane != null) {
             splitPane.secondComponent = defaultRightPane
@@ -90,6 +91,8 @@ class TreeView(
     }
 
     private fun createMouseListeners(): MouseAdapter {
+        val treeView = this
+
         return object : MouseAdapter() {
             override fun mousePressed(e: MouseEvent) {
                 val selRow: Int = tree.getRowForLocation(e.x, e.y)
@@ -97,15 +100,15 @@ class TreeView(
                 if (selRow != -1 && selPath != null) {
                     // single right mouse click
                     if (e.button == MouseEvent.BUTTON3 && e.clickCount == 1) {
-                        DetectionNodeContextMenu(project, selPath).showPopup(e)
+                        DetectionNodeContextMenu(treeView, project, selPath).showPopup(e)
                     }
                 }
             }
         }
     }
 
-    private fun displayScaViolationCard(node: ScaDetectionNode) {
-        // not implemented yet
+    fun displayScaViolationCard(node: ScaDetectionNode) {
+        replaceRightPanel(ScaViolationCardContentTab().getContent(node.detection))
     }
 
     private fun convertSeverityToIcon(severity: String): Icon {
