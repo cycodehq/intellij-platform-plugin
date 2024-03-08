@@ -4,6 +4,11 @@
 
 ## [Unreleased]
 
+## [1.5.0] - 2024-03-XX
+
+- Add SCA Violation Card
+- Add the on-demand scan of an entire project for Secrets
+
 ## [1.4.0] - 2024-02-28
 
 - Add Tree View
@@ -55,6 +60,8 @@
 ## [1.0.0] - 2023-12-05
 
 The first public release of the plugin.
+
+[1.5.0]: https://github.com/cycodehq/intellij-platform-plugin/releases/tag/v1.5.0
 
 [1.4.0]: https://github.com/cycodehq/intellij-platform-plugin/releases/tag/v1.4.0
 

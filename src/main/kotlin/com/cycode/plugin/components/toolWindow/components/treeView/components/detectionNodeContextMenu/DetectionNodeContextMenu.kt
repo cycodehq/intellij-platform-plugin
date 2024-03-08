@@ -70,7 +70,7 @@ class DetectionNodeContextMenu(
 
         // FIXME(MarshalX): add some key field instead of abusing name?
         when (node.name) {
-            CycodeBundle.message("secretDisplayName") -> service.startSecretScanForCurrentFile()
+            CycodeBundle.message("secretDisplayName") -> service.startSecretScanForCurrentProject()
             CycodeBundle.message("scaDisplayName") -> service.startScaScanForCurrentProject()
         }
     }
