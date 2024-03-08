@@ -1,5 +1,6 @@
 package com.cycode.plugin.components.toolWindow.components.scaViolationCardContentTab.components.header
 
+import com.cycode.plugin.CycodeBundle
 import com.cycode.plugin.cli.models.scanResult.sca.ScaDetection
 import com.intellij.ui.JBColor
 import com.intellij.ui.components.JBLabel
@@ -33,21 +34,28 @@ class ScaHeader {
         gbc.anchor = GridBagConstraints.NORTHWEST
         gbc.insets = JBUI.insets(2)
 
-        addHeader("Package: ", detection.detectionDetails.packageName)
-        addHeader("Version: ", detection.detectionDetails.packageVersion)
+        addHeader(CycodeBundle.message("scaViolationCardHeaderPackageField"), detection.detectionDetails.packageName)
+        addHeader(CycodeBundle.message("scaViolationCardHeaderVersionField"), detection.detectionDetails.packageVersion)
 
         if (detection.detectionDetails.alert != null) {
-            val patchedVersion = detection.detectionDetails.alert.firstPatchedVersion ?: "Not fixed"
-            addHeader("First patched version:", patchedVersion)
+            val patchedVersion = detection.detectionDetails.alert.firstPatchedVersion
+                ?: CycodeBundle.message("scaViolationCardHeaderPatchedVersionDefaultValue")
+            addHeader(CycodeBundle.message("scaViolationCardHeaderPatchedVersionField"), patchedVersion)
         }
 
         if (detection.detectionDetails.dependencyPaths.isNotEmpty()) {
-            addHeader("Dependency path:", detection.detectionDetails.dependencyPaths)
+            addHeader(
+                CycodeBundle.message("scaViolationCardHeaderDependencyPathField"),
+                detection.detectionDetails.dependencyPaths
+            )
         }
 
         if (detection.detectionDetails.alert == null) {
             // if non-permissive-license
-            addHeader("License:", detection.detectionDetails.license ?: "Unknown")
+            addHeader(
+                CycodeBundle.message("scaViolationCardHeaderLicenseField"),
+                detection.detectionDetails.license ?: CycodeBundle.message("scaViolationCardHeaderLicenseDefaultValue")
+            )
         }
 
         panel.border = JBUI.Borders.compound(

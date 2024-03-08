@@ -1,5 +1,6 @@
 package com.cycode.plugin.components.toolWindow.components.scaViolationCardContentTab.components.shortSummary
 
+import com.cycode.plugin.CycodeBundle
 import com.cycode.plugin.cli.models.scanResult.sca.ScaDetection
 import com.intellij.ui.components.JBLabel
 import java.awt.GridBagConstraints
@@ -19,9 +20,9 @@ class ScaShortSummary {
         if (detection.detectionDetails.alert != null) {
             val cwe = detection.detectionDetails.vulnerabilityId
             val severity = detection.severity
-            val shortDetails = "$severity | $cwe"
+            val shortSummary = CycodeBundle.message("scaViolationCardShortSummary", severity, cwe ?: "")
 
-            panel.add(JBLabel(shortDetails).apply { setAllowAutoWrapping(true); setCopyable(true) }, gbc)
+            panel.add(JBLabel(shortSummary).apply { setAllowAutoWrapping(true); setCopyable(true) }, gbc)
         }
 
         return panel
