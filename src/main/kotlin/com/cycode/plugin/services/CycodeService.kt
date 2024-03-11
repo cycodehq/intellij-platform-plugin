@@ -122,6 +122,16 @@ class CycodeService(val project: Project) : Disposable {
         startPathSecretScan(vFile.path, onDemand = true)
     }
 
+    fun startSecretScanForCurrentProject() {
+        val projectRoot = cliService.getProjectRootDirectory()
+        if (projectRoot == null) {
+            CycodeNotifier.notifyInfo(project, CycodeBundle.message("noProjectRootErrorNotification"))
+            return
+        }
+
+        startPathSecretScan(projectRoot, onDemand = true)
+    }
+
     fun startScaScanForCurrentProject() {
         val projectRoot = cliService.getProjectRootDirectory()
         if (projectRoot == null) {
