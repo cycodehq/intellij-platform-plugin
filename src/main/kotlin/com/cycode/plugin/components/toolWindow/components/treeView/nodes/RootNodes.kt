@@ -56,6 +56,12 @@ class RootNodes {
         sastNode.removeAllChildren()
         iacNode.removeAllChildren()
 
+        // reset summary to default
+        setNodeSummary(CliScanType.Secret, CycodeBundle.message("secretNodeSummary"))
+        setNodeSummary(CliScanType.Sca, CycodeBundle.message("scaNodeSummary"))
+        setNodeSummary(CliScanType.Sast, CycodeBundle.message("sastNodeSummary"))
+        setNodeSummary(CliScanType.Iac, CycodeBundle.message("iacNodeSummary"))
+
         // the order of adding nodes is important
         top.add(secretNode)
         top.add(scaNode)

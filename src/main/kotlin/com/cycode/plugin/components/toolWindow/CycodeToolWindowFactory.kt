@@ -1,6 +1,7 @@
 package com.cycode.plugin.components.toolWindow
 
 import com.cycode.plugin.components.toolWindow.components.authContentTab.AuthContentTab
+import com.cycode.plugin.components.toolWindow.components.cycodeActionToolBar.CycodeActionToolbar
 import com.cycode.plugin.components.toolWindow.components.loadingContentTab.LoadingContentTab
 import com.cycode.plugin.components.toolWindow.components.scanContentTab.ScanContentTab
 import com.cycode.plugin.icons.PluginIcons
@@ -30,8 +31,12 @@ class CycodeToolWindowFactory : DumbAware, ToolWindowFactory {
         val contentTab = CycodeContentTab(project)
         TabManager.addTab(project, contentTab)
 
+        CycodeActionToolbar().attachActionToolbar(contentTab)
+
         val initRightPanel = getRightPanelDependingOnState(project)
-        val toolWindowContent = createToolWindowContent(contentTab.updateContent(initRightPanel))
+        contentTab.updateContent(initRightPanel)
+
+        val toolWindowContent = createToolWindowContent(contentTab)
         toolWindow.contentManager.addContent(toolWindowContent)
 
         Disposer.register(service, toolWindowContent)
@@ -66,7 +71,7 @@ private fun createToolWindowContent(component: JPanel): Content {
     return ContentFactory.SERVICE.getInstance().createContent(component, null, false)
 }
 
-private fun getRightPanelDependingOnState(project: Project): JPanel {
+fun getRightPanelDependingOnState(project: Project): JPanel {
     val service = cycode(project)
     val pluginState = pluginState()
 

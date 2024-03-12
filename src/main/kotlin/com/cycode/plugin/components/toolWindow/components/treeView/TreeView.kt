@@ -23,7 +23,6 @@ import java.awt.GridLayout
 import java.awt.event.MouseAdapter
 import java.awt.event.MouseEvent
 import java.io.File
-import javax.swing.Icon
 import javax.swing.JComponent
 import javax.swing.JPanel
 import javax.swing.event.TreeSelectionEvent
@@ -46,6 +45,8 @@ class TreeView(
     private val splitPane: JBSplitter = JBSplitter()
 
     private val scanResults = scanResults(project)
+
+    private var severityFilter: Map<String, Boolean>? = null
 
     init {
         createNodes(dummyRootNode)
@@ -111,16 +112,6 @@ class TreeView(
         replaceRightPanel(ScaViolationCardContentTab().getContent(node.detection))
     }
 
-    private fun convertSeverityToIcon(severity: String): Icon {
-        return when (severity.toLowerCase()) {
-            "critical" -> PluginIcons.SEVERITY_CRITICAL
-            "high" -> PluginIcons.SEVERITY_HIGH
-            "medium" -> PluginIcons.SEVERITY_MEDIUM
-            "low" -> PluginIcons.SEVERITY_LOW
-            else -> PluginIcons.SEVERITY_INFO
-        }
-    }
-
     private fun getSeverityWeight(severity: String): Int {
         return when (severity.toLowerCase()) {
             "critical" -> 4
@@ -143,7 +134,10 @@ class TreeView(
         scanResults: ScanResultBase,
         createNodeCallback: (detection: DetectionBase) -> DefaultMutableTreeNode
     ) {
-        val sortedDetections = scanResults.detections.sortedByDescending { getSeverityWeight(it.severity) }
+        val filteredDetections = scanResults.detections.filter {
+            severityFilter?.getOrDefault(it.severity.toLowerCase(), true) ?: true
+        }
+        val sortedDetections = filteredDetections.sortedByDescending { getSeverityWeight(it.severity) }
         val detectionsByFile = sortedDetections.groupBy { it.detectionDetails.getFilepath() }
 
         rootNodes.setNodeSummary(scanType, getDetectionSummary(sortedDetections))
@@ -171,7 +165,7 @@ class TreeView(
             return createNode(
                 SecretDetectionNode(
                     detection.getFormattedNodeTitle(),
-                    convertSeverityToIcon(detection.severity),
+                    PluginIcons.getSeverityIcon(detection.severity),
                     detection as SecretDetection
                 )
             )
@@ -190,7 +184,7 @@ class TreeView(
             return createNode(
                 ScaDetectionNode(
                     detection.getFormattedNodeTitle(),
-                    convertSeverityToIcon(detection.severity),
+                    PluginIcons.getSeverityIcon(detection.severity),
                     detection as ScaDetection
                 )
             )
@@ -215,5 +209,12 @@ class TreeView(
         rootNodes.createNodes(top)
         createSecretDetectionNodes()
         createScaDetectionNodes()
+    }
+
+    fun getTree() = tree
+
+    fun updateSeverityFilter(newSeverityFilter: Map<String, Boolean>) {
+        severityFilter = newSeverityFilter
+        refreshTree()
     }
 }
