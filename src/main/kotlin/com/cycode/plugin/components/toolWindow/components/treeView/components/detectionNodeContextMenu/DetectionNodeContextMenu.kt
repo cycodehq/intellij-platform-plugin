@@ -98,12 +98,12 @@ class DetectionNodeContextMenu(
 
     private fun onOpenViolationCardOptionClicked() {
         val node = getUnknownNode()
-        if (node !is ScaDetectionNode) {
-            // remove to implement more cards
-            return
+        if (node is ScaDetectionNode) {
+            treeView.displayScaViolationCard(node)
         }
-
-        treeView.displayScaViolationCard(node)
+        if (node is SecretDetectionNode) {
+            treeView.displaySecretViolationCard(node)
+        }
     }
 
     fun showPopup(e: MouseEvent) {

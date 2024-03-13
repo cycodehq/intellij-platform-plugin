@@ -4,9 +4,10 @@
 
 ## [Unreleased]
 
-## [1.5.0] - 2024-03-XX
+## [1.5.0] - 2024-03-13
 
 - Add SCA Violation Card
+- Add action toolbar to the Cycode tab
 - Add the on-demand scan of an entire project for Secrets
 
 ## [1.4.0] - 2024-02-28

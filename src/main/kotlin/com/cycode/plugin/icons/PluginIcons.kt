@@ -32,4 +32,14 @@ object PluginIcons {
     private fun intellijLoad(path: String): Icon {
         return IconLoader.getIcon(path, AllIcons::class.java)
     }
+
+    fun getSeverityIcon(severity: String): Icon {
+        return when (severity.toLowerCase()) {
+            "critical" -> SEVERITY_CRITICAL
+            "high" -> SEVERITY_HIGH
+            "medium" -> SEVERITY_MEDIUM
+            "low" -> SEVERITY_LOW
+            else -> SEVERITY_INFO
+        }
+    }
 }
