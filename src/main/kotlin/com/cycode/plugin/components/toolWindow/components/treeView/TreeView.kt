@@ -8,9 +8,11 @@ import com.cycode.plugin.cli.models.scanResult.ScanResultBase
 import com.cycode.plugin.cli.models.scanResult.sca.ScaDetection
 import com.cycode.plugin.cli.models.scanResult.secret.SecretDetection
 import com.cycode.plugin.components.toolWindow.components.scaViolationCardContentTab.ScaViolationCardContentTab
+import com.cycode.plugin.components.toolWindow.components.scanContentTab.ScanContentTab
 import com.cycode.plugin.components.toolWindow.components.treeView.components.detectionNodeContextMenu.DetectionNodeContextMenu
 import com.cycode.plugin.components.toolWindow.components.treeView.nodes.*
 import com.cycode.plugin.icons.PluginIcons
+import com.cycode.plugin.services.cycode
 import com.cycode.plugin.services.scanResults
 import com.intellij.openapi.project.Project
 import com.intellij.ui.JBColor
@@ -37,6 +39,7 @@ class TreeView(
     val project: Project, defaultRightPane: JComponent? = null
 ) : JPanel(GridLayout(1, 0)), TreeSelectionListener {
     private val tree: Tree
+    private val service = cycode(project)
 
     // dummyRootNode is a workaround to allow us to hide the root node of the tree
     private val dummyRootNode = createNode(DummyNode())
@@ -83,6 +86,7 @@ class TreeView(
 
         if (node.userObject is SecretDetectionNode) {
             openSecretDetectionInFile(project, node.userObject as SecretDetectionNode)
+            displaySecretViolationCard(node.userObject as SecretDetectionNode)
         }
 
         if (node.userObject is ScaDetectionNode) {
@@ -106,6 +110,12 @@ class TreeView(
                 }
             }
         }
+    }
+
+    fun displaySecretViolationCard(node: SecretDetectionNode) {
+        // we don't have a dedicated card yet for secret violations,
+        // so we are returning to the main content tab
+        replaceRightPanel(ScanContentTab().getContent(service))
     }
 
     fun displayScaViolationCard(node: ScaDetectionNode) {
