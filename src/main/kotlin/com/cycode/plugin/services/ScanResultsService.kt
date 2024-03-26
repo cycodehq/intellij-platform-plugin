@@ -2,6 +2,7 @@ package com.cycode.plugin.services
 
 import com.cycode.plugin.cli.CliResult
 import com.cycode.plugin.cli.CliScanType
+import com.cycode.plugin.cli.models.scanResult.iac.IacScanResult
 import com.cycode.plugin.cli.models.scanResult.sca.ScaScanResult
 import com.cycode.plugin.cli.models.scanResult.secret.SecretScanResult
 import com.cycode.plugin.services.scanResultsFilters.ScaScanResultsFilter
@@ -13,8 +14,10 @@ import com.intellij.openapi.util.TextRange
 @Service(Service.Level.PROJECT)
 class ScanResultsService {
     private val detectedSegments = mutableMapOf<Pair<CliScanType, TextRange>, String>()
+
     private var secretResults: CliResult<SecretScanResult>? = null
     private var scaResults: CliResult<ScaScanResult>? = null
+    private var iacResults: CliResult<IacScanResult>? = null
 
     init {
         thisLogger().info("CycodeResultsService init")
@@ -38,14 +41,24 @@ class ScanResultsService {
         return scaResults
     }
 
+    fun setIacResults(result: CliResult<IacScanResult>) {
+        clearDetectedSegments(CliScanType.Iac)
+        iacResults = result
+    }
+
+    fun getIacResults(): CliResult<IacScanResult>? {
+        return iacResults
+    }
+
     fun clear() {
         secretResults = null
         scaResults = null
+        iacResults = null
         clearDetectedSegments()
     }
 
     fun hasResults(): Boolean {
-        return secretResults != null || scaResults != null
+        return secretResults != null || scaResults != null || iacResults != null
     }
 
     fun saveDetectedSegment(scanType: CliScanType, textRange: TextRange, value: String) {

@@ -5,6 +5,7 @@ import com.cycode.plugin.cli.CliResult
 import com.cycode.plugin.cli.CliScanType
 import com.cycode.plugin.cli.models.scanResult.DetectionBase
 import com.cycode.plugin.cli.models.scanResult.ScanResultBase
+import com.cycode.plugin.cli.models.scanResult.iac.IacDetection
 import com.cycode.plugin.cli.models.scanResult.sca.ScaDetection
 import com.cycode.plugin.cli.models.scanResult.secret.SecretDetection
 import com.cycode.plugin.components.toolWindow.components.scaViolationCardContentTab.ScaViolationCardContentTab
@@ -32,8 +33,6 @@ import javax.swing.event.TreeSelectionListener
 import javax.swing.tree.DefaultMutableTreeNode
 import javax.swing.tree.TreePath
 import javax.swing.tree.TreeSelectionModel
-
-const val DIFFERENCE_BETWEEN_SCA_LINE_NUMBERS = 1
 
 class TreeView(
     val project: Project, defaultRightPane: JComponent? = null
@@ -84,14 +83,21 @@ class TreeView(
 
         val node = tree.getLastSelectedPathComponent() as DefaultMutableTreeNode
 
-        if (node.userObject is SecretDetectionNode) {
-            openSecretDetectionInFile(project, node.userObject as SecretDetectionNode)
-            displaySecretViolationCard(node.userObject as SecretDetectionNode)
-        }
+        when (node.userObject) {
+            is SecretDetectionNode -> {
+                openSecretDetectionInFile(project, node.userObject as SecretDetectionNode)
+                displaySecretViolationCard(node.userObject as SecretDetectionNode)
+            }
 
-        if (node.userObject is ScaDetectionNode) {
-            openScaDetectionInFile(project, node.userObject as ScaDetectionNode)
-            displayScaViolationCard(node.userObject as ScaDetectionNode)
+            is ScaDetectionNode -> {
+                openScaDetectionInFile(project, node.userObject as ScaDetectionNode)
+                displayScaViolationCard(node.userObject as ScaDetectionNode)
+            }
+
+            is IacDetectionNode -> {
+                openIacDetectionInFile(project, node.userObject as IacDetectionNode)
+                displayIacViolationCard(node.userObject as IacDetectionNode)
+            }
         }
     }
 
@@ -114,6 +120,12 @@ class TreeView(
 
     fun displaySecretViolationCard(node: SecretDetectionNode) {
         // we don't have a dedicated card yet for secret violations,
+        // so we are returning to the main content tab
+        replaceRightPanel(ScanContentTab().getContent(service))
+    }
+
+    fun displayIacViolationCard(node: IacDetectionNode) {
+        // we don't have a dedicated card yet for IaC violations,
         // so we are returning to the main content tab
         replaceRightPanel(ScanContentTab().getContent(service))
     }
@@ -203,6 +215,25 @@ class TreeView(
         createDetectionNodes(CliScanType.Sca, scaDetections.result, ::createScaDetectionNode)
     }
 
+    private fun createIacDetectionNodes() {
+        val iacDetections = scanResults.getIacResults()
+        if (iacDetections !is CliResult.Success) {
+            return
+        }
+
+        fun createIacDetectionNode(detection: DetectionBase): DefaultMutableTreeNode {
+            return createNode(
+                IacDetectionNode(
+                    detection.getFormattedNodeTitle(),
+                    PluginIcons.getSeverityIcon(detection.severity),
+                    detection as IacDetection
+                )
+            )
+        }
+
+        createDetectionNodes(CliScanType.Iac, iacDetections.result, ::createIacDetectionNode)
+    }
+
     fun replaceRightPanel(newRightPanel: JComponent): TreeView {
         splitPane.secondComponent = newRightPanel
         return this
@@ -219,6 +250,7 @@ class TreeView(
         rootNodes.createNodes(top)
         createSecretDetectionNodes()
         createScaDetectionNodes()
+        createIacDetectionNodes()
     }
 
     fun getTree() = tree

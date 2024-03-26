@@ -5,6 +5,7 @@ import com.cycode.plugin.cli.*
 import com.cycode.plugin.cli.models.AuthCheckResult
 import com.cycode.plugin.cli.models.AuthResult
 import com.cycode.plugin.cli.models.VersionResult
+import com.cycode.plugin.cli.models.scanResult.iac.IacScanResult
 import com.cycode.plugin.cli.models.scanResult.sca.ScaScanResult
 import com.cycode.plugin.cli.models.scanResult.secret.SecretScanResult
 import com.cycode.plugin.components.toolWindow.updateToolWindowState
@@ -229,6 +230,25 @@ class CliService(private val project: Project) {
         showScanFileResultNotification(CliScanType.Sca, detectionsCount, onDemand)
 
         scanResults.setScaResults(results)
+        DaemonCodeAnalyzer.getInstance(project).restart()
+        updateToolWindowState(project)
+    }
+
+    fun scanPathsIac(paths: List<String>, onDemand: Boolean = true, cancelledCallback: TaskCancelledCallback = null) {
+        val results = scanPaths<IacScanResult>(paths, CliScanType.Iac, cancelledCallback)
+        if (results == null) {
+            thisLogger().warn("Failed to scan paths: $paths")
+            return
+        }
+
+        var detectionsCount = 0
+        if (results is CliResult.Success) {
+            detectionsCount = results.result.detections.count()
+        }
+
+        showScanFileResultNotification(CliScanType.Iac, detectionsCount, onDemand)
+
+        scanResults.setIacResults(results)
         DaemonCodeAnalyzer.getInstance(project).restart()
         updateToolWindowState(project)
     }

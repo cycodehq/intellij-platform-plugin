@@ -97,6 +97,28 @@ class CycodeService(val project: Project) : Disposable {
         }.queue()
     }
 
+    fun startPathIacScan(path: String, onDemand: Boolean = false) {
+        startPathIacScan(listOf(path), onDemand = onDemand)
+    }
+
+    fun startPathIacScan(pathsToScan: List<String>, onDemand: Boolean = false) {
+        object : Task.Backgroundable(project, CycodeBundle.message("iacScanning"), true) {
+            override fun run(indicator: ProgressIndicator) {
+                if (!pluginState.cliAuthed) {
+                    return
+                }
+
+                thisLogger().debug("[IAC] Start scanning paths: $pathsToScan")
+                cliService.scanPathsIac(
+                    pathsToScan,
+                    onDemand = onDemand,
+                    cancelledCallback = { indicator.isCanceled }
+                )
+                thisLogger().debug("[IAC] Finish scanning paths: $pathsToScan")
+            }
+        }.queue()
+    }
+
     fun applyIgnoreFromFileAnnotation(optionScanType: String, optionName: String, optionValue: String) {
         object : Task.Backgroundable(project, CycodeBundle.message("ignoresApplying"), true) {
             override fun run(indicator: ProgressIndicator) {
@@ -140,6 +162,16 @@ class CycodeService(val project: Project) : Disposable {
         }
 
         startPathScaScan(projectRoot, onDemand = true)
+    }
+
+    fun startIacScanForCurrentProject() {
+        val projectRoot = cliService.getProjectRootDirectory()
+        if (projectRoot == null) {
+            CycodeNotifier.notifyInfo(project, CycodeBundle.message("noProjectRootErrorNotification"))
+            return
+        }
+
+        startPathIacScan(projectRoot, onDemand = true)
     }
 
     override fun dispose() {

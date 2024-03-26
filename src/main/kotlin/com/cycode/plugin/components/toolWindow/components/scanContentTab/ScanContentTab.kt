@@ -37,6 +37,11 @@ class ScanContentTab : Component<CycodeService>() {
                 addActionListener { service.startScaScanForCurrentProject() }
             },
         )
+        addComponentToPanel(
+            JButton(CycodeBundle.message("scanTabIacBtn")).apply {
+                addActionListener { service.startIacScanForCurrentProject() }
+            },
+        )
         addComponentToPanel(createClickableLabel(CycodeBundle.message("scanTabOnSaveTip")))
         addComponentToPanel(createClickableLabel(CycodeBundle.message("howToUseLabel")))
 

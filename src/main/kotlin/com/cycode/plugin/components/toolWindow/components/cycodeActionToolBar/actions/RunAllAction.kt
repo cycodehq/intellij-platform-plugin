@@ -22,8 +22,10 @@ class RunAllAction :
         //  we can provide "stop" action only after that
         val project = e.project ?: return
         val service = cycode(project)
+
         service.startSecretScanForCurrentProject()
         service.startScaScanForCurrentProject()
+        service.startIacScanForCurrentProject()
     }
 
     override fun update(e: AnActionEvent) {
