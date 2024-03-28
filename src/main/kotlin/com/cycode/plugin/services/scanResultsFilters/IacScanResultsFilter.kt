@@ -14,7 +14,7 @@ class IacScanResultsFilter(scanResults: IacScanResult) : ScanResultsFilterBase<I
     }
 
     override fun excludeByValue(value: String) {
-        // do nothing because we don't have a value field in SCA
+        // do nothing because we don't have a value field in IaC
     }
 
     override fun excludeByPath(path: String) {
