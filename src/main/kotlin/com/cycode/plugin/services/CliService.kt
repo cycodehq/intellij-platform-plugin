@@ -5,6 +5,8 @@ import com.cycode.plugin.cli.*
 import com.cycode.plugin.cli.models.AuthCheckResult
 import com.cycode.plugin.cli.models.AuthResult
 import com.cycode.plugin.cli.models.VersionResult
+import com.cycode.plugin.cli.models.scanResult.ScanResultBase
+import com.cycode.plugin.cli.models.scanResult.iac.IacDetection
 import com.cycode.plugin.cli.models.scanResult.iac.IacScanResult
 import com.cycode.plugin.cli.models.scanResult.sca.ScaScanResult
 import com.cycode.plugin.cli.models.scanResult.secret.SecretScanResult
@@ -53,6 +55,7 @@ class CliService(private val project: Project) {
             showErrorNotification(result.result.message)
             return null
         }
+
         if (result is CliResult.Panic) {
             if (result.exitCode == ExitCodes.TERMINATION) {
                 // don't notify user about user-requested terminations
@@ -60,6 +63,20 @@ class CliService(private val project: Project) {
             }
 
             showErrorNotification(result.errorMessage)
+            return null
+        }
+
+        if (result is CliResult.Success && result.result is ScanResultBase) {
+            val errors = result.result.errors
+            if (errors.isEmpty()) {
+                return result
+            }
+
+            for (error in errors) {
+                showErrorNotification(error.message)
+            }
+
+            // we trust that it is not possible to have both errors and detections
             return null
         }
 
@@ -234,8 +251,20 @@ class CliService(private val project: Project) {
         updateToolWindowState(project)
     }
 
+    private fun filterUnsupportedIacDetections(detections: List<IacDetection>): List<IacDetection> {
+        return detections.filter { detection ->
+            val detectionDetails = detection.detectionDetails
+            val filePath = detectionDetails.getFilepath()
+
+            // TF plans are virtual files what is not exist in the file system
+            // "file_name": "1711298252-/Users/ilyasiamionau/projects/cycode/ilya-siamionau-payloads/tfplan.tf",
+            // skip such detections
+            return@filter filePath.startsWith("/")
+        }
+    }
+
     fun scanPathsIac(paths: List<String>, onDemand: Boolean = true, cancelledCallback: TaskCancelledCallback = null) {
-        val results = scanPaths<IacScanResult>(paths, CliScanType.Iac, cancelledCallback)
+        var results = scanPaths<IacScanResult>(paths, CliScanType.Iac, cancelledCallback)
         if (results == null) {
             thisLogger().warn("Failed to scan paths: $paths")
             return
@@ -243,6 +272,14 @@ class CliService(private val project: Project) {
 
         var detectionsCount = 0
         if (results is CliResult.Success) {
+            // filter unsupported detections
+            results = CliResult.Success(
+                IacScanResult(
+                    filterUnsupportedIacDetections(results.result.detections),
+                    results.result.errors
+                )
+            )
+
             detectionsCount = results.result.detections.count()
         }
 

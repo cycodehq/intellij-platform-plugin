@@ -5,5 +5,5 @@ import com.cycode.plugin.cli.models.scanResult.ScanResultBase
 
 data class IacScanResult(
     override val detections: List<IacDetection>,
-    val errors: List<CliError>,
+    override val errors: List<CliError>,
 ) : ScanResultBase

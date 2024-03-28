@@ -15,7 +15,9 @@ import com.cycode.plugin.components.toolWindow.components.treeView.nodes.*
 import com.cycode.plugin.icons.PluginIcons
 import com.cycode.plugin.services.cycode
 import com.cycode.plugin.services.scanResults
+import com.intellij.icons.AllIcons
 import com.intellij.openapi.project.Project
+import com.intellij.openapi.util.Iconable
 import com.intellij.ui.JBColor
 import com.intellij.ui.JBSplitter
 import com.intellij.ui.SideBorder
@@ -25,7 +27,6 @@ import java.awt.Dimension
 import java.awt.GridLayout
 import java.awt.event.MouseAdapter
 import java.awt.event.MouseEvent
-import java.io.File
 import javax.swing.JComponent
 import javax.swing.JPanel
 import javax.swing.event.TreeSelectionEvent
@@ -165,10 +166,14 @@ class TreeView(
         rootNodes.setNodeSummary(scanType, getDetectionSummary(sortedDetections))
 
         for ((filePath, detections) in detectionsByFile) {
-            val fileName = File(filePath).name
             val summary = CycodeBundle.message("fileNodeSummary", detections.size)
 
-            val fileNode = createNode(FileNode(fileName, summary))
+            val psiFile = getPsiFile(project, filePath)
+            val icon = if (psiFile != null)
+                psiFile.getIcon(Iconable.ICON_FLAG_READ_STATUS) else
+                AllIcons.Actions.Annotate
+
+            val fileNode = createNode(FileNode(filePath, summary, icon))
             for (detection in detections) {
                 fileNode.add(createNodeCallback(detection))
             }

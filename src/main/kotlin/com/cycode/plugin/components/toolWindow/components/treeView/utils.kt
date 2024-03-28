@@ -7,10 +7,18 @@ import com.intellij.openapi.fileEditor.FileEditorManager
 import com.intellij.openapi.fileEditor.OpenFileDescriptor
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.vfs.LocalFileSystem
+import com.intellij.openapi.vfs.VirtualFileManager
+import com.intellij.psi.PsiFile
+import com.intellij.psi.PsiManager
 import java.io.File
 
 const val DIFFERENCE_BETWEEN_SCA_LINE_NUMBERS = 1
 const val DIFFERENCE_BETWEEN_IAC_LINE_NUMBERS = 1
+
+fun getPsiFile(project: Project, filePath: String): PsiFile? {
+    val virtualFile = VirtualFileManager.getInstance().findFileByUrl("file://$filePath") ?: return null
+    return PsiManager.getInstance(project).findFile(virtualFile)
+}
 
 private fun openFileInEditor(project: Project, filePath: String, lineNumber: Int) {
     val file = File(filePath)

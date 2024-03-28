@@ -5,27 +5,19 @@ import com.cycode.plugin.annotators.convertSeverity
 import com.cycode.plugin.annotators.validateTextRange
 import com.cycode.plugin.cli.CliResult
 import com.cycode.plugin.cli.CliScanType
+import com.cycode.plugin.intentions.CycodeIgnoreIntentionQuickFix
+import com.cycode.plugin.intentions.CycodeIgnoreType
 import com.cycode.plugin.services.ScanResultsService
 import com.intellij.lang.annotation.AnnotationHolder
-import com.intellij.openapi.diagnostic.thisLogger
 import com.intellij.openapi.util.TextRange
 import com.intellij.psi.PsiFile
 
 class IacApplier(private val scanResults: ScanResultsService) : AnnotationApplierBase() {
     private fun validateIacTextRange(textRange: TextRange, psiFile: PsiFile): Boolean {
-        val detectedSubstr = psiFile.text.substring(textRange.startOffset, textRange.endOffset)
-        val detectedSegment = scanResults.getDetectedSegment(CliScanType.Iac, textRange)
-        if (detectedSegment == null) {
-            scanResults.saveDetectedSegment(CliScanType.Iac, textRange, detectedSubstr)
-        } else if (detectedSegment != detectedSubstr) {
-            // case: the code has been added or deleted before the detection
-            thisLogger().debug(
-                "[IaC] Text range of detection has been shifted. " +
-                        "Annotation is not relevant to this state of the file content anymore"
-            )
-            return false
-        }
-
+        // FIXME(MarshalX): for now, I dont see any way to validate the text range for IaC
+        //   small explanation:
+        //   - IaC doesn't provide end positions, so we have to calculate them from the line number (get the last character in the line)
+        //   - we can't use the same validation as for SCA because value in the range is unknown (for SCA we expect package name)
         return true
     }
 
@@ -60,7 +52,7 @@ class IacApplier(private val scanResults: ScanResultsService) : AnnotationApplie
             var companyGuidelineMessage = ""
             if (detectionDetails.customRemediationGuidelines != null) {
                 companyGuidelineMessage = CycodeBundle.message(
-                    "secretsAnnotationTooltipCompanyGuideline",
+                    "iacAnnotationTooltipCompanyGuideline",
                     detectionDetails.customRemediationGuidelines
                 )
             }
@@ -68,8 +60,8 @@ class IacApplier(private val scanResults: ScanResultsService) : AnnotationApplie
             val tooltip = CycodeBundle.message(
                 "iacAnnotationTooltip",
                 detection.severity,
-                detection.type,
                 message,
+                detectionDetails.infraProvider,
                 detection.detectionRuleId,
                 detectionDetails.fileName,
                 companyGuidelineMessage
@@ -77,6 +69,20 @@ class IacApplier(private val scanResults: ScanResultsService) : AnnotationApplie
             holder.newAnnotation(severity, title)
                 .range(textRange)
                 .tooltip(tooltip)
+                .withFix(
+                    CycodeIgnoreIntentionQuickFix(
+                        CliScanType.Iac,
+                        CycodeIgnoreType.PATH,
+                        detection.detectionDetails.getFilepath()
+                    )
+                )
+                .withFix(
+                    CycodeIgnoreIntentionQuickFix(
+                        CliScanType.Iac,
+                        CycodeIgnoreType.RULE,
+                        detection.detectionRuleId
+                    )
+                )
                 .create()
         }
     }

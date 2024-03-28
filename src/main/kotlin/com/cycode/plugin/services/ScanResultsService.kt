@@ -5,6 +5,7 @@ import com.cycode.plugin.cli.CliScanType
 import com.cycode.plugin.cli.models.scanResult.iac.IacScanResult
 import com.cycode.plugin.cli.models.scanResult.sca.ScaScanResult
 import com.cycode.plugin.cli.models.scanResult.secret.SecretScanResult
+import com.cycode.plugin.services.scanResultsFilters.IacScanResultsFilter
 import com.cycode.plugin.services.scanResultsFilters.ScaScanResultsFilter
 import com.cycode.plugin.services.scanResultsFilters.SecretScanResultsFilter
 import com.intellij.openapi.components.Service
@@ -88,6 +89,11 @@ class ScanResultsService {
             val filter = ScaScanResultsFilter((scaResults as CliResult.Success<ScaScanResult>).result)
             filter.exclude(byValue, byPath, byRuleId)
             scaResults = CliResult.Success(filter.getFilteredScanResults())
+        }
+        if (iacResults is CliResult.Success) {
+            val filter = IacScanResultsFilter((iacResults as CliResult.Success<IacScanResult>).result)
+            filter.exclude(byValue, byPath, byRuleId)
+            iacResults = CliResult.Success(filter.getFilteredScanResults())
         }
     }
 }

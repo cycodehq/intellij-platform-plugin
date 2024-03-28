@@ -7,6 +7,8 @@
 ## [1.6.0] - 2024-03-XX
 
 - Add Infrastructure as Code (IaC) support
+- Add icons for file nodes in the tree view
+- Add a full path of file nodes in the tree view
 
 ## [1.5.0] - 2024-03-13
 

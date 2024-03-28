@@ -5,5 +5,5 @@ import com.cycode.plugin.cli.models.scanResult.ScanResultBase
 
 data class ScaScanResult(
     override val detections: List<ScaDetection>,
-    val errors: List<CliError>,
+    override val errors: List<CliError>,
 ) : ScanResultBase

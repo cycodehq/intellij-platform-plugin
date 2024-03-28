@@ -8,11 +8,9 @@ import com.cycode.plugin.utils.CycodeNotifier
 import com.intellij.openapi.Disposable
 import com.intellij.openapi.components.Service
 import com.intellij.openapi.diagnostic.thisLogger
-import com.intellij.openapi.fileEditor.FileEditorManager
 import com.intellij.openapi.progress.ProgressIndicator
 import com.intellij.openapi.progress.Task
 import com.intellij.openapi.project.Project
-import com.intellij.psi.PsiDocumentManager
 
 
 @Service(Service.Level.PROJECT)
@@ -129,19 +127,6 @@ class CycodeService(val project: Project) : Disposable {
                 cliService.ignore(optionScanType, optionName, optionValue, cancelledCallback = { indicator.isCanceled })
             }
         }.queue()
-    }
-
-    fun startSecretScanForCurrentFile() {
-        val currentOpenedDocument = FileEditorManager.getInstance(project).selectedTextEditor?.document
-        if (currentOpenedDocument == null) {
-            CycodeNotifier.notifyInfo(project, CycodeBundle.message("noOpenFileErrorNotification"))
-            return
-        }
-
-        val psiFile = PsiDocumentManager.getInstance(project).getPsiFile(currentOpenedDocument)
-        val vFile = psiFile!!.originalFile.virtualFile
-
-        startPathSecretScan(vFile.path, onDemand = true)
     }
 
     fun startSecretScanForCurrentProject() {

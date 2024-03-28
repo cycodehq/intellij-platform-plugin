@@ -5,6 +5,7 @@ import com.cycode.plugin.cli.models.scanResult.ScanDetectionDetailsBase
 data class IacDetectionDetails(
     val info: String,
     val failureType: String,
+    val infraProvider: String,
     val lineInFile: Int,
     val startPosition: Int,
     val endPosition: Int,
