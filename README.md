@@ -14,6 +14,7 @@ The extension provides functionalities such as:
 
 * Scanning your code for exposed secrets, passwords, tokens, keys, and other credentials.
 * Scanning your code for open-source package`s vulnerabilities.
+* Scanning your code for Infrastructure as Code (IaC).
 * Company’s Custom Remediation Guidelines - If your company has set custom remediation guidelines via the Cycode portal, you'll see a field for "Company Guidelines" that contains those guidelines.
 * Running a new scan from your IDE even before committing the code.
 * Triggering a scan automatically whenever a file is saved.
@@ -22,7 +23,7 @@ The extension provides functionalities such as:
 * Removing a detected secret or ignoring it by secret value, rule (type) or by path.
 * Upgrading a detected vulnerable package or ignoring it by rule (type) or by path.
 
-Coming soon: Code Security (SAST), and Infrastructure as Code (IaC).
+Coming soon: Code Security (SAST).
 
 ## Installation
 

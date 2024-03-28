@@ -8,11 +8,9 @@ import com.cycode.plugin.utils.CycodeNotifier
 import com.intellij.openapi.Disposable
 import com.intellij.openapi.components.Service
 import com.intellij.openapi.diagnostic.thisLogger
-import com.intellij.openapi.fileEditor.FileEditorManager
 import com.intellij.openapi.progress.ProgressIndicator
 import com.intellij.openapi.progress.Task
 import com.intellij.openapi.project.Project
-import com.intellij.psi.PsiDocumentManager
 
 
 @Service(Service.Level.PROJECT)
@@ -97,6 +95,28 @@ class CycodeService(val project: Project) : Disposable {
         }.queue()
     }
 
+    fun startPathIacScan(path: String, onDemand: Boolean = false) {
+        startPathIacScan(listOf(path), onDemand = onDemand)
+    }
+
+    fun startPathIacScan(pathsToScan: List<String>, onDemand: Boolean = false) {
+        object : Task.Backgroundable(project, CycodeBundle.message("iacScanning"), true) {
+            override fun run(indicator: ProgressIndicator) {
+                if (!pluginState.cliAuthed) {
+                    return
+                }
+
+                thisLogger().debug("[IAC] Start scanning paths: $pathsToScan")
+                cliService.scanPathsIac(
+                    pathsToScan,
+                    onDemand = onDemand,
+                    cancelledCallback = { indicator.isCanceled }
+                )
+                thisLogger().debug("[IAC] Finish scanning paths: $pathsToScan")
+            }
+        }.queue()
+    }
+
     fun applyIgnoreFromFileAnnotation(optionScanType: String, optionName: String, optionValue: String) {
         object : Task.Backgroundable(project, CycodeBundle.message("ignoresApplying"), true) {
             override fun run(indicator: ProgressIndicator) {
@@ -107,19 +127,6 @@ class CycodeService(val project: Project) : Disposable {
                 cliService.ignore(optionScanType, optionName, optionValue, cancelledCallback = { indicator.isCanceled })
             }
         }.queue()
-    }
-
-    fun startSecretScanForCurrentFile() {
-        val currentOpenedDocument = FileEditorManager.getInstance(project).selectedTextEditor?.document
-        if (currentOpenedDocument == null) {
-            CycodeNotifier.notifyInfo(project, CycodeBundle.message("noOpenFileErrorNotification"))
-            return
-        }
-
-        val psiFile = PsiDocumentManager.getInstance(project).getPsiFile(currentOpenedDocument)
-        val vFile = psiFile!!.originalFile.virtualFile
-
-        startPathSecretScan(vFile.path, onDemand = true)
     }
 
     fun startSecretScanForCurrentProject() {
@@ -140,6 +147,16 @@ class CycodeService(val project: Project) : Disposable {
         }
 
         startPathScaScan(projectRoot, onDemand = true)
+    }
+
+    fun startIacScanForCurrentProject() {
+        val projectRoot = cliService.getProjectRootDirectory()
+        if (projectRoot == null) {
+            CycodeNotifier.notifyInfo(project, CycodeBundle.message("noProjectRootErrorNotification"))
+            return
+        }
+
+        startPathIacScan(projectRoot, onDemand = true)
     }
 
     override fun dispose() {

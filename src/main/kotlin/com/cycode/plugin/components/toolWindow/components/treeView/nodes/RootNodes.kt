@@ -65,8 +65,10 @@ class RootNodes {
         // the order of adding nodes is important
         top.add(secretNode)
         top.add(scaNode)
-        top.add(sastNode)
         top.add(iacNode)
+
+        // temporary at the bottom because of "coming soon"
+        top.add(sastNode)
     }
 
     fun getScanTypeNode(scanType: CliScanType): DefaultMutableTreeNode {

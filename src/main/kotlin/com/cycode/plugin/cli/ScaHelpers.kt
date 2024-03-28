@@ -58,6 +58,28 @@ private val SCA_CONFIGURATION_SCAN_LOCK_FILE_TO_PACKAGE_FILE: Map<String, String
 private val SCA_CONFIGURATION_SCAN_SUPPORTED_LOCK_FILES: List<String> =
     SCA_CONFIGURATION_SCAN_LOCK_FILE_TO_PACKAGE_FILE.keys.toList()
 
+// keep in lowercase.
+// source: https://github.com/cycodehq/cycode-cli/blob/ec8333707ab2590518fd0f36454c8636ccbf1061/cycode/cli/consts.py#L16
+private val INFRA_CONFIGURATION_SCAN_SUPPORTED_FILE_SUFFIXES: List<String> = listOf(
+    ".tf",
+    ".tf.json",
+    ".json",
+    ".yaml",
+    ".yml",
+    "dockerfile",
+)
+
+fun isSupportedIacFile(filename: String): Boolean {
+    val lowercaseFilename = filename.toLowerCase()
+    INFRA_CONFIGURATION_SCAN_SUPPORTED_FILE_SUFFIXES.forEach {
+        if (lowercaseFilename.endsWith(it)) {
+            return true
+        }
+    }
+
+    return false
+}
+
 fun isSupportedPackageFile(filename: String): Boolean {
     val lowercaseFilename = filename.toLowerCase()
     SCA_CONFIGURATION_SCAN_SUPPORTED_FILES.forEach {

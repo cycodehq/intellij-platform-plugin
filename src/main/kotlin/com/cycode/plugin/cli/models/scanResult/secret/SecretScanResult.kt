@@ -5,5 +5,5 @@ import com.cycode.plugin.cli.models.scanResult.ScanResultBase
 
 data class SecretScanResult(
     override val detections: List<SecretDetection>,
-    val errors: List<CliError>,
+    override val errors: List<CliError>,
 ) : ScanResultBase

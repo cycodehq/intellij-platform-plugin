@@ -2,9 +2,11 @@ package com.cycode.plugin.components.toolWindow.components.treeView.components.d
 
 import com.cycode.plugin.CycodeBundle
 import com.cycode.plugin.components.toolWindow.components.treeView.TreeView
+import com.cycode.plugin.components.toolWindow.components.treeView.nodes.IacDetectionNode
 import com.cycode.plugin.components.toolWindow.components.treeView.nodes.ScaDetectionNode
 import com.cycode.plugin.components.toolWindow.components.treeView.nodes.ScanTypeNode
 import com.cycode.plugin.components.toolWindow.components.treeView.nodes.SecretDetectionNode
+import com.cycode.plugin.components.toolWindow.components.treeView.openIacDetectionInFile
 import com.cycode.plugin.components.toolWindow.components.treeView.openScaDetectionInFile
 import com.cycode.plugin.components.toolWindow.components.treeView.openSecretDetectionInFile
 import com.cycode.plugin.services.cycode
@@ -49,6 +51,7 @@ class DetectionNodeContextMenu(
             is ScanTypeNode -> listOf(RUN_OPTION)
             is SecretDetectionNode -> listOf(OPEN_IN_EDITOR_OPTION, RESCAN_OPTION)
             is ScaDetectionNode -> listOf(OPEN_VIOLATION_CARD_OPTION, OPEN_IN_EDITOR_OPTION, RESCAN_OPTION)
+            is IacDetectionNode -> listOf(OPEN_IN_EDITOR_OPTION, RESCAN_OPTION)
             else -> listOf()
         }
     }
@@ -72,6 +75,7 @@ class DetectionNodeContextMenu(
         when (node.name) {
             CycodeBundle.message("secretDisplayName") -> service.startSecretScanForCurrentProject()
             CycodeBundle.message("scaDisplayName") -> service.startScaScanForCurrentProject()
+            CycodeBundle.message("iacDisplayName") -> service.startIacScanForCurrentProject()
         }
     }
 
@@ -86,6 +90,11 @@ class DetectionNodeContextMenu(
                 node.detection.detectionDetails.getFilepath(),
                 onDemand = true
             )
+
+            is IacDetectionNode -> service.startPathIacScan(
+                node.detection.detectionDetails.getFilepath(),
+                onDemand = true
+            )
         }
     }
 
@@ -93,16 +102,23 @@ class DetectionNodeContextMenu(
         when (val node = getUnknownNode()) {
             is SecretDetectionNode -> openSecretDetectionInFile(project, node)
             is ScaDetectionNode -> openScaDetectionInFile(project, node)
+            is IacDetectionNode -> openIacDetectionInFile(project, node)
         }
     }
 
     private fun onOpenViolationCardOptionClicked() {
-        val node = getUnknownNode()
-        if (node is ScaDetectionNode) {
-            treeView.displayScaViolationCard(node)
-        }
-        if (node is SecretDetectionNode) {
-            treeView.displaySecretViolationCard(node)
+        when (val node = getUnknownNode()) {
+            is ScaDetectionNode -> {
+                treeView.displayScaViolationCard(node)
+            }
+
+            is SecretDetectionNode -> {
+                treeView.displaySecretViolationCard(node)
+            }
+
+            is IacDetectionNode -> {
+                treeView.displayIacViolationCard(node)
+            }
         }
     }
 

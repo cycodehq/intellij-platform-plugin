@@ -1,6 +1,7 @@
 package com.cycode.plugin.listeners
 
 import com.cycode.plugin.Consts
+import com.cycode.plugin.cli.isSupportedIacFile
 import com.cycode.plugin.cli.isSupportedPackageFile
 import com.cycode.plugin.services.cycode
 import com.cycode.plugin.services.pluginSettings
@@ -43,6 +44,11 @@ class FileSaveListener(private val project: Project) : FileDocumentManagerListen
         if (scaPathsToScan.isNotEmpty()) {
             service.startPathScaScan(scaPathsToScan)
         }
+
+        val iacPathsToScan = excludeNonIacRelatedPaths(pathsToScan)
+        if (iacPathsToScan.isNotEmpty()) {
+            service.startPathIacScan(iacPathsToScan)
+        }
     }
 
     private fun excludeNotExistingPaths(paths: List<String>): List<String> {
@@ -51,6 +57,10 @@ class FileSaveListener(private val project: Project) : FileDocumentManagerListen
 
     private fun excludeNonScaRelatedPaths(paths: List<String>): List<String> {
         return paths.filter { isSupportedPackageFile(it) }
+    }
+
+    private fun excludeNonIacRelatedPaths(paths: List<String>): List<String> {
+        return paths.filter { isSupportedIacFile(it) }
     }
 
     private fun scheduleScanPathsFlush() {
