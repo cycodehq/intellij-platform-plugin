@@ -8,10 +8,11 @@ import com.cycode.plugin.cli.models.scanResult.ScanResultBase
 import com.cycode.plugin.cli.models.scanResult.iac.IacDetection
 import com.cycode.plugin.cli.models.scanResult.sca.ScaDetection
 import com.cycode.plugin.cli.models.scanResult.secret.SecretDetection
-import com.cycode.plugin.components.toolWindow.components.scaViolationCardContentTab.ScaViolationCardContentTab
 import com.cycode.plugin.components.toolWindow.components.scanContentTab.ScanContentTab
 import com.cycode.plugin.components.toolWindow.components.treeView.components.detectionNodeContextMenu.DetectionNodeContextMenu
 import com.cycode.plugin.components.toolWindow.components.treeView.nodes.*
+import com.cycode.plugin.components.toolWindow.components.violationCardContentTab.scaViolationCardContentTab.ScaViolationCardContentTab
+import com.cycode.plugin.components.toolWindow.components.violationCardContentTab.secretViolationCardContentTab.SecretViolationCardContentTab
 import com.cycode.plugin.icons.PluginIcons
 import com.cycode.plugin.services.cycode
 import com.cycode.plugin.services.scanResults
@@ -122,7 +123,7 @@ class TreeView(
     fun displaySecretViolationCard(node: SecretDetectionNode) {
         // we don't have a dedicated card yet for secret violations,
         // so we are returning to the main content tab
-        replaceRightPanel(ScanContentTab().getContent(service))
+        replaceRightPanel(SecretViolationCardContentTab().getContent(node.detection))
     }
 
     fun displayIacViolationCard(node: IacDetectionNode) {

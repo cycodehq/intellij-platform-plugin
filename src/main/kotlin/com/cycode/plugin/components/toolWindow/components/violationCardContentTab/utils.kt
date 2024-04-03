@@ -1,4 +1,4 @@
-package com.cycode.plugin.components.toolWindow.components.scaViolationCardContentTab
+package com.cycode.plugin.components.toolWindow.components.violationCardContentTab
 
 import org.intellij.markdown.flavours.commonmark.CommonMarkFlavourDescriptor
 import org.intellij.markdown.html.HtmlGenerator
