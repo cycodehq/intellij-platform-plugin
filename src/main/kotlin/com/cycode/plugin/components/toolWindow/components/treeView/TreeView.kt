@@ -132,12 +132,6 @@ class TreeView(
         replaceRightPanel(ScanContentTab().getContent(service))
     }
 
-    fun displayIacViolationCard(node: IacDetectionNode) {
-        // we don't have a dedicated card yet for IaC violations,
-        // so we are returning to the main content tab
-        replaceRightPanel(ScanContentTab().getContent(service))
-    }
-
     fun displayScaViolationCard(node: ScaDetectionNode) {
         replaceRightPanel(ScaViolationCardContentTab().getContent(node.detection))
     }

@@ -10,7 +10,7 @@ import java.awt.GridBagLayout
 import javax.swing.JComponent
 import javax.swing.JPanel
 
-class SecretSummary() {
+class SecretSummary {
     fun getContent(detection: SecretDetection): JComponent {
         val message = detection.message.replace(
             "within '' repository", // BE bug
