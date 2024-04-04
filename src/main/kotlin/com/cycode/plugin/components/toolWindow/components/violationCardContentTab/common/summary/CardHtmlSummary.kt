@@ -1,8 +1,5 @@
-package com.cycode.plugin.components.toolWindow.components.scaViolationCardContentTab.components.summary
+package com.cycode.plugin.components.toolWindow.components.violationCardContentTab.common.summary
 
-import com.cycode.plugin.CycodeBundle
-import com.cycode.plugin.cli.models.scanResult.sca.ScaDetection
-import com.cycode.plugin.components.toolWindow.components.scaViolationCardContentTab.convertMarkdownToHtml
 import com.intellij.ui.BrowserHyperlinkListener
 import com.intellij.ui.components.JBLabel
 import com.intellij.util.ui.JBFont
@@ -16,15 +13,8 @@ import javax.swing.JPanel
 import javax.swing.JScrollPane
 import javax.swing.text.DefaultCaret
 
-class ScaSummary {
-    private fun getDescription(detection: ScaDetection): String {
-        val descriptionMarkdown = detection.detectionDetails.alert?.description ?: ""
-        return convertMarkdownToHtml(descriptionMarkdown)
-    }
-
-    fun getContent(detection: ScaDetection): JComponent {
-        val description = getDescription(detection)
-
+open class CardHtmlSummary {
+    fun getContent(panelTitle: String, htmlSummary: String? = null): JComponent {
         val editorPane = JEditorPane().apply {
             contentType = "text/html"
             isEditable = false
@@ -38,7 +28,7 @@ class ScaSummary {
         (editorPane.caret as DefaultCaret).updatePolicy = DefaultCaret.NEVER_UPDATE
 
         editorPane.editorKit = UIUtil.getHTMLEditorKit()
-        editorPane.text = description
+        editorPane.text = htmlSummary
 
         // reset scroll position to top
         editorPane.caretPosition = 0
@@ -62,12 +52,12 @@ class ScaSummary {
             )
         }
 
-        if (detection.detectionDetails.alert?.description != null) {
-            // we don't want to show the summary label if there is no description
+        if (!htmlSummary.isNullOrBlank()) {
+            // we don't want to show the label if there is no description
             // editor pane still required to acquire the space on the card panel
 
             panel.add(
-                JBLabel(CycodeBundle.message("scaViolationCardSummaryTitle")).apply {
+                JBLabel(panelTitle).apply {
                     font = font.deriveFont(18f).deriveFont(JBFont.BOLD)
                 },
                 GridBagConstraints().apply {

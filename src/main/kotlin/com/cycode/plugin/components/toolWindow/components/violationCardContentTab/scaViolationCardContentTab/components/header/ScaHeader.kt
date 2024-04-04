@@ -1,39 +1,12 @@
-package com.cycode.plugin.components.toolWindow.components.scaViolationCardContentTab.components.header
+package com.cycode.plugin.components.toolWindow.components.violationCardContentTab.scaViolationCardContentTab.components.header
 
 import com.cycode.plugin.CycodeBundle
 import com.cycode.plugin.cli.models.scanResult.sca.ScaDetection
-import com.intellij.ui.JBColor
-import com.intellij.ui.components.JBLabel
-import com.intellij.util.ui.JBUI
-import java.awt.GridBagConstraints
-import java.awt.GridBagLayout
+import com.cycode.plugin.components.toolWindow.components.violationCardContentTab.common.header.CardHeader
 import javax.swing.JComponent
-import javax.swing.JLabel
-import javax.swing.JPanel
 
-class ScaHeader {
-    private val gbc = GridBagConstraints()
-    private val panel: JPanel = JPanel(GridBagLayout())
-
-    private fun addHeader(label: String, value: String) {
-        gbc.gridy++
-
-        panel.add(JLabel(label), gbc.apply {
-            gridx = 0
-            weightx = 0.125
-        })
-        panel.add(JBLabel(value).apply { setAllowAutoWrapping(true); setCopyable(true) }, gbc.apply {
-            gridx = 1
-            weightx = 0.875
-            anchor = GridBagConstraints.NORTHWEST
-        })
-    }
-
-    fun getContent(detection: ScaDetection): JComponent {
-        gbc.fill = GridBagConstraints.HORIZONTAL
-        gbc.anchor = GridBagConstraints.NORTHWEST
-        gbc.insets = JBUI.insets(2)
-
+class ScaHeader : CardHeader() {
+    fun addContent(detection: ScaDetection): JComponent {
         addHeader(CycodeBundle.message("scaViolationCardHeaderPackageField"), detection.detectionDetails.packageName)
         addHeader(CycodeBundle.message("scaViolationCardHeaderVersionField"), detection.detectionDetails.packageVersion)
 
@@ -58,11 +31,6 @@ class ScaHeader {
             )
         }
 
-        panel.border = JBUI.Borders.compound(
-            JBUI.Borders.customLine(JBColor.GRAY, 1, 0, 1, 0),
-            JBUI.Borders.empty(10, 0)
-        )
-
-        return panel
+        return getContent()
     }
 }

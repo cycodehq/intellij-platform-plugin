@@ -60,14 +60,6 @@ class SecretApplier(private val scanResults: ScanResultsService) : AnnotationApp
             val message = detection.getFormattedMessage()
             val title = CycodeBundle.message("annotationTitle", detection.getFormattedTitle())
 
-            var companyGuidelineMessage = ""
-            if (detectionDetails.customRemediationGuidelines != null) {
-                companyGuidelineMessage = CycodeBundle.message(
-                    "secretsAnnotationTooltipCompanyGuideline",
-                    detectionDetails.customRemediationGuidelines
-                )
-            }
-
             val tooltip = CycodeBundle.message(
                 "secretsAnnotationTooltip",
                 detection.severity,
@@ -76,7 +68,6 @@ class SecretApplier(private val scanResults: ScanResultsService) : AnnotationApp
                 detection.detectionRuleId,
                 detectionDetails.fileName,
                 detectionDetails.sha512,
-                companyGuidelineMessage
             )
             holder.newAnnotation(severity, title)
                 .range(textRange)
