@@ -4,6 +4,12 @@
 
 ## [Unreleased]
 
+## [1.6.0] - 2024-03-XX
+
+- Add Infrastructure as Code (IaC) support
+- Add icons for file nodes in the tree view
+- Add a full path of file nodes in the tree view
+
 ## [1.5.0] - 2024-03-13
 
 - Add SCA Violation Card
@@ -61,6 +67,8 @@
 ## [1.0.0] - 2023-12-05
 
 The first public release of the plugin.
+
+[1.6.0]: https://github.com/cycodehq/intellij-platform-plugin/releases/tag/v1.6.0
 
 [1.5.0]: https://github.com/cycodehq/intellij-platform-plugin/releases/tag/v1.5.0
 
