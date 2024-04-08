@@ -4,8 +4,8 @@ import org.commonmark.Extension
 import org.commonmark.ext.autolink.AutolinkExtension
 import org.commonmark.ext.gfm.strikethrough.StrikethroughExtension
 import org.commonmark.ext.gfm.tables.TablesExtension
-import org.commonmark.parser.Parser;
-import org.commonmark.renderer.html.HtmlRenderer;
+import org.commonmark.parser.Parser
+import org.commonmark.renderer.html.HtmlRenderer
 
 fun convertMarkdownToHtml(markdown: String): String {
     val extensions: List<Extension> = listOf(

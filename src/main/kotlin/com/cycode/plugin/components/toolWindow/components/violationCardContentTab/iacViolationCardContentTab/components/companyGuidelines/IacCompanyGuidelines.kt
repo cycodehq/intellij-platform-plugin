@@ -2,7 +2,7 @@ package com.cycode.plugin.components.toolWindow.components.violationCardContentT
 
 import com.cycode.plugin.CycodeBundle
 import com.cycode.plugin.cli.models.scanResult.iac.IacDetection
-import com.cycode.plugin.components.toolWindow.components.violationCardContentTab.common.summary.CardHtmlSummary
+import com.cycode.plugin.components.toolWindow.components.violationCardContentTab.common.htmlSummary.CardHtmlSummary
 import com.cycode.plugin.components.toolWindow.components.violationCardContentTab.convertMarkdownToHtml
 import javax.swing.JComponent
 

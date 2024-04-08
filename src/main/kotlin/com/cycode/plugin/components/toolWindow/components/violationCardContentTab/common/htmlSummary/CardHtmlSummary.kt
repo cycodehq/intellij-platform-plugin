@@ -1,4 +1,4 @@
-package com.cycode.plugin.components.toolWindow.components.violationCardContentTab.common.summary
+package com.cycode.plugin.components.toolWindow.components.violationCardContentTab.common.htmlSummary
 
 import com.intellij.ui.BrowserHyperlinkListener
 import com.intellij.ui.components.JBLabel
