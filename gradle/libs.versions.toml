@@ -2,7 +2,7 @@
 # libraries
 annotations = "24.0.1"
 jackson = "2.15.2"
-markdown = "0.6.1"
+commonmark = "0.22.0"
 
 # plugins
 dokka = "1.9.10"
@@ -14,7 +14,10 @@ kover = "0.7.3"
 [libraries]
 annotations = { group = "org.jetbrains", name = "annotations", version.ref = "annotations" }
 jackson = { group = "com.fasterxml.jackson.module", name = "jackson-module-kotlin", version.ref = "jackson" }
-markdown = { group = "org.jetbrains", name = "markdown", version.ref = "markdown" }
+commonmark = { group = "org.commonmark", name = "commonmark", version.ref = "commonmark" }
+commonmarkTables = { group = "org.commonmark", name = "commonmark-ext-gfm-tables", version.ref = "commonmark" }
+commonmarkStrikethrough = { group = "org.commonmark", name = "commonmark-ext-gfm-strikethrough", version.ref = "commonmark" }
+commonmarkAutolink = { group = "org.commonmark", name = "commonmark-ext-autolink", version.ref = "commonmark" }
 
 [plugins]
 changelog = { id = "org.jetbrains.changelog", version.ref = "changelog" }
