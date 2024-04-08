@@ -13,6 +13,8 @@ data class SecretDetectionDetails(
     val filePath: String,
     val fileName: String,
     val fileExtension: String?,
+    val description: String?,
+    val remediationGuidelines: String?,
     val customRemediationGuidelines: String?,
     var detectedValue: String? = null, // custom field out of CLI JSON schema. TODO(MarshalX): add from CLI side?
 ) : ScanDetectionDetailsBase {

@@ -2,13 +2,8 @@ package com.cycode.plugin.components.toolWindow.components.treeView.components.d
 
 import com.cycode.plugin.CycodeBundle
 import com.cycode.plugin.components.toolWindow.components.treeView.TreeView
-import com.cycode.plugin.components.toolWindow.components.treeView.nodes.IacDetectionNode
-import com.cycode.plugin.components.toolWindow.components.treeView.nodes.ScaDetectionNode
-import com.cycode.plugin.components.toolWindow.components.treeView.nodes.ScanTypeNode
-import com.cycode.plugin.components.toolWindow.components.treeView.nodes.SecretDetectionNode
-import com.cycode.plugin.components.toolWindow.components.treeView.openIacDetectionInFile
-import com.cycode.plugin.components.toolWindow.components.treeView.openScaDetectionInFile
-import com.cycode.plugin.components.toolWindow.components.treeView.openSecretDetectionInFile
+import com.cycode.plugin.components.toolWindow.components.treeView.nodes.*
+import com.cycode.plugin.components.toolWindow.components.treeView.openDetectionInFile
 import com.cycode.plugin.services.cycode
 import com.intellij.openapi.editor.actions.ContentChooser.RETURN_SYMBOL
 import com.intellij.openapi.project.Project
@@ -99,26 +94,16 @@ class DetectionNodeContextMenu(
     }
 
     private fun onOpenInEditorOptionClicked() {
-        when (val node = getUnknownNode()) {
-            is SecretDetectionNode -> openSecretDetectionInFile(project, node)
-            is ScaDetectionNode -> openScaDetectionInFile(project, node)
-            is IacDetectionNode -> openIacDetectionInFile(project, node)
+        val node = getUnknownNode()
+        if (node is AbstractNode) {
+            openDetectionInFile(project, node)
         }
     }
 
     private fun onOpenViolationCardOptionClicked() {
-        when (val node = getUnknownNode()) {
-            is ScaDetectionNode -> {
-                treeView.displayScaViolationCard(node)
-            }
-
-            is SecretDetectionNode -> {
-                treeView.displaySecretViolationCard(node)
-            }
-
-            is IacDetectionNode -> {
-                treeView.displayIacViolationCard(node)
-            }
+        val node = getUnknownNode()
+        if (node is ScaDetectionNode) {
+            treeView.displayViolationCard(node)
         }
     }
 

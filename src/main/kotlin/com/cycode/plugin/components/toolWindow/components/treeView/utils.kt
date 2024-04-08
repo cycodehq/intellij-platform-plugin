@@ -1,5 +1,6 @@
 package com.cycode.plugin.components.toolWindow.components.treeView
 
+import com.cycode.plugin.components.toolWindow.components.treeView.nodes.AbstractNode
 import com.cycode.plugin.components.toolWindow.components.treeView.nodes.IacDetectionNode
 import com.cycode.plugin.components.toolWindow.components.treeView.nodes.ScaDetectionNode
 import com.cycode.plugin.components.toolWindow.components.treeView.nodes.SecretDetectionNode
@@ -30,20 +31,28 @@ private fun openFileInEditor(project: Project, filePath: String, lineNumber: Int
     )
 }
 
-fun openSecretDetectionInFile(project: Project, node: SecretDetectionNode) {
+private fun openSecretDetectionInFile(project: Project, node: SecretDetectionNode) {
     val filePath = node.detection.detectionDetails.getFilepath()
     val line = node.detection.detectionDetails.line
     openFileInEditor(project, filePath, line)
 }
 
-fun openScaDetectionInFile(project: Project, node: ScaDetectionNode) {
+private fun openScaDetectionInFile(project: Project, node: ScaDetectionNode) {
     val filePath = node.detection.detectionDetails.getFilepath()
     val line = node.detection.detectionDetails.lineInFile - DIFFERENCE_BETWEEN_SCA_LINE_NUMBERS
     openFileInEditor(project, filePath, line)
 }
 
-fun openIacDetectionInFile(project: Project, node: IacDetectionNode) {
+private fun openIacDetectionInFile(project: Project, node: IacDetectionNode) {
     val filePath = node.detection.detectionDetails.getFilepath()
     val line = node.detection.detectionDetails.lineInFile - DIFFERENCE_BETWEEN_IAC_LINE_NUMBERS
     openFileInEditor(project, filePath, line)
+}
+
+fun openDetectionInFile(project: Project, node: AbstractNode) {
+    when (node) {
+        is SecretDetectionNode -> openSecretDetectionInFile(project, node)
+        is ScaDetectionNode -> openScaDetectionInFile(project, node)
+        is IacDetectionNode -> openIacDetectionInFile(project, node)
+    }
 }
