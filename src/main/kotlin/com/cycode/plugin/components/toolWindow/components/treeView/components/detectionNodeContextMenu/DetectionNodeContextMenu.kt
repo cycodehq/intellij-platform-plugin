@@ -102,7 +102,7 @@ class DetectionNodeContextMenu(
 
     private fun onOpenViolationCardOptionClicked() {
         val node = getUnknownNode()
-        if (node is ScaDetectionNode) {
+        if (node is AbstractNode) {
             treeView.displayViolationCard(node)
         }
     }
