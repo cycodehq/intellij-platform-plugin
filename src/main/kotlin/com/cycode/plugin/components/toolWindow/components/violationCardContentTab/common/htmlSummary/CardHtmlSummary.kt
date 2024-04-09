@@ -1,4 +1,4 @@
-package com.cycode.plugin.components.toolWindow.components.violationCardContentTab.common.summary
+package com.cycode.plugin.components.toolWindow.components.violationCardContentTab.common.htmlSummary
 
 import com.intellij.ui.BrowserHyperlinkListener
 import com.intellij.ui.components.JBLabel
@@ -10,7 +10,6 @@ import java.awt.GridBagLayout
 import javax.swing.JComponent
 import javax.swing.JEditorPane
 import javax.swing.JPanel
-import javax.swing.JScrollPane
 import javax.swing.text.DefaultCaret
 
 open class CardHtmlSummary {
@@ -37,11 +36,7 @@ open class CardHtmlSummary {
 
         val panel = JPanel(GridBagLayout()).apply {
             add(
-                JScrollPane(
-                    editorPane,
-                    JScrollPane.VERTICAL_SCROLLBAR_ALWAYS,
-                    JScrollPane.HORIZONTAL_SCROLLBAR_NEVER
-                ).apply { border = null },
+                editorPane,
                 GridBagConstraints().apply {
                     fill = GridBagConstraints.BOTH
                     anchor = GridBagConstraints.NORTHWEST

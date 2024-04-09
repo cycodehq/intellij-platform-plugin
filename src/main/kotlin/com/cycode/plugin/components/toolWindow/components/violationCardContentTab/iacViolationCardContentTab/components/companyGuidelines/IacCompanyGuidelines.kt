@@ -1,20 +1,20 @@
-package com.cycode.plugin.components.toolWindow.components.violationCardContentTab.secretViolationCardContentTab.components.companyGuidelines
+package com.cycode.plugin.components.toolWindow.components.violationCardContentTab.iacViolationCardContentTab.components.companyGuidelines
 
 import com.cycode.plugin.CycodeBundle
-import com.cycode.plugin.cli.models.scanResult.secret.SecretDetection
+import com.cycode.plugin.cli.models.scanResult.iac.IacDetection
 import com.cycode.plugin.components.toolWindow.components.violationCardContentTab.common.htmlSummary.CardHtmlSummary
 import com.cycode.plugin.components.toolWindow.components.violationCardContentTab.convertMarkdownToHtml
 import javax.swing.JComponent
 
-class SecretCompanyGuidelines : CardHtmlSummary() {
-    private fun getCustomGuidelines(detection: SecretDetection): String? {
+class IacCompanyGuidelines : CardHtmlSummary() {
+    private fun getCustomGuidelines(detection: IacDetection): String? {
         val descriptionMarkdown = detection.detectionDetails.customRemediationGuidelines ?: return null
         return convertMarkdownToHtml(descriptionMarkdown)
     }
 
-    fun getContent(detection: SecretDetection): JComponent {
+    fun getContent(detection: IacDetection): JComponent {
         return getContent(
-            CycodeBundle.message("secretViolationCardCompanyGuidelinesTitle"),
+            CycodeBundle.message("iacViolationCardCompanyGuidelinesTitle"),
             getCustomGuidelines(detection)
         )
     }

@@ -11,6 +11,7 @@ import com.cycode.plugin.services.ScanResultsService
 import com.intellij.lang.annotation.AnnotationHolder
 import com.intellij.openapi.util.TextRange
 import com.intellij.psi.PsiFile
+import java.io.File
 
 class IacApplier(private val scanResults: ScanResultsService) : AnnotationApplierBase() {
     private fun validateIacTextRange(textRange: TextRange, psiFile: PsiFile): Boolean {
@@ -49,22 +50,13 @@ class IacApplier(private val scanResults: ScanResultsService) : AnnotationApplie
             val message = detection.getFormattedMessage()
             val title = CycodeBundle.message("annotationTitle", detection.getFormattedTitle())
 
-            var companyGuidelineMessage = ""
-            if (detectionDetails.customRemediationGuidelines != null) {
-                companyGuidelineMessage = CycodeBundle.message(
-                    "iacAnnotationTooltipCompanyGuideline",
-                    detectionDetails.customRemediationGuidelines
-                )
-            }
-
             val tooltip = CycodeBundle.message(
                 "iacAnnotationTooltip",
                 detection.severity,
                 message,
                 detectionDetails.infraProvider,
                 detection.detectionRuleId,
-                detectionDetails.fileName,
-                companyGuidelineMessage
+                File(detectionDetails.fileName).name,
             )
             holder.newAnnotation(severity, title)
                 .range(textRange)

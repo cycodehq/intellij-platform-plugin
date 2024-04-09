@@ -8,9 +8,9 @@ import com.cycode.plugin.cli.models.scanResult.ScanResultBase
 import com.cycode.plugin.cli.models.scanResult.iac.IacDetection
 import com.cycode.plugin.cli.models.scanResult.sca.ScaDetection
 import com.cycode.plugin.cli.models.scanResult.secret.SecretDetection
-import com.cycode.plugin.components.toolWindow.components.scanContentTab.ScanContentTab
 import com.cycode.plugin.components.toolWindow.components.treeView.components.detectionNodeContextMenu.DetectionNodeContextMenu
 import com.cycode.plugin.components.toolWindow.components.treeView.nodes.*
+import com.cycode.plugin.components.toolWindow.components.violationCardContentTab.iacViolationCardContentTab.IacViolationCardContentTab
 import com.cycode.plugin.components.toolWindow.components.violationCardContentTab.scaViolationCardContentTab.ScaViolationCardContentTab
 import com.cycode.plugin.components.toolWindow.components.violationCardContentTab.secretViolationCardContentTab.SecretViolationCardContentTab
 import com.cycode.plugin.icons.PluginIcons
@@ -85,22 +85,8 @@ class TreeView(
 
         val node = tree.getLastSelectedPathComponent() as DefaultMutableTreeNode
 
-        when (node.userObject) {
-            is SecretDetectionNode -> {
-                openSecretDetectionInFile(project, node.userObject as SecretDetectionNode)
-                displaySecretViolationCard(node.userObject as SecretDetectionNode)
-            }
-
-            is ScaDetectionNode -> {
-                openScaDetectionInFile(project, node.userObject as ScaDetectionNode)
-                displayScaViolationCard(node.userObject as ScaDetectionNode)
-            }
-
-            is IacDetectionNode -> {
-                openIacDetectionInFile(project, node.userObject as IacDetectionNode)
-                displayIacViolationCard(node.userObject as IacDetectionNode)
-            }
-        }
+        openDetectionInFile(project, node.userObject as AbstractNode)
+        displayViolationCard(node.userObject as AbstractNode)
     }
 
     private fun createMouseListeners(): MouseAdapter {
@@ -120,19 +106,23 @@ class TreeView(
         }
     }
 
-    fun displaySecretViolationCard(node: SecretDetectionNode) {
-        // we don't have a dedicated card yet for secret violations,
-        // so we are returning to the main content tab
+    fun displayViolationCard(node: AbstractNode) {
+        when (node) {
+            is SecretDetectionNode -> displaySecretViolationCard(node)
+            is ScaDetectionNode -> displayScaViolationCard(node)
+            is IacDetectionNode -> displayIacViolationCard(node)
+        }
+    }
+
+    private fun displaySecretViolationCard(node: SecretDetectionNode) {
         replaceRightPanel(SecretViolationCardContentTab().getContent(node.detection))
     }
 
-    fun displayIacViolationCard(node: IacDetectionNode) {
-        // we don't have a dedicated card yet for IaC violations,
-        // so we are returning to the main content tab
-        replaceRightPanel(ScanContentTab().getContent(service))
+    private fun displayIacViolationCard(node: IacDetectionNode) {
+        replaceRightPanel(IacViolationCardContentTab().getContent(node.detection))
     }
 
-    fun displayScaViolationCard(node: ScaDetectionNode) {
+    private fun displayScaViolationCard(node: ScaDetectionNode) {
         replaceRightPanel(ScaViolationCardContentTab().getContent(node.detection))
     }
 
