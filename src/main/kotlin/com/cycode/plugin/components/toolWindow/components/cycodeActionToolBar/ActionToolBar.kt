@@ -21,6 +21,7 @@ class CycodeActionToolbar {
             add(FilterBySeverityAction.create(contentTab, "High"))
             add(FilterBySeverityAction.create(contentTab, "Medium"))
             add(FilterBySeverityAction.create(contentTab, "Low"))
+            add(FilterBySeverityAction.create(contentTab, "Info"))
             addSeparator()
             add(ClearAction.create(contentTab))
             addSeparator()

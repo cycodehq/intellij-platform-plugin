@@ -4,13 +4,14 @@
 
 ## [Unreleased]
 
-## [1.6.0] - 2024-04-XX
+## [1.6.0] - 2024-04-16
 
 - Add Infrastructure as Code (IaC) support
 - Add Secrets Violation Card
 - Add IaC Violation Card
 - Add icons for file nodes in the tree view
 - Add a full path of file nodes in the tree view
+- Fix filter by info severity
 
 ## [1.5.0] - 2024-03-13
 
