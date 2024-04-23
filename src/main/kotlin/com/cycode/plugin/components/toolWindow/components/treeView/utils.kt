@@ -1,9 +1,6 @@
 package com.cycode.plugin.components.toolWindow.components.treeView
 
-import com.cycode.plugin.components.toolWindow.components.treeView.nodes.AbstractNode
-import com.cycode.plugin.components.toolWindow.components.treeView.nodes.IacDetectionNode
-import com.cycode.plugin.components.toolWindow.components.treeView.nodes.ScaDetectionNode
-import com.cycode.plugin.components.toolWindow.components.treeView.nodes.SecretDetectionNode
+import com.cycode.plugin.components.toolWindow.components.treeView.nodes.*
 import com.intellij.openapi.fileEditor.FileEditorManager
 import com.intellij.openapi.fileEditor.OpenFileDescriptor
 import com.intellij.openapi.project.Project
@@ -15,6 +12,7 @@ import java.io.File
 
 const val DIFFERENCE_BETWEEN_SCA_LINE_NUMBERS = 1
 const val DIFFERENCE_BETWEEN_IAC_LINE_NUMBERS = 1
+const val DIFFERENCE_BETWEEN_SAST_LINE_NUMBERS = 1
 
 fun getPsiFile(project: Project, filePath: String): PsiFile? {
     val virtualFile = VirtualFileManager.getInstance().findFileByUrl("file://$filePath") ?: return null
@@ -49,10 +47,17 @@ private fun openIacDetectionInFile(project: Project, node: IacDetectionNode) {
     openFileInEditor(project, filePath, line)
 }
 
+private fun openSastDetectionInFile(project: Project, node: SastDetectionNode) {
+    val filePath = node.detection.detectionDetails.getFilepath()
+    val line = node.detection.detectionDetails.lineInFile - DIFFERENCE_BETWEEN_SAST_LINE_NUMBERS
+    openFileInEditor(project, filePath, line)
+}
+
 fun openDetectionInFile(project: Project, node: AbstractNode) {
     when (node) {
         is SecretDetectionNode -> openSecretDetectionInFile(project, node)
         is ScaDetectionNode -> openScaDetectionInFile(project, node)
         is IacDetectionNode -> openIacDetectionInFile(project, node)
+        is SastDetectionNode -> openSastDetectionInFile(project, node)
     }
 }

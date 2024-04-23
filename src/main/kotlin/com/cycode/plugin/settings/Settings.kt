@@ -8,4 +8,5 @@ data class Settings(
     val cliAdditionalParams: String,
     val scanOnSave: Boolean,
     val scaSyncFlow: Boolean,
+    val sastSupport: Boolean,
 )

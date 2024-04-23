@@ -3,9 +3,11 @@ package com.cycode.plugin.services
 import com.cycode.plugin.cli.CliResult
 import com.cycode.plugin.cli.CliScanType
 import com.cycode.plugin.cli.models.scanResult.iac.IacScanResult
+import com.cycode.plugin.cli.models.scanResult.sast.SastScanResult
 import com.cycode.plugin.cli.models.scanResult.sca.ScaScanResult
 import com.cycode.plugin.cli.models.scanResult.secret.SecretScanResult
 import com.cycode.plugin.services.scanResultsFilters.IacScanResultsFilter
+import com.cycode.plugin.services.scanResultsFilters.SastScanResultsFilter
 import com.cycode.plugin.services.scanResultsFilters.ScaScanResultsFilter
 import com.cycode.plugin.services.scanResultsFilters.SecretScanResultsFilter
 import com.intellij.openapi.components.Service
@@ -19,6 +21,7 @@ class ScanResultsService {
     private var secretResults: CliResult<SecretScanResult>? = null
     private var scaResults: CliResult<ScaScanResult>? = null
     private var iacResults: CliResult<IacScanResult>? = null
+    private var sastResults: CliResult<SastScanResult>? = null
 
     init {
         thisLogger().info("CycodeResultsService init")
@@ -51,15 +54,25 @@ class ScanResultsService {
         return iacResults
     }
 
+    fun setSastResults(result: CliResult<SastScanResult>) {
+        clearDetectedSegments(CliScanType.Sast)
+        sastResults = result
+    }
+
+    fun getSastResults(): CliResult<SastScanResult>? {
+        return sastResults
+    }
+
     fun clear() {
         secretResults = null
         scaResults = null
         iacResults = null
+        sastResults = null
         clearDetectedSegments()
     }
 
     fun hasResults(): Boolean {
-        return secretResults != null || scaResults != null || iacResults != null
+        return secretResults != null || scaResults != null || iacResults != null || sastResults != null
     }
 
     fun saveDetectedSegment(scanType: CliScanType, textRange: TextRange, value: String) {
@@ -94,6 +107,11 @@ class ScanResultsService {
             val filter = IacScanResultsFilter((iacResults as CliResult.Success<IacScanResult>).result)
             filter.exclude(byValue, byPath, byRuleId)
             iacResults = CliResult.Success(filter.getFilteredScanResults())
+        }
+        if (sastResults is CliResult.Success) {
+            val filter = SastScanResultsFilter((sastResults as CliResult.Success<SastScanResult>).result)
+            filter.exclude(byValue, byPath, byRuleId)
+            sastResults = CliResult.Success(filter.getFilteredScanResults())
         }
     }
 }
