@@ -8,6 +8,7 @@ import com.cycode.plugin.cli.models.VersionResult
 import com.cycode.plugin.cli.models.scanResult.ScanResultBase
 import com.cycode.plugin.cli.models.scanResult.iac.IacDetection
 import com.cycode.plugin.cli.models.scanResult.iac.IacScanResult
+import com.cycode.plugin.cli.models.scanResult.sast.SastScanResult
 import com.cycode.plugin.cli.models.scanResult.sca.ScaScanResult
 import com.cycode.plugin.cli.models.scanResult.secret.SecretScanResult
 import com.cycode.plugin.components.toolWindow.updateToolWindowState
@@ -38,6 +39,12 @@ class CliService(private val project: Project) {
 
         val module = modules[0]
         return module.project.basePath
+    }
+
+    private fun rerunAnnotators() {
+        // TODO(MarshalX): run only for the provided file?
+        DaemonCodeAnalyzer.getInstance(project).restart()
+        updateToolWindowState(project)
     }
 
     private fun resetPluginCLiState() {
@@ -225,11 +232,8 @@ class CliService(private val project: Project) {
 
         showScanFileResultNotification(CliScanType.Secret, detectionsCount, onDemand)
 
-        // TODO(MarshalX): run only for the provided file?
-        // save results and rerun annotators
         scanResults.setSecretResults(results)
-        DaemonCodeAnalyzer.getInstance(project).restart()
-        updateToolWindowState(project)
+        rerunAnnotators()
     }
 
     fun scanPathsSca(paths: List<String>, onDemand: Boolean = true, cancelledCallback: TaskCancelledCallback = null) {
@@ -247,8 +251,7 @@ class CliService(private val project: Project) {
         showScanFileResultNotification(CliScanType.Sca, detectionsCount, onDemand)
 
         scanResults.setScaResults(results)
-        DaemonCodeAnalyzer.getInstance(project).restart()
-        updateToolWindowState(project)
+        rerunAnnotators()
     }
 
     private fun filterUnsupportedIacDetections(detections: List<IacDetection>): List<IacDetection> {
@@ -286,7 +289,24 @@ class CliService(private val project: Project) {
         showScanFileResultNotification(CliScanType.Iac, detectionsCount, onDemand)
 
         scanResults.setIacResults(results)
-        DaemonCodeAnalyzer.getInstance(project).restart()
-        updateToolWindowState(project)
+        rerunAnnotators()
+    }
+
+    fun scanPathsSast(paths: List<String>, onDemand: Boolean = true, cancelledCallback: TaskCancelledCallback = null) {
+        val results = scanPaths<SastScanResult>(paths, CliScanType.Sast, cancelledCallback)
+        if (results == null) {
+            thisLogger().warn("Failed to scan paths: $paths")
+            return
+        }
+
+        var detectionsCount = 0
+        if (results is CliResult.Success) {
+            detectionsCount = results.result.detections.count()
+        }
+
+        showScanFileResultNotification(CliScanType.Sast, detectionsCount, onDemand)
+
+        scanResults.setSastResults(results)
+        rerunAnnotators()
     }
 }

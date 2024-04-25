@@ -78,7 +78,7 @@ class CliWrapper(val executablePath: String, val workDirectory: String? = null) 
         val stdout = outputListener.stdout.trim().toString()
         val stderr = outputListener.stderr.trim().toString()
 
-        thisLogger().warn("CLI exitCode: $exitCode; stdout: $stdout; stderr: $stderr")
+        thisLogger().warn("CLI exitCode: $exitCode; stdout: $stdout")
 
         if (exitCode == ExitCodes.ABNORMAL_TERMINATION) {
             val errorCode = detectErrorCode(stderr)
@@ -119,6 +119,7 @@ class CliWrapper(val executablePath: String, val workDirectory: String? = null) 
             if (outputType == ProcessOutputTypes.STDOUT) {
                 stdout.append(event.text)
             } else if (outputType == ProcessOutputTypes.STDERR) {
+                thisLogger().warn(event.text)
                 stderr.append(event.text)
             }
         }

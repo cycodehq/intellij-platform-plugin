@@ -4,6 +4,7 @@ import com.cycode.plugin.CycodeBundle
 import com.cycode.plugin.components.Component
 import com.cycode.plugin.components.common.createClickableLabel
 import com.cycode.plugin.services.CycodeService
+import com.cycode.plugin.services.pluginSettings
 import com.intellij.util.ui.JBUI
 import java.awt.GridBagConstraints
 import java.awt.GridBagLayout
@@ -42,6 +43,15 @@ class ScanContentTab : Component<CycodeService>() {
                 addActionListener { service.startIacScanForCurrentProject() }
             },
         )
+
+        if (pluginSettings().sastSupport) {
+            addComponentToPanel(
+                JButton(CycodeBundle.message("scanTabSastBtn")).apply {
+                    addActionListener { service.startSastScanForCurrentProject() }
+                },
+            )
+        }
+
         addComponentToPanel(createClickableLabel(CycodeBundle.message("scanTabOnSaveTip")))
         addComponentToPanel(createClickableLabel(CycodeBundle.message("howToUseLabel")))
 

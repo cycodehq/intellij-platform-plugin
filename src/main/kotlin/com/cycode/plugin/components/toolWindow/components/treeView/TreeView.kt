@@ -6,15 +6,16 @@ import com.cycode.plugin.cli.CliScanType
 import com.cycode.plugin.cli.models.scanResult.DetectionBase
 import com.cycode.plugin.cli.models.scanResult.ScanResultBase
 import com.cycode.plugin.cli.models.scanResult.iac.IacDetection
+import com.cycode.plugin.cli.models.scanResult.sast.SastDetection
 import com.cycode.plugin.cli.models.scanResult.sca.ScaDetection
 import com.cycode.plugin.cli.models.scanResult.secret.SecretDetection
 import com.cycode.plugin.components.toolWindow.components.treeView.components.detectionNodeContextMenu.DetectionNodeContextMenu
 import com.cycode.plugin.components.toolWindow.components.treeView.nodes.*
 import com.cycode.plugin.components.toolWindow.components.violationCardContentTab.iacViolationCardContentTab.IacViolationCardContentTab
+import com.cycode.plugin.components.toolWindow.components.violationCardContentTab.sastViolationCardContentTab.SastViolationCardContentTab
 import com.cycode.plugin.components.toolWindow.components.violationCardContentTab.scaViolationCardContentTab.ScaViolationCardContentTab
 import com.cycode.plugin.components.toolWindow.components.violationCardContentTab.secretViolationCardContentTab.SecretViolationCardContentTab
 import com.cycode.plugin.icons.PluginIcons
-import com.cycode.plugin.services.cycode
 import com.cycode.plugin.services.scanResults
 import com.intellij.icons.AllIcons
 import com.intellij.openapi.project.Project
@@ -40,7 +41,6 @@ class TreeView(
     val project: Project, defaultRightPane: JComponent? = null
 ) : JPanel(GridLayout(1, 0)), TreeSelectionListener {
     private val tree: Tree
-    private val service = cycode(project)
 
     // dummyRootNode is a workaround to allow us to hide the root node of the tree
     private val dummyRootNode = createNode(DummyNode())
@@ -107,23 +107,15 @@ class TreeView(
     }
 
     fun displayViolationCard(node: AbstractNode) {
-        when (node) {
-            is SecretDetectionNode -> displaySecretViolationCard(node)
-            is ScaDetectionNode -> displayScaViolationCard(node)
-            is IacDetectionNode -> displayIacViolationCard(node)
+        val card = when (node) {
+            is SecretDetectionNode -> SecretViolationCardContentTab().getContent(node.detection)
+            is ScaDetectionNode -> ScaViolationCardContentTab().getContent(node.detection)
+            is IacDetectionNode -> IacViolationCardContentTab().getContent(node.detection)
+            is SastDetectionNode -> SastViolationCardContentTab().getContent(node.detection)
+            else -> return
         }
-    }
 
-    private fun displaySecretViolationCard(node: SecretDetectionNode) {
-        replaceRightPanel(SecretViolationCardContentTab().getContent(node.detection))
-    }
-
-    private fun displayIacViolationCard(node: IacDetectionNode) {
-        replaceRightPanel(IacViolationCardContentTab().getContent(node.detection))
-    }
-
-    private fun displayScaViolationCard(node: ScaDetectionNode) {
-        replaceRightPanel(ScaViolationCardContentTab().getContent(node.detection))
+        replaceRightPanel(card)
     }
 
     private fun getSeverityWeight(severity: String): Int {
@@ -230,6 +222,25 @@ class TreeView(
         createDetectionNodes(CliScanType.Iac, iacDetections.result, ::createIacDetectionNode)
     }
 
+    private fun createSastDetectionNodes() {
+        val sastDetections = scanResults.getSastResults()
+        if (sastDetections !is CliResult.Success) {
+            return
+        }
+
+        fun createSastDetectionNode(detection: DetectionBase): DefaultMutableTreeNode {
+            return createNode(
+                SastDetectionNode(
+                    detection.getFormattedNodeTitle(),
+                    PluginIcons.getSeverityIcon(detection.severity),
+                    detection as SastDetection
+                )
+            )
+        }
+
+        createDetectionNodes(CliScanType.Sast, sastDetections.result, ::createSastDetectionNode)
+    }
+
     fun replaceRightPanel(newRightPanel: JComponent): TreeView {
         splitPane.secondComponent = newRightPanel
         return this
@@ -247,6 +258,7 @@ class TreeView(
         createSecretDetectionNodes()
         createScaDetectionNodes()
         createIacDetectionNodes()
+        createSastDetectionNodes()
     }
 
     fun getTree() = tree

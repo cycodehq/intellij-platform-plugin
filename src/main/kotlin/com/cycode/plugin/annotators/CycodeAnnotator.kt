@@ -1,6 +1,7 @@
 package com.cycode.plugin.annotators
 
 import com.cycode.plugin.annotators.annotationAppliers.IacApplier
+import com.cycode.plugin.annotators.annotationAppliers.SastApplier
 import com.cycode.plugin.annotators.annotationAppliers.ScaApplier
 import com.cycode.plugin.annotators.annotationAppliers.SecretApplier
 import com.cycode.plugin.services.ScanResultsService
@@ -118,6 +119,7 @@ class CycodeAnnotator : DumbAware, ExternalAnnotator<PsiFile, Unit>() {
         applyAnnotationsForSecrets(psiFile, holder)
         applyAnnotationsForSca(psiFile, holder)
         applyAnnotationsForIac(psiFile, holder)
+        applyAnnotationsForSast(psiFile, holder)
     }
 
     private fun applyAnnotationsForSecrets(psiFile: PsiFile, holder: AnnotationHolder) {
@@ -130,5 +132,9 @@ class CycodeAnnotator : DumbAware, ExternalAnnotator<PsiFile, Unit>() {
 
     private fun applyAnnotationsForIac(psiFile: PsiFile, holder: AnnotationHolder) {
         IacApplier(getScanResults(psiFile)).apply(psiFile, holder)
+    }
+
+    private fun applyAnnotationsForSast(psiFile: PsiFile, holder: AnnotationHolder) {
+        SastApplier(getScanResults(psiFile)).apply(psiFile, holder)
     }
 }
