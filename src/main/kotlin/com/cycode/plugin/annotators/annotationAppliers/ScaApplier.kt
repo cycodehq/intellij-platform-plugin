@@ -83,7 +83,6 @@ class ScaApplier(private val scanResults: ScanResultsService) : AnnotationApplie
                 detection.severity,
                 firstPatchedVersionMessage,
                 detection.message,
-                detection.detectionRuleId,
                 lockFileNote,
             )
             holder.newAnnotation(severity, title)

@@ -65,7 +65,6 @@ class SecretApplier(private val scanResults: ScanResultsService) : AnnotationApp
                 detection.severity,
                 detection.type,
                 message,
-                detection.detectionRuleId,
                 detectionDetails.fileName,
                 detectionDetails.sha512,
             )

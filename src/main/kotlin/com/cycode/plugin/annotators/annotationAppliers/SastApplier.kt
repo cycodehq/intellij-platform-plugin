@@ -52,7 +52,6 @@ class SastApplier(private val scanResults: ScanResultsService) : AnnotationAppli
                 "sastAnnotationTooltip",
                 detection.severity,
                 detection.getFormattedMessage(),
-                detection.detectionRuleId,
                 detectionDetails.fileName,
             )
             holder.newAnnotation(severity, title)
