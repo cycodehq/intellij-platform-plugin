@@ -55,7 +55,6 @@ class IacApplier(private val scanResults: ScanResultsService) : AnnotationApplie
                 detection.severity,
                 message,
                 detectionDetails.infraProvider,
-                detection.detectionRuleId,
                 File(detectionDetails.fileName).name,
             )
             holder.newAnnotation(severity, title)

@@ -7,9 +7,9 @@ import javax.swing.JComponent
 
 class SecretHeader : CardHeader() {
     fun addContent(detection: SecretDetection): JComponent {
-        addHeader(CycodeBundle.message("secretViolationCardHeaderRuleIdField"), detection.detectionRuleId)
         addHeader(CycodeBundle.message("secretViolationCardHeaderFileField"), detection.detectionDetails.fileName)
         addHeader(CycodeBundle.message("secretViolationCardHeaderShaField"), detection.detectionDetails.sha512)
+        addHeader(CycodeBundle.message("secretViolationCardHeaderRuleIdField"), detection.detectionRuleId)
 
         return getContent()
     }

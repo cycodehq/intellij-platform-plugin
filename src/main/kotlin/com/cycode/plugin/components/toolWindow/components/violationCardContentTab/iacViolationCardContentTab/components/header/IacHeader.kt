@@ -8,12 +8,12 @@ import javax.swing.JComponent
 
 class IacHeader : CardHeader() {
     fun addContent(detection: IacDetection): JComponent {
-        addHeader(CycodeBundle.message("iacViolationCardHeaderRuleIdField"), detection.detectionRuleId)
         addHeader(
             CycodeBundle.message("iacViolationCardHeaderFileField"),
             File(detection.detectionDetails.fileName).name
         )
         addHeader(CycodeBundle.message("iacViolationCardHeaderProviderField"), detection.detectionDetails.infraProvider)
+        addHeader(CycodeBundle.message("iacViolationCardHeaderRuleIdField"), detection.detectionRuleId)
 
         return getContent()
     }

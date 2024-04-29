@@ -7,7 +7,6 @@ import javax.swing.JComponent
 
 class SastHeader : CardHeader() {
     fun addContent(detection: SastDetection): JComponent {
-        addHeader(CycodeBundle.message("sastViolationCardHeaderRuleIdField"), detection.detectionRuleId)
         addHeader(CycodeBundle.message("sastViolationCardHeaderFileField"), detection.detectionDetails.fileName)
         addHeader(CycodeBundle.message("sastViolationCardHeaderCategoryField"), detection.detectionDetails.category)
 
@@ -22,6 +21,8 @@ class SastHeader : CardHeader() {
         if (engineDisplayName != null) {
             addHeader(CycodeBundle.message("sastViolationCardHeaderEngineField"), engineDisplayName)
         }
+
+        addHeader(CycodeBundle.message("sastViolationCardHeaderRuleIdField"), detection.detectionRuleId)
 
         return getContent()
     }
