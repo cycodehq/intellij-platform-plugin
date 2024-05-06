@@ -151,12 +151,18 @@ class TreeView(
         for ((filePath, detections) in detectionsByFile) {
             val summary = CycodeBundle.message("fileNodeSummary", detections.size)
 
+            var projectRelatedFilePath = filePath
+            if (project.basePath != null) {
+                val prefixToRemove = project.basePath + "/"
+                projectRelatedFilePath = filePath.removePrefix(prefixToRemove)
+            }
+
             val psiFile = getPsiFile(project, filePath)
             val icon = if (psiFile != null)
                 psiFile.getIcon(Iconable.ICON_FLAG_READ_STATUS) else
                 AllIcons.Actions.Annotate
 
-            val fileNode = createNode(FileNode(filePath, summary, icon))
+            val fileNode = createNode(FileNode(projectRelatedFilePath, summary, icon))
             for (detection in detections) {
                 fileNode.add(createNodeCallback(detection))
             }
