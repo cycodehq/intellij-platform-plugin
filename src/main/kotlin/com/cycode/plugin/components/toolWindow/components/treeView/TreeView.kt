@@ -29,6 +29,7 @@ import java.awt.Dimension
 import java.awt.GridLayout
 import java.awt.event.MouseAdapter
 import java.awt.event.MouseEvent
+import java.io.File
 import javax.swing.JComponent
 import javax.swing.JPanel
 import javax.swing.event.TreeSelectionEvent
@@ -148,14 +149,11 @@ class TreeView(
 
         rootNodes.setNodeSummary(scanType, getDetectionSummary(sortedDetections))
 
+        val projectRoot = project.basePath?.let { File(it) } ?: File("")
+
         for ((filePath, detections) in detectionsByFile) {
             val summary = CycodeBundle.message("fileNodeSummary", detections.size)
-
-            var projectRelatedFilePath = filePath
-            if (project.basePath != null) {
-                val prefixToRemove = project.basePath + "/"
-                projectRelatedFilePath = filePath.removePrefix(prefixToRemove)
-            }
+            val projectRelatedFilePath = File(filePath).relativeTo(projectRoot).path
 
             val psiFile = getPsiFile(project, filePath)
             val icon = if (psiFile != null)
