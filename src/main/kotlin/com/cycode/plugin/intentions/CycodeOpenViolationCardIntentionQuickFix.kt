@@ -1,0 +1,52 @@
+package com.cycode.plugin.intentions
+
+import com.cycode.plugin.CycodeBundle
+import com.cycode.plugin.cli.models.scanResult.DetectionBase
+import com.cycode.plugin.components.toolWindow.CycodeToolWindowFactory
+import com.cycode.plugin.components.toolWindow.activateToolWindow
+import com.intellij.codeInsight.intention.PriorityAction
+import com.intellij.codeInsight.intention.impl.BaseIntentionAction
+import com.intellij.openapi.diagnostic.thisLogger
+import com.intellij.openapi.editor.Editor
+import com.intellij.openapi.project.Project
+import com.intellij.openapi.util.Iconable
+import com.intellij.psi.PsiFile
+import javax.swing.Icon
+
+
+class CycodeOpenViolationCardIntentionQuickFix(
+    private val detection: DetectionBase,
+) :
+    BaseIntentionAction(), PriorityAction, Iconable {
+    override fun getText(): String {
+        return CycodeBundle.message("violationCardIntentionText", detection.getFormattedNodeTitle())
+    }
+
+    override fun getFamilyName(): String {
+        return CycodeBundle.message("violationCardIntentionFamilyName")
+    }
+
+    override fun isAvailable(project: Project, editor: Editor?, file: PsiFile?): Boolean {
+        return true
+    }
+
+    override fun invoke(project: Project, editor: Editor?, file: PsiFile?) {
+        if (file == null || file != file.originalFile) {
+            // Disable Intention Action Preview
+            return
+        }
+
+        thisLogger().warn("Open violation card quick fix intention has been invoked")
+
+        CycodeToolWindowFactory.TabManager.getTab(project)?.getTreeView()?.displayViolationCard(detection)
+        activateToolWindow(project)
+    }
+
+    override fun getPriority(): PriorityAction.Priority {
+        return PriorityAction.Priority.NORMAL
+    }
+
+    override fun getIcon(flags: Int): Icon {
+        return com.intellij.icons.AllIcons.Actions.IntentionBulbGrey
+    }
+}

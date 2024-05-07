@@ -1,5 +1,6 @@
 package com.cycode.plugin.intentions
 
+import com.cycode.plugin.CycodeBundle
 import com.cycode.plugin.cli.CliScanType
 import com.cycode.plugin.components.toolWindow.updateToolWindowState
 import com.cycode.plugin.services.cycode
@@ -14,12 +15,6 @@ import com.intellij.openapi.util.Iconable
 import com.intellij.psi.PsiFile
 import javax.swing.Icon
 
-enum class CycodeIgnoreType {
-    VALUE,
-    RULE,
-    PATH
-}
-
 
 class CycodeIgnoreIntentionQuickFix(
     private val scanType: CliScanType,
@@ -30,15 +25,15 @@ class CycodeIgnoreIntentionQuickFix(
     override fun getText(): String {
         with(type) {
             return when (this) {
-                CycodeIgnoreType.VALUE -> "Ignore value '$value'"
-                CycodeIgnoreType.RULE -> "Ignore rule '$value'"
-                CycodeIgnoreType.PATH -> "Ignore path '$value'"
+                CycodeIgnoreType.VALUE -> CycodeBundle.message("ignoreIntentionByValueText", value)
+                CycodeIgnoreType.RULE -> CycodeBundle.message("ignoreIntentionByRuleText", value)
+                CycodeIgnoreType.PATH -> CycodeBundle.message("ignoreIntentionByPathText", value)
             }
         }
     }
 
     override fun getFamilyName(): String {
-        return "Ignore"
+        return CycodeBundle.message("ignoreIntentionFamilyName")
     }
 
     override fun isAvailable(project: Project, editor: Editor?, file: PsiFile?): Boolean {

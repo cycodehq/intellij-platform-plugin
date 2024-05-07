@@ -108,11 +108,21 @@ class TreeView(
     }
 
     fun displayViolationCard(node: AbstractNode) {
-        val card = when (node) {
-            is SecretDetectionNode -> SecretViolationCardContentTab().getContent(node.detection)
-            is ScaDetectionNode -> ScaViolationCardContentTab().getContent(node.detection)
-            is IacDetectionNode -> IacViolationCardContentTab().getContent(node.detection)
-            is SastDetectionNode -> SastViolationCardContentTab().getContent(node.detection)
+        when (node) {
+            is SecretDetectionNode -> displayViolationCard(node.detection)
+            is ScaDetectionNode -> displayViolationCard(node.detection)
+            is IacDetectionNode -> displayViolationCard(node.detection)
+            is SastDetectionNode -> displayViolationCard(node.detection)
+            else -> return
+        }
+    }
+
+    fun displayViolationCard(detection: DetectionBase) {
+        val card = when (detection) {
+            is SecretDetection -> SecretViolationCardContentTab().getContent(detection)
+            is ScaDetection -> ScaViolationCardContentTab().getContent(detection)
+            is IacDetection -> IacViolationCardContentTab().getContent(detection)
+            is SastDetection -> SastViolationCardContentTab().getContent(detection)
             else -> return
         }
 

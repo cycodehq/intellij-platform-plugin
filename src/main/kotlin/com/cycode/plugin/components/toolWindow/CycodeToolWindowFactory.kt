@@ -1,5 +1,6 @@
 package com.cycode.plugin.components.toolWindow
 
+import com.cycode.plugin.CycodeBundle
 import com.cycode.plugin.components.toolWindow.components.authContentTab.AuthContentTab
 import com.cycode.plugin.components.toolWindow.components.cycodeActionToolBar.CycodeActionToolbar
 import com.cycode.plugin.components.toolWindow.components.loadingContentTab.LoadingContentTab
@@ -15,6 +16,7 @@ import com.intellij.openapi.project.ProjectManager
 import com.intellij.openapi.util.Disposer
 import com.intellij.openapi.wm.ToolWindow
 import com.intellij.openapi.wm.ToolWindowFactory
+import com.intellij.openapi.wm.ToolWindowManager
 import com.intellij.ui.content.Content
 import com.intellij.ui.content.ContentFactory
 import javax.swing.JPanel
@@ -104,4 +106,10 @@ fun updateToolWindowState(project: Project) {
             replaceToolWindowRightPanel(project, getRightPanelDependingOnState(project))
         }
     }
+}
+
+fun activateToolWindow(project: Project) {
+    val toolWindowManager = ToolWindowManager.getInstance(project)
+    val toolWindow = toolWindowManager.getToolWindow(CycodeBundle.message("toolWindowId"))
+    toolWindow?.activate(null)
 }
