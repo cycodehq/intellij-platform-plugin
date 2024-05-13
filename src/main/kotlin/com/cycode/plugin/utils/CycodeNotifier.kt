@@ -1,21 +1,19 @@
 package com.cycode.plugin.utils
 
 import com.cycode.plugin.CycodeBundle
+import com.cycode.plugin.components.toolWindow.activateToolWindow
 import com.intellij.notification.NotificationGroup
 import com.intellij.notification.NotificationGroupManager
 import com.intellij.notification.NotificationType
 import com.intellij.openapi.actionSystem.AnAction
 import com.intellij.openapi.actionSystem.AnActionEvent
 import com.intellij.openapi.project.Project
-import com.intellij.openapi.wm.ToolWindowManager
 
 
 class OpenProblemsTabAction : AnAction(CycodeBundle.message("openProblemsTabAction")) {
     override fun actionPerformed(e: AnActionEvent) {
         val project = e.project ?: return
-        val toolWindowManager = ToolWindowManager.getInstance(project)
-        val toolWindow = toolWindowManager.getToolWindow(CycodeBundle.message("toolWindowId"))
-        toolWindow?.activate(null)
+        activateToolWindow(project)
     }
 }
 

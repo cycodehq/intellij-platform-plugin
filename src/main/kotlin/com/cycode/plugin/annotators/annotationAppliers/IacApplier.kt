@@ -7,6 +7,7 @@ import com.cycode.plugin.cli.CliResult
 import com.cycode.plugin.cli.CliScanType
 import com.cycode.plugin.intentions.CycodeIgnoreIntentionQuickFix
 import com.cycode.plugin.intentions.CycodeIgnoreType
+import com.cycode.plugin.intentions.CycodeOpenViolationCardIntentionQuickFix
 import com.cycode.plugin.services.ScanResultsService
 import com.intellij.lang.annotation.AnnotationHolder
 import com.intellij.openapi.util.TextRange
@@ -60,6 +61,7 @@ class IacApplier(private val scanResults: ScanResultsService) : AnnotationApplie
             holder.newAnnotation(severity, title)
                 .range(textRange)
                 .tooltip(tooltip)
+                .withFix(CycodeOpenViolationCardIntentionQuickFix(detection))
                 .withFix(
                     CycodeIgnoreIntentionQuickFix(
                         CliScanType.Iac,
