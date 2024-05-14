@@ -11,7 +11,7 @@ data class IacDetection(
     val detectionRuleId: String,  // UUID
     val detectionTypeId: String,  // UUID
 ) : DetectionBase {
-    fun getFormattedMessage(): String {
+    override fun getFormattedMessage(): String {
         return message
     }
 

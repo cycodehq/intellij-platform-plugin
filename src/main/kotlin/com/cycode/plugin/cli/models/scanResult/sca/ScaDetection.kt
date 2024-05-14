@@ -11,7 +11,7 @@ data class ScaDetection(
     val detectionRuleId: String,
     val detectionTypeId: String,
 ) : DetectionBase {
-    fun getFormattedMessage(): String {
+    override fun getFormattedMessage(): String {
         return message
     }
 

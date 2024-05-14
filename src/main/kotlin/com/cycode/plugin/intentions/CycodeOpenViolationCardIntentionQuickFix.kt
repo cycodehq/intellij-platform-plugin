@@ -19,7 +19,7 @@ class CycodeOpenViolationCardIntentionQuickFix(
 ) :
     BaseIntentionAction(), PriorityAction, Iconable {
     override fun getText(): String {
-        return CycodeBundle.message("violationCardIntentionText", detection.getFormattedNodeTitle())
+        return CycodeBundle.message("violationCardIntentionText", detection.getFormattedMessage())
     }
 
     override fun getFamilyName(): String {

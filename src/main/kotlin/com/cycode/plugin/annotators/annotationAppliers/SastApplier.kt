@@ -52,7 +52,7 @@ class SastApplier(private val scanResults: ScanResultsService) : AnnotationAppli
             val tooltip = CycodeBundle.message(
                 "sastAnnotationTooltip",
                 detection.severity,
-                detection.getFormattedMessage(),
+                detectionDetails.policyDisplayName,
                 detectionDetails.fileName,
             )
             holder.newAnnotation(severity, title)

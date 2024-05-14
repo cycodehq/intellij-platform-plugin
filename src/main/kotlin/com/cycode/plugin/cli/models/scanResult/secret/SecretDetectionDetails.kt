@@ -16,6 +16,7 @@ data class SecretDetectionDetails(
     val description: String?,
     val remediationGuidelines: String?,
     val customRemediationGuidelines: String?,
+    val policyDisplayName: String?,
     var detectedValue: String? = null, // custom field out of CLI JSON schema. TODO(MarshalX): add from CLI side?
 ) : ScanDetectionDetailsBase {
     override fun getFilepath(): String {

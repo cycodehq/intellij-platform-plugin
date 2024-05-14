@@ -13,12 +13,8 @@ data class SastDetection(
     val detectionRuleId: String,  // UUID
     val detectionTypeId: String,  // UUID
 ) : DetectionBase {
-    fun getFormattedMessage(): String {
-        if (message.length <= SAST_MAX_TITLE_LENGTH) {
-            return message
-        }
-
-        return message.take(SAST_MAX_TITLE_LENGTH).plus("...")
+    override fun getFormattedMessage(): String {
+        return this.detectionDetails.policyDisplayName
     }
 
     fun getFormattedTitle(): String {
