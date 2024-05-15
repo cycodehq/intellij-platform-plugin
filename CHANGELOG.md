@@ -4,6 +4,14 @@
 
 ## [Unreleased]
 
+## [1.7.0] - 2024-05-15
+
+- Add experimental SAST support
+- Add intention actions to open violation card
+- Add policy display name as the title of SAST detections
+- Improve UX of violation cards by clarifying fields
+- Improve UX of tree view by using relative paths
+
 ## [1.6.0] - 2024-04-16
 
 - Add Infrastructure as Code (IaC) support
@@ -70,6 +78,8 @@
 ## [1.0.0] - 2023-12-05
 
 The first public release of the plugin.
+
+[1.7.0]: https://github.com/cycodehq/intellij-platform-plugin/releases/tag/v1.7.0
 
 [1.6.0]: https://github.com/cycodehq/intellij-platform-plugin/releases/tag/v1.6.0
 
