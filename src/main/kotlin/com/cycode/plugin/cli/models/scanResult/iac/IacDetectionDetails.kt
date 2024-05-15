@@ -14,6 +14,7 @@ data class IacDetectionDetails(
     val description: String?,
     val remediationGuidelines: String?,
     val customRemediationGuidelines: String?,
+    val policyDisplayName: String?,
 ) : ScanDetectionDetailsBase {
     override fun getFilepath(): String {
         return fileName

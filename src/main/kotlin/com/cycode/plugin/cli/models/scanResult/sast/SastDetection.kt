@@ -3,8 +3,6 @@ package com.cycode.plugin.cli.models.scanResult.sast
 import com.cycode.plugin.CycodeBundle
 import com.cycode.plugin.cli.models.scanResult.DetectionBase
 
-const val SAST_MAX_TITLE_LENGTH = 100
-
 data class SastDetection(
     val message: String,
     override val detectionDetails: SastDetectionDetails,
@@ -13,12 +11,8 @@ data class SastDetection(
     val detectionRuleId: String,  // UUID
     val detectionTypeId: String,  // UUID
 ) : DetectionBase {
-    fun getFormattedMessage(): String {
-        if (message.length <= SAST_MAX_TITLE_LENGTH) {
-            return message
-        }
-
-        return message.take(SAST_MAX_TITLE_LENGTH).plus("...")
+    override fun getFormattedMessage(): String {
+        return this.detectionDetails.policyDisplayName
     }
 
     fun getFormattedTitle(): String {

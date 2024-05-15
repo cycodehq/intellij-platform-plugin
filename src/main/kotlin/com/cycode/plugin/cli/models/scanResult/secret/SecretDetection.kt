@@ -13,7 +13,7 @@ data class SecretDetection(
     val detectionRuleId: String,  // UUID
     val detectionTypeId: String,  // UUID
 ) : DetectionBase {
-    fun getFormattedMessage(): String {
+    override fun getFormattedMessage(): String {
         return message.replace("within '' repository", "")  // BE bug
     }
 

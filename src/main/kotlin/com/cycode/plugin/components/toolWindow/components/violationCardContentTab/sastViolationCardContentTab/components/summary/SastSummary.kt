@@ -8,7 +8,7 @@ import javax.swing.JComponent
 
 class SastSummary : CardHtmlSummary() {
     private fun getSummary(detection: SastDetection): String {
-        return convertMarkdownToHtml(detection.message)
+        return convertMarkdownToHtml(detection.detectionDetails.description)
     }
 
     fun getContent(detection: SastDetection): JComponent {

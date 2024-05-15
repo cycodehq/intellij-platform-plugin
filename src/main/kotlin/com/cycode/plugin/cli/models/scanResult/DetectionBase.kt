@@ -4,5 +4,6 @@ interface DetectionBase {
     val severity: String
     val detectionDetails: ScanDetectionDetailsBase
 
+    fun getFormattedMessage(): String
     fun getFormattedNodeTitle(): String
 }
