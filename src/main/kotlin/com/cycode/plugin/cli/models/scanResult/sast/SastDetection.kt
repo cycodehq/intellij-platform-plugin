@@ -3,8 +3,6 @@ package com.cycode.plugin.cli.models.scanResult.sast
 import com.cycode.plugin.CycodeBundle
 import com.cycode.plugin.cli.models.scanResult.DetectionBase
 
-const val SAST_MAX_TITLE_LENGTH = 100
-
 data class SastDetection(
     val message: String,
     override val detectionDetails: SastDetectionDetails,
