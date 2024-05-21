@@ -1,11 +1,9 @@
 package com.cycode.plugin.intentions
 
 import com.cycode.plugin.CycodeBundle
+import com.cycode.plugin.cli.CliIgnoreType
 import com.cycode.plugin.cli.CliScanType
-import com.cycode.plugin.components.toolWindow.updateToolWindowState
 import com.cycode.plugin.services.cycode
-import com.cycode.plugin.services.scanResults
-import com.intellij.codeInsight.daemon.DaemonCodeAnalyzer
 import com.intellij.codeInsight.intention.PriorityAction
 import com.intellij.codeInsight.intention.impl.BaseIntentionAction
 import com.intellij.openapi.diagnostic.thisLogger
@@ -18,16 +16,16 @@ import javax.swing.Icon
 
 class CycodeIgnoreIntentionQuickFix(
     private val scanType: CliScanType,
-    private val type: CycodeIgnoreType,
+    private val type: CliIgnoreType,
     private val value: String
 ) :
     BaseIntentionAction(), PriorityAction, Iconable {
     override fun getText(): String {
         with(type) {
             return when (this) {
-                CycodeIgnoreType.VALUE -> CycodeBundle.message("ignoreIntentionByValueText", value)
-                CycodeIgnoreType.RULE -> CycodeBundle.message("ignoreIntentionByRuleText", value)
-                CycodeIgnoreType.PATH -> CycodeBundle.message("ignoreIntentionByPathText", value)
+                CliIgnoreType.VALUE -> CycodeBundle.message("ignoreIntentionByValueText", value)
+                CliIgnoreType.RULE -> CycodeBundle.message("ignoreIntentionByRuleText", value)
+                CliIgnoreType.PATH -> CycodeBundle.message("ignoreIntentionByPathText", value)
             }
         }
     }
@@ -38,28 +36,6 @@ class CycodeIgnoreIntentionQuickFix(
 
     override fun isAvailable(project: Project, editor: Editor?, file: PsiFile?): Boolean {
         return true
-    }
-
-    private fun mapTypeToOptionName(type: CycodeIgnoreType): String {
-        return when (type) {
-            CycodeIgnoreType.VALUE -> "--by-value"
-            CycodeIgnoreType.RULE -> "--by-rule"
-            CycodeIgnoreType.PATH -> "--by-path"
-        }
-    }
-
-    private fun applyIgnoreInUi(project: Project) {
-        // exclude results from the local DB and restart the code analyzer
-
-        val scanResults = scanResults(project)
-        when (type) {
-            CycodeIgnoreType.VALUE -> scanResults.excludeResults(byValue = value)
-            CycodeIgnoreType.RULE -> scanResults.excludeResults(byRuleId = value)
-            CycodeIgnoreType.PATH -> scanResults.excludeResults(byPath = value)
-        }
-
-        DaemonCodeAnalyzer.getInstance(project).restart()
-        updateToolWindowState(project)
     }
 
     override fun invoke(project: Project, editor: Editor?, file: PsiFile?) {
@@ -75,11 +51,7 @@ class CycodeIgnoreIntentionQuickFix(
         }
 
         thisLogger().warn("Ignore quick fix intention has been invoked")
-
-        // we are removing is from UI first to show how it's blazing fast and then apply it in the background
-        applyIgnoreInUi(project)
-
-        cycode(project).applyIgnoreFromFileAnnotation(scanType.name.toLowerCase(), mapTypeToOptionName(type), value)
+        cycode(project).applyIgnoreFromFileAnnotation(scanType, type, value)
     }
 
     override fun getPriority(): PriorityAction.Priority {

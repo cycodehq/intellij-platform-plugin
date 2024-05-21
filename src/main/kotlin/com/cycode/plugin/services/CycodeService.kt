@@ -1,10 +1,13 @@
 package com.cycode.plugin.services
 
 import com.cycode.plugin.CycodeBundle
+import com.cycode.plugin.cli.CliIgnoreType
+import com.cycode.plugin.cli.CliScanType
 import com.cycode.plugin.components.toolWindow.CycodeToolWindowFactory
 import com.cycode.plugin.components.toolWindow.updateToolWindowState
 import com.cycode.plugin.components.toolWindow.updateToolWindowStateForAllProjects
 import com.cycode.plugin.utils.CycodeNotifier
+import com.intellij.codeInsight.daemon.DaemonCodeAnalyzer
 import com.intellij.openapi.Disposable
 import com.intellij.openapi.components.Service
 import com.intellij.openapi.diagnostic.thisLogger
@@ -139,14 +142,43 @@ class CycodeService(val project: Project) : Disposable {
         }.queue()
     }
 
-    fun applyIgnoreFromFileAnnotation(optionScanType: String, optionName: String, optionValue: String) {
+    private fun mapTypeToOptionName(type: CliIgnoreType): String {
+        return when (type) {
+            CliIgnoreType.VALUE -> "--by-value"
+            CliIgnoreType.RULE -> "--by-rule"
+            CliIgnoreType.PATH -> "--by-path"
+        }
+    }
+
+    private fun applyIgnoreInUi(type: CliIgnoreType, value: String) {
+        // exclude results from the local DB and restart the code analyzer
+
+        val scanResults = scanResults(project)
+        when (type) {
+            CliIgnoreType.VALUE -> scanResults.excludeResults(byValue = value)
+            CliIgnoreType.RULE -> scanResults.excludeResults(byRuleId = value)
+            CliIgnoreType.PATH -> scanResults.excludeResults(byPath = value)
+        }
+
+        DaemonCodeAnalyzer.getInstance(project).restart()
+        updateToolWindowState(project)
+    }
+
+    fun applyIgnoreFromFileAnnotation(scanType: CliScanType, type: CliIgnoreType, value: String) {
+        // we are removing is from UI first to show how it's blazing fast and then apply it in the background
+        applyIgnoreInUi(type, value)
+
         object : Task.Backgroundable(project, CycodeBundle.message("ignoresApplying"), true) {
             override fun run(indicator: ProgressIndicator) {
                 if (!pluginState.cliAuthed) {
                     return
                 }
 
-                cliService.ignore(optionScanType, optionName, optionValue, cancelledCallback = { indicator.isCanceled })
+                cliService.ignore(
+                    scanType.name.toLowerCase(),
+                    mapTypeToOptionName(type),
+                    value,
+                    cancelledCallback = { indicator.isCanceled })
             }
         }.queue()
     }
