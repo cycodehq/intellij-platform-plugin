@@ -3,10 +3,8 @@ package com.cycode.plugin.annotators.annotationAppliers
 import com.cycode.plugin.CycodeBundle
 import com.cycode.plugin.annotators.convertSeverity
 import com.cycode.plugin.annotators.validateTextRange
-import com.cycode.plugin.cli.CliIgnoreType
 import com.cycode.plugin.cli.CliResult
 import com.cycode.plugin.cli.CliScanType
-import com.cycode.plugin.intentions.CycodeIgnoreIntentionQuickFix
 import com.cycode.plugin.intentions.CycodeOpenViolationCardIntentionQuickFix
 import com.cycode.plugin.services.ScanResultsService
 import com.intellij.lang.annotation.AnnotationHolder
@@ -73,21 +71,6 @@ class SecretApplier(private val scanResults: ScanResultsService) : AnnotationApp
                 .range(textRange)
                 .tooltip(tooltip)
                 .withFix(CycodeOpenViolationCardIntentionQuickFix(detection))
-                .withFix(
-                    CycodeIgnoreIntentionQuickFix(
-                        CliScanType.Secret,
-                        CliIgnoreType.PATH,
-                        detection.detectionDetails.getFilepath()
-                    )
-                )
-                .withFix(
-                    CycodeIgnoreIntentionQuickFix(
-                        CliScanType.Secret,
-                        CliIgnoreType.RULE,
-                        detection.detectionRuleId
-                    )
-                )
-                .withFix(CycodeIgnoreIntentionQuickFix(CliScanType.Secret, CliIgnoreType.VALUE, detectedValue))
                 .create()
 
         }

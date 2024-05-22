@@ -3,10 +3,7 @@ package com.cycode.plugin.annotators.annotationAppliers
 import com.cycode.plugin.CycodeBundle
 import com.cycode.plugin.annotators.convertSeverity
 import com.cycode.plugin.annotators.validateTextRange
-import com.cycode.plugin.cli.CliIgnoreType
 import com.cycode.plugin.cli.CliResult
-import com.cycode.plugin.cli.CliScanType
-import com.cycode.plugin.intentions.CycodeIgnoreIntentionQuickFix
 import com.cycode.plugin.intentions.CycodeOpenViolationCardIntentionQuickFix
 import com.cycode.plugin.services.ScanResultsService
 import com.intellij.lang.annotation.AnnotationHolder
@@ -59,20 +56,6 @@ class SastApplier(private val scanResults: ScanResultsService) : AnnotationAppli
                 .range(textRange)
                 .tooltip(tooltip)
                 .withFix(CycodeOpenViolationCardIntentionQuickFix(detection))
-                .withFix(
-                    CycodeIgnoreIntentionQuickFix(
-                        CliScanType.Sast,
-                        CliIgnoreType.PATH,
-                        detection.detectionDetails.getFilepath()
-                    )
-                )
-                .withFix(
-                    CycodeIgnoreIntentionQuickFix(
-                        CliScanType.Sast,
-                        CliIgnoreType.RULE,
-                        detection.detectionRuleId
-                    )
-                )
                 .create()
         }
     }
