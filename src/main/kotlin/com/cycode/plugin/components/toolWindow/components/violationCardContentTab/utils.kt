@@ -23,3 +23,36 @@ fun convertMarkdownToHtml(markdown: String): String {
 
     return renderer.render(parser.parse(markdown))
 }
+
+private fun getCweCveLink(cweCve: String?): String? {
+    if (cweCve.isNullOrEmpty()) {
+        return null
+    }
+
+    return when {
+        cweCve.startsWith("GHSA") -> "https://github.com/advisories/$cweCve"
+        cweCve.startsWith("CWE") -> {
+            val cweNumber = cweCve.split("-")
+                .getOrNull(1)
+                ?.takeWhile { it.isDigit() }
+                ?.toIntOrNull()
+            if (cweNumber != null) {
+                "https://cwe.mitre.org/data/definitions/$cweNumber"
+            } else {
+                null
+            }
+        }
+
+        cweCve.startsWith("CVE") -> "https://cve.mitre.org/cgi-bin/cvename.cgi?name=$cweCve"
+        else -> null
+    }
+}
+
+fun renderCweCveLink(cweCve: String?): String {
+    val link = getCweCveLink(cweCve)
+    return if (link != null) {
+        "<a href=\"$link\" target=\"_blank\">$cweCve</a>"
+    } else {
+        cweCve ?: ""
+    }
+}
