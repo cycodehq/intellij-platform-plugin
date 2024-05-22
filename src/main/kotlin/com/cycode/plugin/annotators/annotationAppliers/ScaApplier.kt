@@ -3,12 +3,8 @@ package com.cycode.plugin.annotators.annotationAppliers
 import com.cycode.plugin.CycodeBundle
 import com.cycode.plugin.annotators.convertSeverity
 import com.cycode.plugin.annotators.validateTextRange
-import com.cycode.plugin.cli.CliResult
-import com.cycode.plugin.cli.CliScanType
-import com.cycode.plugin.cli.getPackageFileForLockFile
-import com.cycode.plugin.cli.isSupportedLockFile
+import com.cycode.plugin.cli.*
 import com.cycode.plugin.intentions.CycodeIgnoreIntentionQuickFix
-import com.cycode.plugin.intentions.CycodeIgnoreType
 import com.cycode.plugin.intentions.CycodeOpenViolationCardIntentionQuickFix
 import com.cycode.plugin.services.ScanResultsService
 import com.intellij.lang.annotation.AnnotationHolder
@@ -93,14 +89,14 @@ class ScaApplier(private val scanResults: ScanResultsService) : AnnotationApplie
                 .withFix(
                     CycodeIgnoreIntentionQuickFix(
                         CliScanType.Sca,
-                        CycodeIgnoreType.PATH,
+                        CliIgnoreType.PATH,
                         detection.detectionDetails.getFilepath()
                     )
                 )
                 .withFix(
                     CycodeIgnoreIntentionQuickFix(
                         CliScanType.Sca,
-                        CycodeIgnoreType.RULE,
+                        CliIgnoreType.RULE,
                         detection.detectionRuleId
                     )
                 )

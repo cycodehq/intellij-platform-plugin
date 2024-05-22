@@ -26,6 +26,7 @@ open class CommonViolationCardContentTab {
         }
 
         // blank JLabel to fill the remaining space otherwise the components are centered
+        gbc.gridy++
         gbc.weighty = 1.0
         panel.add(JLabel(" "), gbc)
 
