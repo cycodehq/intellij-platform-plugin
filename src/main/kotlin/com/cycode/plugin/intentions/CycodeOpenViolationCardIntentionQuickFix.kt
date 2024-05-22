@@ -62,7 +62,12 @@ class CycodeOpenViolationCardIntentionQuickFix(
     }
 
     override fun getPriority(): PriorityAction.Priority {
-        return PriorityAction.Priority.NORMAL
+        return when (detection.severity.toLowerCase()) {
+            "critical" -> PriorityAction.Priority.TOP
+            "high" -> PriorityAction.Priority.HIGH
+            "medium" -> PriorityAction.Priority.NORMAL
+            else -> PriorityAction.Priority.LOW
+        }
     }
 
     override fun getIcon(flags: Int): Icon {
