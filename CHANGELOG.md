@@ -4,6 +4,12 @@
 
 ## [Unreleased]
 
+## [1.8.0] - 2024-05-23
+
+- Add "Ignore this violation" for violation card of secrets
+- Make CWE and CVE clickable on violation cards
+- Leave "Open violation card" as only one quick fix action
+
 ## [1.7.0] - 2024-05-15
 
 - Add experimental SAST support
@@ -78,6 +84,8 @@
 ## [1.0.0] - 2023-12-05
 
 The first public release of the plugin.
+
+[1.8.0]: https://github.com/cycodehq/intellij-platform-plugin/releases/tag/v1.8.0
 
 [1.7.0]: https://github.com/cycodehq/intellij-platform-plugin/releases/tag/v1.7.0
 
