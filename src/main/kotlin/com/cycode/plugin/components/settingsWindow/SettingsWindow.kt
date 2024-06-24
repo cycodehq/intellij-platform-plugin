@@ -21,7 +21,6 @@ class SettingsWindow {
     private var scanOnSaveCheckbox = JBCheckBox(null, pluginSettings.scanOnSave)
 
     private var scaSyncFlowCheckbox = JBCheckBox(null, pluginSettings.scaSyncFlow)
-    private var sastSupportCheckbox = JBCheckBox(null, pluginSettings.sastSupport)
 
     fun getComponent(): DialogPanel {
         val contentPanel = panel {
@@ -67,11 +66,6 @@ class SettingsWindow {
                         scaSyncFlowCheckbox()
                     }
                 }
-                row(label = CycodeBundle.message("settingsSastSupportCheckbox")) {
-                    cell {
-                        sastSupportCheckbox()
-                    }
-                }
             }
         }
 
@@ -87,7 +81,6 @@ class SettingsWindow {
             cliAdditionalParamsTextField.text,
             scanOnSaveCheckbox.isSelected,
             scaSyncFlowCheckbox.isSelected,
-            sastSupportCheckbox.isSelected,
         )
     }
 

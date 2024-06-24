@@ -4,6 +4,10 @@
 
 ## [Unreleased]
 
+## [1.9.0] - 2024-06-24
+
+- Add SAST support
+
 ## [1.8.0] - 2024-05-23
 
 - Add "Ignore this violation" for violation card of secrets
@@ -84,6 +88,8 @@
 ## [1.0.0] - 2023-12-05
 
 The first public release of the plugin.
+
+[1.9.0]: https://github.com/cycodehq/intellij-platform-plugin/releases/tag/v1.9.0
 
 [1.8.0]: https://github.com/cycodehq/intellij-platform-plugin/releases/tag/v1.8.0
 
