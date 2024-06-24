@@ -3,7 +3,6 @@ package com.cycode.plugin.components.toolWindow.components.cycodeActionToolBar.a
 import com.cycode.plugin.CycodeBundle
 import com.cycode.plugin.components.toolWindow.CycodeContentTab
 import com.cycode.plugin.services.cycode
-import com.cycode.plugin.services.pluginSettings
 import com.cycode.plugin.services.pluginState
 import com.intellij.icons.AllIcons
 import com.intellij.openapi.actionSystem.AnActionEvent
@@ -27,10 +26,7 @@ class RunAllAction :
         service.startSecretScanForCurrentProject()
         service.startScaScanForCurrentProject()
         service.startIacScanForCurrentProject()
-
-        if (pluginSettings().sastSupport) {
-            service.startSastScanForCurrentProject()
-        }
+        service.startSastScanForCurrentProject()
     }
 
     override fun update(e: AnActionEvent) {

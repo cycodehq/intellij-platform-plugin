@@ -5,7 +5,6 @@ import com.cycode.plugin.components.toolWindow.components.treeView.TreeView
 import com.cycode.plugin.components.toolWindow.components.treeView.nodes.*
 import com.cycode.plugin.components.toolWindow.components.treeView.openDetectionInFile
 import com.cycode.plugin.services.cycode
-import com.cycode.plugin.services.pluginSettings
 import com.intellij.openapi.editor.actions.ContentChooser.RETURN_SYMBOL
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.ui.popup.JBPopupFactory
@@ -73,9 +72,7 @@ class DetectionNodeContextMenu(
             CycodeBundle.message("secretDisplayName") -> service.startSecretScanForCurrentProject()
             CycodeBundle.message("scaDisplayName") -> service.startScaScanForCurrentProject()
             CycodeBundle.message("iacDisplayName") -> service.startIacScanForCurrentProject()
-            CycodeBundle.message("sastDisplayName") -> {
-                if (pluginSettings().sastSupport) service.startSastScanForCurrentProject()
-            }
+            CycodeBundle.message("sastDisplayName") -> service.startSastScanForCurrentProject()
         }
     }
 
