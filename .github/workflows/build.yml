@@ -97,6 +97,7 @@ jobs:
         if: ${{ github.event_name == 'workflow_dispatch' }}
         env:
           PUBLISH_TOKEN: ${{ secrets.PUBLISH_TOKEN }}
+          SENTRY_AUTH_TOKEN: ${{ secrets.SENTRY_AUTH_TOKEN }}
         run: ./gradlew publishPlugin
 
       #  test:

@@ -4,6 +4,10 @@
 
 ## [Unreleased]
 
+## [1.9.2] - 2024-07-10
+
+- Integrate Sentry
+
 ## [1.9.1] - 2024-06-25
 
 - Remove forgotten "coming soon" from SAST
@@ -93,6 +97,8 @@
 
 The first public release of the plugin.
 
+[1.9.2]: https://github.com/cycodehq/intellij-platform-plugin/releases/tag/v1.9.2
+
 [1.9.1]: https://github.com/cycodehq/intellij-platform-plugin/releases/tag/v1.9.1
 
 [1.9.0]: https://github.com/cycodehq/intellij-platform-plugin/releases/tag/v1.9.0
@@ -129,4 +135,4 @@ The first public release of the plugin.
 
 [1.0.0]: https://github.com/cycodehq/intellij-platform-plugin/releases/tag/v1.0.0
 
-[Unreleased]: https://github.com/cycodehq/intellij-platform-plugin/compare/v1.4.0...HEAD
+[Unreleased]: https://github.com/cycodehq/intellij-platform-plugin/compare/v1.9.2...HEAD

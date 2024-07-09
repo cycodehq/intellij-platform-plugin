@@ -1,5 +1,6 @@
 package com.cycode.plugin.utils
 
+import io.sentry.Sentry
 import java.io.File
 import java.io.FileInputStream
 import java.security.MessageDigest
@@ -38,6 +39,7 @@ fun verifyFileChecksum(file: File, sha256Checksum: String): Boolean {
     try {
         return sha256Checksum.equals(getFileShaHash(file), ignoreCase = true)
     } catch (e: Exception) {
+        Sentry.captureException(e)
         e.printStackTrace()
     }
 
