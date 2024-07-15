@@ -1,17 +1,17 @@
 package com.cycode.plugin.cli
 
+import com.cycode.plugin.CycodeBundle
 import com.cycode.plugin.cli.models.IDEUserAgent
+import com.cycode.plugin.utils.getPluginVersion
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.databind.PropertyNamingStrategies
-import com.intellij.ide.plugins.PluginManagerCore
 import com.intellij.openapi.application.ApplicationInfo
-import com.intellij.openapi.extensions.PluginId
 
 private fun retrieveIDEInfo(): IDEUserAgent {
     val appInfo = ApplicationInfo.getInstance()
 
-    val appName = "jetbrains_plugin"
-    val appVersion = PluginManagerCore.getPlugin(PluginId.getId("com.cycode.plugin"))?.version ?: "unknown"
+    val appName = CycodeBundle.message("appName")
+    val appVersion = getPluginVersion()
     val envName = appInfo.versionName
     val envVersion = appInfo.fullVersion
 

@@ -16,6 +16,7 @@
         <projectConfigurable instance="com.cycode.plugin.settings.ApplicationSettingsConfigurable" groupId="tools"
                              displayName="Cycode"/>
         <notificationGroup id="Cycode" displayType="BALLOON"/>
+        <errorHandler implementation="com.cycode.plugin.sentry.SentryErrorReporter"/>
     </extensions>
 
     <applicationListeners>

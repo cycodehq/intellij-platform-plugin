@@ -10,6 +10,7 @@ plugins {
     alias(libs.plugins.gradleIntelliJPlugin) // Gradle IntelliJ Plugin
     alias(libs.plugins.changelog) // Gradle Changelog Plugin
     alias(libs.plugins.kover) // Gradle Kover Plugin
+    alias(libs.plugins.sentry)
 }
 
 group = properties("pluginGroup").get()
@@ -64,6 +65,20 @@ koverReport {
             onCheck = true
         }
     }
+}
+
+// Configure Sentry
+sentry {
+    includeDependenciesReport = false
+
+    // Generates a JVM (Java, Kotlin, etc.) source bundle and uploads your source code to Sentry.
+    // This enables source context, allowing you to see your source
+    // code as part of your stack traces in Sentry.
+    includeSourceContext = true
+
+    org = "cycode"
+    projectName = "intellij-platform-plugin"
+    authToken = environment("SENTRY_AUTH_TOKEN")
 }
 
 tasks {
@@ -124,6 +139,7 @@ tasks {
 
     publishPlugin {
         dependsOn("patchChangelog")
+        dependsOn("sentryUploadSourceBundleJava")
         token = environment("PUBLISH_TOKEN")
         // The pluginVersion is based on the SemVer (https://semver.org) and supports pre-release labels, like 2.1.7-alpha.3
         // Specify pre-release label to publish the plugin in a custom Release Channel automatically. Read more:
