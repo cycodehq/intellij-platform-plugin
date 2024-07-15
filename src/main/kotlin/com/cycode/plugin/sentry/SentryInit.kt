@@ -10,6 +10,7 @@ object SentryInit {
             options.dsn = Consts.SENTRY_DSN
             options.isDebug = Consts.SENTRY_DEBUG
             options.sampleRate = Consts.SENTRY_SAMPLE_RATE
+            options.isEnableUncaughtExceptionHandler = Consts.SENTRY_ENABLE_UNCAUGHT_EXCEPTION_HANDLER
             options.release = Consts.SENTRY_RELEASE
             options.isSendDefaultPii = Consts.SENTRY_SEND_DEFAULT_PII
             options.serverName = ""
