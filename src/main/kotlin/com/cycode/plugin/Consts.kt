@@ -42,5 +42,6 @@ class Consts {
         val SENTRY_RELEASE = getSentryReleaseVersion()
         const val SENTRY_SAMPLE_RATE = 1.0
         const val SENTRY_SEND_DEFAULT_PII = false
+        const val SENTRY_ENABLE_UNCAUGHT_EXCEPTION_HANDLER = false
     }
 }
