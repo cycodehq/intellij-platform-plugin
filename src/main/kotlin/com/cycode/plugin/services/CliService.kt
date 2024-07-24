@@ -125,10 +125,10 @@ class CliService(private val project: Project) {
                 showErrorNotification(CycodeBundle.message("checkAuthErrorNotification"))
             }
 
-            SentryInit.setupScope(
-                processedResult.result.data.userId,
-                processedResult.result.data.tenantId,
-            )
+            val sentryData = processedResult.result.data
+            if (sentryData != null) {
+                SentryInit.setupScope(sentryData.userId, sentryData.tenantId)
+            }
 
             return pluginState.cliAuthed
         }

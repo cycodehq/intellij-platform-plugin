@@ -1,7 +1,9 @@
 package com.cycode.plugin.sentry
 
 import com.cycode.plugin.Consts
+import com.cycode.plugin.utils.isOnPremiseInstallation
 import io.sentry.Sentry
+import io.sentry.SentryOptions
 import io.sentry.protocol.User
 
 object SentryInit {
@@ -14,6 +16,13 @@ object SentryInit {
             options.release = Consts.SENTRY_RELEASE
             options.isSendDefaultPii = Consts.SENTRY_SEND_DEFAULT_PII
             options.serverName = ""
+            options.beforeSend = SentryOptions.BeforeSendCallback { event, _ ->
+                if (isSentryDisabled()) {
+                    return@BeforeSendCallback null
+                }
+
+                event
+            }
         }
     }
 
@@ -25,5 +34,9 @@ object SentryInit {
                 data = mapOf("tenant_id" to tenantId)
             }
         }
+    }
+
+    private fun isSentryDisabled(): Boolean {
+        return isOnPremiseInstallation()
     }
 }
