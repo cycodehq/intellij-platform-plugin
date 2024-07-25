@@ -46,8 +46,8 @@ class CycodeService(val project: Project) : Disposable {
         object : Task.Backgroundable(project, CycodeBundle.message("authProcessing"), true) {
             override fun run(indicator: ProgressIndicator) {
                 if (!pluginState.cliAuthed) {
-                    val successLogin = cliService.doAuth { indicator.isCanceled }
-                    pluginState.cliAuthed = successLogin
+                    cliService.doAuth { indicator.isCanceled }
+                    cliService.checkAuth()
 
                     updateToolWindowStateForAllProjects()
                 }

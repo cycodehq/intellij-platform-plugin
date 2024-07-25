@@ -27,7 +27,9 @@ class Consts {
     companion object {
         val PLUGIN_PATH = PathManager.getPluginsPath() + "/cycode-intellij-platform-plugin"
         val DEFAULT_CLI_PATH = getDefaultCliPath()
-        const val REQUIRED_CLI_VERSION = "1.10.3"
+        const val REQUIRED_CLI_VERSION = "1.10.7"
+
+        const val CYCODE_DOMAIN = "cycode.com"
 
         const val CLI_GITHUB_ORG = "cycodehq"
         const val CLI_GITHUB_REPO = "cycode-cli"
