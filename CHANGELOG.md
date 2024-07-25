@@ -4,7 +4,7 @@
 
 ## [Unreleased]
 
-## [1.9.4] - 2024-07-24
+## [1.9.4] - 2024-07-25
 
 - Disable Sentry for on-premise installations
 - Fix deserialization errors
