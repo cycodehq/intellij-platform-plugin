@@ -35,6 +35,7 @@ import javax.swing.JPanel
 import javax.swing.event.TreeSelectionEvent
 import javax.swing.event.TreeSelectionListener
 import javax.swing.tree.DefaultMutableTreeNode
+import javax.swing.tree.DefaultTreeModel
 import javax.swing.tree.TreePath
 import javax.swing.tree.TreeSelectionModel
 
@@ -45,6 +46,7 @@ class TreeView(
 
     // dummyRootNode is a workaround to allow us to hide the root node of the tree
     private val dummyRootNode = createNode(DummyNode())
+    private val model = DefaultTreeModel(dummyRootNode)
     private val rootNodes: RootNodes = RootNodes()
 
     private val splitPane: JBSplitter = JBSplitter()
@@ -56,9 +58,9 @@ class TreeView(
     init {
         createNodes(dummyRootNode)
 
-        tree = Tree(dummyRootNode)
-        tree.setRootVisible(false)
-        tree.setCellRenderer(TreeCellRenderer())
+        tree = Tree(model)
+        tree.isRootVisible = false
+        tree.cellRenderer = TreeCellRenderer()
 
         tree.selectionModel.selectionMode = TreeSelectionModel.SINGLE_TREE_SELECTION
         tree.addTreeSelectionListener(this)  // we want to listen for when the user selects a node
@@ -264,7 +266,8 @@ class TreeView(
         // TODO(MarshalX): is possible to optimize this to only update the nodes that have changed
         dummyRootNode.removeAllChildren()
         createNodes(dummyRootNode)
-        tree.updateUI()
+        model.reload()
+        // never use tree.updateUI() here
     }
 
     private fun createNodes(top: DefaultMutableTreeNode) {
