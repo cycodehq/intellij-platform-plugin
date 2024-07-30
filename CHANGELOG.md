@@ -4,6 +4,10 @@
 
 ## [Unreleased]
 
+## [1.9.5] - 2024-07-30
+
+- Fix UI tree component loading in new IDE versions
+
 ## [1.9.4] - 2024-07-25
 
 - Disable Sentry for on-premise installations
@@ -107,6 +111,8 @@
 
 The first public release of the plugin.
 
+[1.9.5]: https://github.com/cycodehq/intellij-platform-plugin/releases/tag/v1.9.5
+
 [1.9.4]: https://github.com/cycodehq/intellij-platform-plugin/releases/tag/v1.9.4
 
 [1.9.3]: https://github.com/cycodehq/intellij-platform-plugin/releases/tag/v1.9.3
@@ -149,4 +155,4 @@ The first public release of the plugin.
 
 [1.0.0]: https://github.com/cycodehq/intellij-platform-plugin/releases/tag/v1.0.0
 
-[Unreleased]: https://github.com/cycodehq/intellij-platform-plugin/compare/v1.9.4...HEAD
+[Unreleased]: https://github.com/cycodehq/intellij-platform-plugin/compare/v1.9.5...HEAD
