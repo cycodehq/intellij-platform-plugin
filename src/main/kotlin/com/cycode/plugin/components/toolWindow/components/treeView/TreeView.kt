@@ -266,8 +266,13 @@ class TreeView(
         // TODO(MarshalX): is possible to optimize this to only update the nodes that have changed
         dummyRootNode.removeAllChildren()
         createNodes(dummyRootNode)
+
+        /*
+        Never use tree.updateUI() here.
+        It crashes component in 2024.1.4, maybe in other versions too.
+        It did not crash in 2023.3.7 and earlier.
+        */
         model.reload()
-        // never use tree.updateUI() here
     }
 
     private fun createNodes(top: DefaultMutableTreeNode) {

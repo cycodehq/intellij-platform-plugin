@@ -4,7 +4,7 @@
 
 ## [Unreleased]
 
-## [1.9.5] - 2024-07-31
+## [1.9.5] - 2024-07-30
 
 - Fix UI tree component loading in new IDE versions
 
