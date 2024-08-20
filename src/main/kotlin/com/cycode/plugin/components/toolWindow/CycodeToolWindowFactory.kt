@@ -70,7 +70,7 @@ private fun replaceToolWindowRightPanel(project: Project, panel: JPanel) {
 }
 
 private fun createToolWindowContent(component: JPanel): Content {
-    return ContentFactory.SERVICE.getInstance().createContent(component, null, false)
+    return ContentFactory.getInstance().createContent(component, null, false)
 }
 
 fun getRightPanelDependingOnState(project: Project): JPanel {

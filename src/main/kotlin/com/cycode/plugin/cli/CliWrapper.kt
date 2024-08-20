@@ -3,6 +3,7 @@ package com.cycode.plugin.cli
 import com.cycode.plugin.cli.models.CliError
 import com.cycode.plugin.services.pluginSettings
 import com.fasterxml.jackson.databind.DeserializationFeature
+import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.databind.PropertyNamingStrategies
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import com.fasterxml.jackson.module.kotlin.readValue
@@ -29,7 +30,7 @@ class CliOSProcessHandler(commandLine: GeneralCommandLine) : OSProcessHandler(co
 class CliWrapper(val executablePath: String, val workDirectory: String? = null) {
     val pluginSettings = pluginSettings()
 
-    var mapper = jacksonObjectMapper()
+    var mapper: ObjectMapper = jacksonObjectMapper()
         .setPropertyNamingStrategy(PropertyNamingStrategies.SNAKE_CASE)
         .configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false)
 

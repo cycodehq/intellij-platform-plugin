@@ -11,7 +11,7 @@ import com.intellij.openapi.util.TextRange
 import com.intellij.psi.PsiFile
 
 class SastApplier(private val scanResults: ScanResultsService) : AnnotationApplierBase() {
-    private fun validateSastTextRange(textRange: TextRange, psiFile: PsiFile): Boolean {
+    private fun validateSastTextRange(): Boolean {
         // FIXME(MarshalX): for now, I dont see any way to validate the text range for SAST
         //   small explanation:
         //   - SAST doesn't provide end positions, so we have to calculate them from the line number (get the last character in the line)
@@ -40,7 +40,7 @@ class SastApplier(private val scanResults: ScanResultsService) : AnnotationAppli
             val detectionDetails = detection.detectionDetails
             val textRange = TextRange(startOffset, endOffset)
 
-            if (!validateTextRange(textRange, psiFile) || !validateSastTextRange(textRange, psiFile)) {
+            if (!validateTextRange(textRange, psiFile) || !validateSastTextRange()) {
                 return@forEach
             }
 

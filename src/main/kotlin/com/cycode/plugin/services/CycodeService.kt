@@ -124,7 +124,7 @@ class CycodeService(val project: Project) : Disposable {
         startPathSastScan(listOf(path), onDemand = onDemand)
     }
 
-    fun startPathSastScan(pathsToScan: List<String>, onDemand: Boolean = false) {
+    private fun startPathSastScan(pathsToScan: List<String>, onDemand: Boolean = false) {
         object : Task.Backgroundable(project, CycodeBundle.message("sastScanning"), true) {
             override fun run(indicator: ProgressIndicator) {
                 if (!pluginState.cliAuthed) {
@@ -175,7 +175,7 @@ class CycodeService(val project: Project) : Disposable {
                 }
 
                 cliService.ignore(
-                    scanType.name.toLowerCase(),
+                    scanType.name.lowercase(),
                     mapTypeToOptionName(type),
                     value,
                     cancelledCallback = { indicator.isCanceled })

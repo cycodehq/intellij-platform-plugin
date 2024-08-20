@@ -70,7 +70,7 @@ private val INFRA_CONFIGURATION_SCAN_SUPPORTED_FILE_SUFFIXES: List<String> = lis
 )
 
 fun isSupportedIacFile(filename: String): Boolean {
-    val lowercaseFilename = filename.toLowerCase()
+    val lowercaseFilename = filename.lowercase()
     INFRA_CONFIGURATION_SCAN_SUPPORTED_FILE_SUFFIXES.forEach {
         if (lowercaseFilename.endsWith(it)) {
             return true
@@ -81,7 +81,7 @@ fun isSupportedIacFile(filename: String): Boolean {
 }
 
 fun isSupportedPackageFile(filename: String): Boolean {
-    val lowercaseFilename = filename.toLowerCase()
+    val lowercaseFilename = filename.lowercase()
     SCA_CONFIGURATION_SCAN_SUPPORTED_FILES.forEach {
         if (lowercaseFilename.endsWith(it)) {
             return true
@@ -92,7 +92,7 @@ fun isSupportedPackageFile(filename: String): Boolean {
 }
 
 fun isSupportedLockFile(filename: String): Boolean {
-    val lowercaseFilename = filename.toLowerCase()
+    val lowercaseFilename = filename.lowercase()
     SCA_CONFIGURATION_SCAN_SUPPORTED_LOCK_FILES.forEach {
         if (lowercaseFilename.endsWith(it)) {
             return true
@@ -103,6 +103,6 @@ fun isSupportedLockFile(filename: String): Boolean {
 }
 
 fun getPackageFileForLockFile(filename: String): String {
-    val lowercaseFilename = filename.toLowerCase()
+    val lowercaseFilename = filename.lowercase()
     return SCA_CONFIGURATION_SCAN_LOCK_FILE_TO_PACKAGE_FILE.getOrDefault(lowercaseFilename, "package")
 }

@@ -10,7 +10,7 @@ enum class ErrorCode {
 const val MISSING_C_STANDARD_LIBRARY_SEARCH = "GLIBC"
 
 private fun caseInsensitiveSearch(output: String, search: String): Boolean {
-    return output.toLowerCase().contains(search.toLowerCase())
+    return output.lowercase().contains(search.lowercase())
 }
 
 fun detectErrorCode(output: String): ErrorCode {

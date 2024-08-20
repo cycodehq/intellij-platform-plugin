@@ -3,6 +3,7 @@ package com.cycode.plugin.components.toolWindow.components.cycodeActionToolBar.a
 import com.cycode.plugin.CycodeBundle
 import com.cycode.plugin.components.toolWindow.CycodeContentTab
 import com.cycode.plugin.icons.PluginIcons
+import com.intellij.openapi.actionSystem.ActionUpdateThread
 import com.intellij.openapi.actionSystem.AnActionEvent
 import com.intellij.openapi.actionSystem.ToggleAction
 import com.intellij.openapi.project.DumbAware
@@ -28,12 +29,12 @@ private class SeverityFilterState {
     private val selectedFilters = mutableMapOf<String, Boolean>()
 
     fun setState(filter: String, selected: Boolean) {
-        selectedFilters[filter.toLowerCase()] = selected
+        selectedFilters[filter.lowercase()] = selected
     }
 
     fun getState(filter: String): Boolean {
         // by default, all filters are selected
-        return selectedFilters.getOrDefault(filter.toLowerCase(), true)
+        return selectedFilters.getOrDefault(filter.lowercase(), true)
     }
 
     fun exportState(): Map<String, Boolean> {
@@ -51,6 +52,10 @@ class FilterBySeverityAction(private val contentTab: CycodeContentTab, private v
         fun create(contentTab: CycodeContentTab, severity: String): FilterBySeverityAction {
             return FilterBySeverityAction(contentTab, severity)
         }
+    }
+
+    override fun getActionUpdateThread(): ActionUpdateThread {
+        return ActionUpdateThread.BGT
     }
 
     override fun isSelected(e: AnActionEvent): Boolean {

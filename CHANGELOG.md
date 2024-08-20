@@ -4,6 +4,11 @@
 
 ## [Unreleased]
 
+## [2.0.0] - 2024-08-20
+
+- Add support for IDEs 2024.2
+- Drop support for IDEs 2021 and 2022
+
 ## [1.9.5] - 2024-07-30
 
 - Fix UI tree component loading in new IDE versions
@@ -111,6 +116,8 @@
 
 The first public release of the plugin.
 
+[2.0.0]: https://github.com/cycodehq/intellij-platform-plugin/releases/tag/v2.0.0
+
 [1.9.5]: https://github.com/cycodehq/intellij-platform-plugin/releases/tag/v1.9.5
 
 [1.9.4]: https://github.com/cycodehq/intellij-platform-plugin/releases/tag/v1.9.4
@@ -155,4 +162,4 @@ The first public release of the plugin.
 
 [1.0.0]: https://github.com/cycodehq/intellij-platform-plugin/releases/tag/v1.0.0
 
-[Unreleased]: https://github.com/cycodehq/intellij-platform-plugin/compare/v1.9.5...HEAD
+[Unreleased]: https://github.com/cycodehq/intellij-platform-plugin/compare/v2.0.0...HEAD

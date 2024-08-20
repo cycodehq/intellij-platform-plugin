@@ -201,7 +201,7 @@ class CliService(private val project: Project) {
         scanType: CliScanType,
         noinline cancelledCallback: TaskCancelledCallback = null
     ): CliResult<T>? {
-        val scanTypeString = scanType.name.toLowerCase()
+        val scanTypeString = scanType.name.lowercase()
         val result = cli
             .executeCommand<T>(
                 "scan",
