@@ -2,6 +2,7 @@ package com.cycode.plugin.components.toolWindow.components.violationCardContentT
 
 import com.intellij.ui.BrowserHyperlinkListener
 import com.intellij.ui.components.JBLabel
+import com.intellij.util.ui.HTMLEditorKitBuilder
 import com.intellij.util.ui.JBFont
 import com.intellij.util.ui.JBUI
 import com.intellij.util.ui.UIUtil
@@ -26,7 +27,7 @@ open class CardHtmlSummary {
 
         (editorPane.caret as DefaultCaret).updatePolicy = DefaultCaret.NEVER_UPDATE
 
-        editorPane.editorKit = UIUtil.getHTMLEditorKit()
+        editorPane.editorKit = HTMLEditorKitBuilder.simple()
         editorPane.text = htmlSummary
 
         // reset scroll position to top

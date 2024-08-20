@@ -11,7 +11,7 @@ import javax.swing.JPanel
 
 open class CardTitle {
     private fun getSeverityIcon(severity: String): JLabel {
-        val icon = when (severity.toLowerCase()) {
+        val icon = when (severity.lowercase()) {
             "critical" -> PluginIcons.CARD_SEVERITY_CRITICAL
             "high" -> PluginIcons.CARD_SEVERITY_HIGH
             "medium" -> PluginIcons.CARD_SEVERITY_MEDIUM
@@ -32,7 +32,7 @@ open class CardTitle {
 
         val severityIcon = getSeverityIcon(severity)
         val title = JBLabel(titleMessage).apply {
-            setAllowAutoWrapping(true)
+            isAllowAutoWrapping = true
             setCopyable(true)
             font = font.deriveFont(18f)
         }

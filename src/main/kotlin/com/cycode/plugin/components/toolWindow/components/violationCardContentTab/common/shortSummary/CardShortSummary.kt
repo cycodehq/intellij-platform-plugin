@@ -16,7 +16,7 @@ open class CardShortSummary {
         val panel = JPanel(GridBagLayout())
 
         if (shortSummary != null) {
-            panel.add(JBLabel(shortSummary).apply { setAllowAutoWrapping(true); setCopyable(true) }, gbc)
+            panel.add(JBLabel(shortSummary).apply { isAllowAutoWrapping = true; setCopyable(true) }, gbc)
         }
 
         return panel

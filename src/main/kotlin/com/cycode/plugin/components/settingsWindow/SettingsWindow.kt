@@ -6,7 +6,7 @@ import com.cycode.plugin.settings.Settings
 import com.intellij.openapi.ui.DialogPanel
 import com.intellij.ui.components.JBCheckBox
 import com.intellij.ui.components.JBTextField
-import com.intellij.ui.layout.panel
+import com.intellij.ui.dsl.builder.panel
 
 class SettingsWindow {
     private val pluginSettings = pluginSettings()
@@ -24,47 +24,33 @@ class SettingsWindow {
 
     fun getComponent(): DialogPanel {
         val contentPanel = panel {
-            titledRow(CycodeBundle.message("settingsCliSectionTitle")) {
-                row(label = CycodeBundle.message("settingsCliAutoManagedCheckbox")) {
-                    cell {
-                        cliAutoManagedCheckbox()
-                    }
+            group(CycodeBundle.message("settingsCliSectionTitle")) {
+                row(CycodeBundle.message("settingsCliAutoManagedCheckbox")) {
+                    cell(cliAutoManagedCheckbox)
                 }
-                row(label = CycodeBundle.message("settingsCliPathLabel")) {
-                    cell {
-                        cliPathTextField()
-                    }
+                row(CycodeBundle.message("settingsCliPathLabel")) {
+                    cell(cliPathTextField)
                 }
-                row(label = CycodeBundle.message("settingsCliAdditionalParamsLabel")) {
-                    cell {
-                        cliAdditionalParamsTextField()
-                    }
+                row(CycodeBundle.message("settingsCliAdditionalParamsLabel")) {
+                    cell(cliAdditionalParamsTextField)
                 }
             }
-            titledRow(CycodeBundle.message("settingsOnPremiseSectionTitle")) {
-                row(label = CycodeBundle.message("settingsCliApiUrlLabel")) {
-                    cell {
-                        cliApiUrlTextField()
-                    }
+            group(CycodeBundle.message("settingsOnPremiseSectionTitle")) {
+                row(CycodeBundle.message("settingsCliApiUrlLabel")) {
+                    cell(cliApiUrlTextField)
                 }
-                row(label = CycodeBundle.message("settingsCliAppUrlLabel")) {
-                    cell {
-                        cliAppUrlTextField()
-                    }
+                row(CycodeBundle.message("settingsCliAppUrlLabel")) {
+                    cell(cliAppUrlTextField)
                 }
             }
-            titledRow(CycodeBundle.message("settingsIdeSectionTitle")) {
-                row(label = CycodeBundle.message("settingsScanOnSaveCheckbox")) {
-                    cell {
-                        scanOnSaveCheckbox()
-                    }
+            group(CycodeBundle.message("settingsIdeSectionTitle")) {
+                row(CycodeBundle.message("settingsScanOnSaveCheckbox")) {
+                    cell(scanOnSaveCheckbox)
                 }
             }
-            titledRow(CycodeBundle.message("settingsExperimentalSectionTitle")) {
-                row(label = CycodeBundle.message("settingsScaSyncFlowCheckbox")) {
-                    cell {
-                        scaSyncFlowCheckbox()
-                    }
+            group(CycodeBundle.message("settingsExperimentalSectionTitle")) {
+                row(CycodeBundle.message("settingsScaSyncFlowCheckbox")) {
+                    cell(scaSyncFlowCheckbox)
                 }
             }
         }

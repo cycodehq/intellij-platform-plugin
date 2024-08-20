@@ -26,7 +26,7 @@ open class CardSummary {
         gbc.gridy++
         gbc.insets = JBUI.emptyInsets()
 
-        panel.add(JBLabel(text).apply { setAllowAutoWrapping(true); setCopyable(true) }, gbc)
+        panel.add(JBLabel(text).apply { isAllowAutoWrapping = true; setCopyable(true) }, gbc)
 
         return panel
     }

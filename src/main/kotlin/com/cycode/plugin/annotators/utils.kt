@@ -5,7 +5,7 @@ import com.intellij.openapi.util.TextRange
 import com.intellij.psi.PsiFile
 
 fun convertSeverity(severity: String): HighlightSeverity {
-    return when (severity.toLowerCase()) {
+    return when (severity.lowercase()) {
         "critical" -> HighlightSeverity.ERROR
         "high" -> HighlightSeverity.ERROR
         "medium" -> HighlightSeverity.WARNING

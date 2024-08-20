@@ -31,7 +31,7 @@ open class CardHeader {
             gridx = 0
             weightx = 0.125
         })
-        panel.add(JBLabel(value).apply { setAllowAutoWrapping(true); setCopyable(true) }, gbc.apply {
+        panel.add(JBLabel(value).apply { isAllowAutoWrapping = true; setCopyable(true) }, gbc.apply {
             gridx = 1
             weightx = 0.875
             anchor = GridBagConstraints.NORTHWEST

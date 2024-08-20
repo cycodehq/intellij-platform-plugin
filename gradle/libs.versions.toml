@@ -1,16 +1,16 @@
 [versions]
 # libraries
-annotations = "24.0.1"
-jackson = "2.15.2"
+annotations = "24.1.0"
+jackson = "2.17.2"
 flexmark = "0.64.8"
 
 # plugins
-dokka = "1.9.10"
-kotlin = "1.9.20"
-changelog = "2.2.0"
-gradleIntelliJPlugin = "1.17.1"
+dokka = "1.9.20"
+kotlin = "2.0.10"
+changelog = "2.2.1"
+gradleIntelliJPlugin = "1.17.4" # the latest before 2.0 with a lot of breaking changes
 kover = "0.7.3"
-sentry = "4.9.0"
+sentry = "4.11.0"
 
 [libraries]
 annotations = { group = "org.jetbrains", name = "annotations", version.ref = "annotations" }

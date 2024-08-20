@@ -132,7 +132,7 @@ class TreeView(
     }
 
     private fun getSeverityWeight(severity: String): Int {
-        return when (severity.toLowerCase()) {
+        return when (severity.lowercase()) {
             "critical" -> 4
             "high" -> 3
             "medium" -> 2
@@ -154,7 +154,7 @@ class TreeView(
         createNodeCallback: (detection: DetectionBase) -> DefaultMutableTreeNode
     ) {
         val filteredDetections = scanResults.detections.filter {
-            severityFilter?.getOrDefault(it.severity.toLowerCase(), true) ?: true
+            severityFilter?.getOrDefault(it.severity.lowercase(), true) ?: true
         }
         val sortedDetections = filteredDetections.sortedByDescending { getSeverityWeight(it.severity) }
         val detectionsByFile = sortedDetections.groupBy { it.detectionDetails.getFilepath() }

@@ -51,18 +51,6 @@ class CliDownloadService {
         return githubReleaseInfo
     }
 
-    private fun getGitHubLatestRelease(forceRefresh: Boolean = false): GitHubRelease? {
-        // not used because could break old versions with breaking changes in CLI
-
-        // prevent sending many requests
-        if (githubReleaseInfo != null && !forceRefresh) {
-            return githubReleaseInfo
-        }
-
-        githubReleaseInfo = githubReleaseService.getLatestReleaseInfo(Consts.CLI_GITHUB_ORG, Consts.CLI_GITHUB_REPO)
-        return githubReleaseInfo
-    }
-
     private fun getOperatingSystemRelatedReleaseAssetFilename(): String? {
         val isAarch64 = SystemInfo.OS_ARCH == "aarch64"
         return when {

@@ -12,7 +12,7 @@ import com.intellij.psi.PsiFile
 import java.io.File
 
 class IacApplier(private val scanResults: ScanResultsService) : AnnotationApplierBase() {
-    private fun validateIacTextRange(textRange: TextRange, psiFile: PsiFile): Boolean {
+    private fun validateIacTextRange(): Boolean {
         // FIXME(MarshalX): for now, I dont see any way to validate the text range for IaC
         //   small explanation:
         //   - IaC doesn't provide end positions, so we have to calculate them from the line number (get the last character in the line)
@@ -41,7 +41,7 @@ class IacApplier(private val scanResults: ScanResultsService) : AnnotationApplie
             val detectionDetails = detection.detectionDetails
             val textRange = TextRange(startOffset, endOffset)
 
-            if (!validateTextRange(textRange, psiFile) || !validateIacTextRange(textRange, psiFile)) {
+            if (!validateTextRange(textRange, psiFile) || !validateIacTextRange()) {
                 return@forEach
             }
 

@@ -4,6 +4,7 @@ import com.cycode.plugin.CycodeBundle
 import com.cycode.plugin.components.toolWindow.CycodeContentTab
 import com.cycode.plugin.components.toolWindow.getRightPanelDependingOnState
 import com.intellij.icons.AllIcons
+import com.intellij.openapi.actionSystem.ActionUpdateThread
 import com.intellij.openapi.actionSystem.AnActionEvent
 import com.intellij.openapi.project.DumbAwareAction
 import java.util.function.Supplier
@@ -14,6 +15,10 @@ class HomeAction(private val contentTab: CycodeContentTab) :
         fun create(contentTab: CycodeContentTab): HomeAction {
             return HomeAction(contentTab)
         }
+    }
+
+    override fun getActionUpdateThread(): ActionUpdateThread {
+        return ActionUpdateThread.BGT
     }
 
     override fun actionPerformed(e: AnActionEvent) {

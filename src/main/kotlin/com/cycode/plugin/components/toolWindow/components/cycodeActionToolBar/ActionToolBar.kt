@@ -12,7 +12,7 @@ class CycodeActionToolbar {
         val actionGroup = DefaultActionGroup().apply {
             add(HomeAction.create(contentTab))
             addSeparator()
-            add(RunAllAction.create(contentTab))
+            add(RunAllAction.create())
             addSeparator()
             add(ExpandAllAction.create(contentTab))
             add(CollapseAllAction.create(contentTab))
@@ -25,14 +25,13 @@ class CycodeActionToolbar {
             addSeparator()
             add(ClearAction.create(contentTab))
             addSeparator()
-            add(SettingsAction.create(contentTab))
-            add(HelpAction.create(contentTab))
+            add(SettingsAction.create())
+            add(HelpAction.create())
         }
 
         val toolbar = ActionManager.getInstance().createActionToolbar(
             CycodeBundle.message("toolbarId"), actionGroup, true
-        )
-        toolbar.setTargetComponent(contentTab)
+        ).apply { targetComponent = contentTab }
         contentTab.toolbar = toolbar.component
 
         return toolbar

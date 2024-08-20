@@ -13,11 +13,11 @@ object PluginIcons {
     val SCAN_TYPE_SCA: Icon = load("/icons/scan-type/SCA.svg")
     val SCAN_TYPE_SECRETS: Icon = load("/icons/scan-type/Secrets.svg")
 
-    val SEVERITY_CRITICAL: Icon = load("/icons/severity/C.svg")
-    val SEVERITY_HIGH: Icon = load("/icons/severity/H.svg")
-    val SEVERITY_INFO: Icon = load("/icons/severity/I.svg")
-    val SEVERITY_LOW: Icon = load("/icons/severity/L.svg")
-    val SEVERITY_MEDIUM: Icon = load("/icons/severity/M.svg")
+    private val SEVERITY_CRITICAL: Icon = load("/icons/severity/C.svg")
+    private val SEVERITY_HIGH: Icon = load("/icons/severity/H.svg")
+    private val SEVERITY_INFO: Icon = load("/icons/severity/I.svg")
+    private val SEVERITY_LOW: Icon = load("/icons/severity/L.svg")
+    private val SEVERITY_MEDIUM: Icon = load("/icons/severity/M.svg")
 
     val CARD_SEVERITY_CRITICAL: Icon = load("/icons/card-severity/C.svg")
     val CARD_SEVERITY_HIGH: Icon = load("/icons/card-severity/H.svg")
@@ -34,7 +34,7 @@ object PluginIcons {
     }
 
     fun getSeverityIcon(severity: String): Icon {
-        return when (severity.toLowerCase()) {
+        return when (severity.lowercase()) {
             "critical" -> SEVERITY_CRITICAL
             "high" -> SEVERITY_HIGH
             "medium" -> SEVERITY_MEDIUM
