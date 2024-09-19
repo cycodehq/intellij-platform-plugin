@@ -14,6 +14,7 @@ import com.cycode.plugin.cli.models.scanResult.secret.SecretScanResult
 import com.cycode.plugin.components.toolWindow.updateToolWindowState
 import com.cycode.plugin.sentry.SentryInit
 import com.cycode.plugin.utils.CycodeNotifier
+import com.cycode.plugin.utils.isValidExistedFilePath
 import com.intellij.codeInsight.daemon.DaemonCodeAnalyzer
 import com.intellij.openapi.components.Service
 import com.intellij.openapi.diagnostic.thisLogger
@@ -268,7 +269,7 @@ class CliService(private val project: Project) {
             // TF plans are virtual files what is not exist in the file system
             // "file_name": "1711298252-/Users/ilyasiamionau/projects/cycode/ilya-siamionau-payloads/tfplan.tf",
             // skip such detections
-            return@filter filePath.startsWith("/")
+            return@filter isValidExistedFilePath(filePath)
         }
     }
 
