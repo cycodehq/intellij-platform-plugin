@@ -4,6 +4,8 @@
 
 ## [Unreleased]
 
+- Fix empty IaC scan results on Windows
+
 ## [2.0.0] - 2024-08-20
 
 - Add support for IDEs 2024.2
