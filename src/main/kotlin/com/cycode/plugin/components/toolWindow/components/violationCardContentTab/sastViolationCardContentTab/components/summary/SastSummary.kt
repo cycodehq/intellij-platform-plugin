@@ -12,6 +12,6 @@ class SastSummary : CardHtmlSummary() {
     }
 
     fun getContent(detection: SastDetection): JComponent {
-        return getContent(CycodeBundle.message("sastViolationCardSummaryTitle"), getSummary(detection))
+        return getContent(CycodeBundle.message("violationCardSummaryTitle"), getSummary(detection))
     }
 }

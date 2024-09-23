@@ -5,6 +5,7 @@
 ## [Unreleased]
 
 - Fix empty IaC scan results on Windows
+- Fix missed markdown blocks on violation cards
 
 ## [2.0.0] - 2024-08-20
 

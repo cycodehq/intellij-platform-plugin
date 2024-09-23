@@ -7,7 +7,7 @@ import javax.swing.JComponent
 
 class IacSummary : CardSummary() {
     fun getContent(detection: IacDetection): JComponent {
-        val title = CycodeBundle.message("iacViolationCardSummaryTitle")
+        val title = CycodeBundle.message("violationCardSummaryTitle")
         val message = detection.detectionDetails.description ?: detection.message
 
         return getContent(title, message)

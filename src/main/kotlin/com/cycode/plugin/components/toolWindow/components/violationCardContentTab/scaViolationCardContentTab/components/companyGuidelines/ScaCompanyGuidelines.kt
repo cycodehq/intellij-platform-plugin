@@ -1,4 +1,4 @@
-package com.cycode.plugin.components.toolWindow.components.violationCardContentTab.scaViolationCardContentTab.components.summary
+package com.cycode.plugin.components.toolWindow.components.violationCardContentTab.scaViolationCardContentTab.components.companyGuidelines
 
 import com.cycode.plugin.CycodeBundle
 import com.cycode.plugin.cli.models.scanResult.sca.ScaDetection
@@ -6,16 +6,16 @@ import com.cycode.plugin.components.toolWindow.components.violationCardContentTa
 import com.cycode.plugin.components.toolWindow.components.violationCardContentTab.convertMarkdownToHtml
 import javax.swing.JComponent
 
-class ScaSummary : CardHtmlSummary() {
-    private fun getDescription(detection: ScaDetection): String? {
-        val descriptionMarkdown = detection.detectionDetails.alert?.description ?: return null
+class ScaCompanyGuidelines : CardHtmlSummary() {
+    private fun getCustomGuidelines(detection: ScaDetection): String? {
+        val descriptionMarkdown = detection.detectionDetails.customRemediationGuidelines ?: return null
         return convertMarkdownToHtml(descriptionMarkdown)
     }
 
     fun getContent(detection: ScaDetection): JComponent {
         return getContent(
-            CycodeBundle.message("violationCardSummaryTitle"),
-            getDescription(detection)
+            CycodeBundle.message("violationCardCompanyGuidelinesTitle"),
+            getCustomGuidelines(detection)
         )
     }
 }
