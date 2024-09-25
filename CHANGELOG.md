@@ -4,6 +4,8 @@
 
 ## [Unreleased]
 
+## [2.0.1] - 2024-09-25
+
 - Fix empty IaC scan results on Windows
 - Fix missed markdown blocks on violation cards
 
@@ -119,6 +121,8 @@
 
 The first public release of the plugin.
 
+[2.0.1]: https://github.com/cycodehq/intellij-platform-plugin/releases/tag/v2.0.1 
+
 [2.0.0]: https://github.com/cycodehq/intellij-platform-plugin/releases/tag/v2.0.0
 
 [1.9.5]: https://github.com/cycodehq/intellij-platform-plugin/releases/tag/v1.9.5
@@ -165,4 +169,4 @@ The first public release of the plugin.
 
 [1.0.0]: https://github.com/cycodehq/intellij-platform-plugin/releases/tag/v1.0.0
 
-[Unreleased]: https://github.com/cycodehq/intellij-platform-plugin/compare/v2.0.0...HEAD
+[Unreleased]: https://github.com/cycodehq/intellij-platform-plugin/compare/v2.0.1...HEAD
