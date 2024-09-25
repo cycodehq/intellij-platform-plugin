@@ -15,6 +15,10 @@ data class ScaDetectionDetails(
     val vulnerabilityDescription: String?,
     val vulnerabilityId: String?,
     val alert: ScaDetectionDetailsAlert?,
+    val description: String?,
+    val remediationGuidelines: String?,
+    val customRemediationGuidelines: String?,
+    val policyDisplayName: String?,
 ) : ScanDetectionDetailsBase {
     override fun getFilepath(): String {
         return fileName

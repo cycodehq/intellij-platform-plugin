@@ -4,6 +4,7 @@ import com.cycode.plugin.cli.models.scanResult.secret.SecretDetection
 import com.cycode.plugin.components.toolWindow.components.violationCardContentTab.common.CommonViolationCardContentTab
 import com.cycode.plugin.components.toolWindow.components.violationCardContentTab.secretViolationCardContentTab.components.actions.SecretActions
 import com.cycode.plugin.components.toolWindow.components.violationCardContentTab.secretViolationCardContentTab.components.companyGuidelines.SecretCompanyGuidelines
+import com.cycode.plugin.components.toolWindow.components.violationCardContentTab.secretViolationCardContentTab.components.cycodeGuidelines.SecretCycodeGuidelines
 import com.cycode.plugin.components.toolWindow.components.violationCardContentTab.secretViolationCardContentTab.components.header.SecretHeader
 import com.cycode.plugin.components.toolWindow.components.violationCardContentTab.secretViolationCardContentTab.components.shortSummary.SecretShortSummary
 import com.cycode.plugin.components.toolWindow.components.violationCardContentTab.secretViolationCardContentTab.components.summary.SecretSummary
@@ -18,6 +19,7 @@ class SecretViolationCardContentTab(val project: Project) : CommonViolationCardC
         val headerContentPanel = SecretHeader().addContent(detection)
         val summaryPanel = SecretSummary().getContent(detection)
         val companyGuidelines = SecretCompanyGuidelines().getContent(detection)
+        val cycodeGuidelines = SecretCycodeGuidelines().getContent(detection)
         val actionsPanel = SecretActions(project).addContent(detection)
 
         return getContent(
@@ -27,6 +29,7 @@ class SecretViolationCardContentTab(val project: Project) : CommonViolationCardC
                 headerContentPanel,
                 summaryPanel,
                 companyGuidelines,
+                cycodeGuidelines,
                 actionsPanel,
             )
         )

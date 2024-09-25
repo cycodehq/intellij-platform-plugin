@@ -26,7 +26,7 @@ class IacViolationCardContentTab : CommonViolationCardContentTab() {
                 headerContentPanel,
                 summaryPanel,
                 companyGuidelines,
-                cycodeGuidelines
+                cycodeGuidelines,
             )
         )
     }

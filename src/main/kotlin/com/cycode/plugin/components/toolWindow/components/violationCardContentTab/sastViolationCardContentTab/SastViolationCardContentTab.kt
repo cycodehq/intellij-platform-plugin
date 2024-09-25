@@ -2,6 +2,8 @@ package com.cycode.plugin.components.toolWindow.components.violationCardContentT
 
 import com.cycode.plugin.cli.models.scanResult.sast.SastDetection
 import com.cycode.plugin.components.toolWindow.components.violationCardContentTab.common.CommonViolationCardContentTab
+import com.cycode.plugin.components.toolWindow.components.violationCardContentTab.sastViolationCardContentTab.components.companyGuidelines.SastCompanyGuidelines
+import com.cycode.plugin.components.toolWindow.components.violationCardContentTab.sastViolationCardContentTab.components.cycodeGuidelines.SastCycodeGuidelines
 import com.cycode.plugin.components.toolWindow.components.violationCardContentTab.sastViolationCardContentTab.components.header.SastHeader
 import com.cycode.plugin.components.toolWindow.components.violationCardContentTab.sastViolationCardContentTab.components.shortSummary.SastShortSummary
 import com.cycode.plugin.components.toolWindow.components.violationCardContentTab.sastViolationCardContentTab.components.summary.SastSummary
@@ -14,6 +16,8 @@ class SastViolationCardContentTab : CommonViolationCardContentTab() {
         val shortSummaryPanel = SastShortSummary().getContent(detection)
         val headerContentPanel = SastHeader().addContent(detection)
         val summaryPanel = SastSummary().getContent(detection)
+        val companyGuidelines = SastCompanyGuidelines().getContent(detection)
+        val cycodeGuidelines = SastCycodeGuidelines().getContent(detection)
 
         return getContent(
             listOf(
@@ -21,6 +25,8 @@ class SastViolationCardContentTab : CommonViolationCardContentTab() {
                 shortSummaryPanel,
                 headerContentPanel,
                 summaryPanel,
+                companyGuidelines,
+                cycodeGuidelines,
             )
         )
     }

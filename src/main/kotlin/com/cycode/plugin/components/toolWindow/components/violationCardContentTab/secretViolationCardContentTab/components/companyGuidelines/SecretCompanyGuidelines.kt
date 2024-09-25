@@ -14,7 +14,7 @@ class SecretCompanyGuidelines : CardHtmlSummary() {
 
     fun getContent(detection: SecretDetection): JComponent {
         return getContent(
-            CycodeBundle.message("secretViolationCardCompanyGuidelinesTitle"),
+            CycodeBundle.message("violationCardCompanyGuidelinesTitle"),
             getCustomGuidelines(detection)
         )
     }

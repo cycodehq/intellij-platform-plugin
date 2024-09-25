@@ -7,12 +7,8 @@ import javax.swing.JComponent
 
 class SecretSummary : CardSummary() {
     fun getContent(detection: SecretDetection): JComponent {
-        val title = CycodeBundle.message("secretViolationCardSummaryTitle")
-        val fixedMessage = detection.message.replace(
-            "within '' repository", // BE bug
-            ""
-        )
-        val message = detection.detectionDetails.description ?: fixedMessage
+        val title = CycodeBundle.message("violationCardSummaryTitle")
+        val message = detection.detectionDetails.description ?: detection.getFormattedMessage()
 
         return getContent(title, message)
     }
