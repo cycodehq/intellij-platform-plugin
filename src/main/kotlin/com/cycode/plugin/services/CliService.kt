@@ -190,10 +190,15 @@ class CliService(private val project: Project) {
 
     private fun getCliScanOptions(scanType: CliScanType): Array<String> {
         val options = mutableListOf<String>()
-        if (scanType == CliScanType.Sca && pluginSettings.scaSyncFlow) {
+
+        if (scanType != CliScanType.Sast) {
             options.add("--sync")
+        }
+
+        if (scanType == CliScanType.Sca) {
             options.add("--no-restore")
         }
+
         return options.toTypedArray()
     }
 

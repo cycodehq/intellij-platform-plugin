@@ -20,8 +20,6 @@ class SettingsWindow {
 
     private var scanOnSaveCheckbox = JBCheckBox(null, pluginSettings.scanOnSave)
 
-    private var scaSyncFlowCheckbox = JBCheckBox(null, pluginSettings.scaSyncFlow)
-
     fun getComponent(): DialogPanel {
         val contentPanel = panel {
             group(CycodeBundle.message("settingsCliSectionTitle")) {
@@ -48,11 +46,6 @@ class SettingsWindow {
                     cell(scanOnSaveCheckbox)
                 }
             }
-            group(CycodeBundle.message("settingsExperimentalSectionTitle")) {
-                row(CycodeBundle.message("settingsScaSyncFlowCheckbox")) {
-                    cell(scaSyncFlowCheckbox)
-                }
-            }
         }
 
         return contentPanel
@@ -66,7 +59,6 @@ class SettingsWindow {
             cliAppUrlTextField.text,
             cliAdditionalParamsTextField.text,
             scanOnSaveCheckbox.isSelected,
-            scaSyncFlowCheckbox.isSelected,
         )
     }
 

@@ -57,7 +57,6 @@ class ApplicationSettingsConfigurable(val project: Project) : SearchableConfigur
         pluginSettings.cliAutoManaged = newSettings.cliAutoManaged
         pluginSettings.cliAdditionalParams = newSettings.cliAdditionalParams
         pluginSettings.scanOnSave = newSettings.scanOnSave
-        pluginSettings.scaSyncFlow = newSettings.scaSyncFlow
 
         if (isValidCliPath(newSettings.cliPath)) {
             pluginSettings.cliPath = newSettings.cliPath

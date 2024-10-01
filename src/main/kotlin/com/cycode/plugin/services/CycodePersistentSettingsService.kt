@@ -20,8 +20,6 @@ class CycodePersistentSettingsService : PersistentStateComponent<CycodePersisten
 
     var scanOnSave: Boolean = true
 
-    var scaSyncFlow: Boolean = true
-
     override fun getState(): CycodePersistentSettingsService {
         return this
     }
@@ -38,7 +36,6 @@ class CycodePersistentSettingsService : PersistentStateComponent<CycodePersisten
             cliAppUrl,
             cliAdditionalParams,
             scanOnSave,
-            scaSyncFlow,
         )
     }
 }
