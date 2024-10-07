@@ -7,5 +7,4 @@ data class Settings(
     val cliAppUrl: String,
     val cliAdditionalParams: String,
     val scanOnSave: Boolean,
-    val scaSyncFlow: Boolean,
 )

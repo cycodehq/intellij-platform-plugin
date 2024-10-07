@@ -4,6 +4,10 @@
 
 ## [Unreleased]
 
+## [2.1.0] - 2024-10-07
+
+- Add sync flow for Secrets and IaC
+
 ## [2.0.1] - 2024-09-25
 
 - Fix empty IaC scan results on Windows
@@ -121,6 +125,8 @@
 
 The first public release of the plugin.
 
+[2.1.0]: https://github.com/cycodehq/intellij-platform-plugin/releases/tag/v2.1.0
+
 [2.0.1]: https://github.com/cycodehq/intellij-platform-plugin/releases/tag/v2.0.1 
 
 [2.0.0]: https://github.com/cycodehq/intellij-platform-plugin/releases/tag/v2.0.0
@@ -169,4 +175,4 @@ The first public release of the plugin.
 
 [1.0.0]: https://github.com/cycodehq/intellij-platform-plugin/releases/tag/v1.0.0
 
-[Unreleased]: https://github.com/cycodehq/intellij-platform-plugin/compare/v2.0.1...HEAD
+[Unreleased]: https://github.com/cycodehq/intellij-platform-plugin/compare/v2.1.0...HEAD
