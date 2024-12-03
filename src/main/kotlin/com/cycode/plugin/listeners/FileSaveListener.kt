@@ -1,6 +1,7 @@
 package com.cycode.plugin.listeners
 
 import com.cycode.plugin.Consts
+import com.cycode.plugin.cli.CliScanType
 import com.cycode.plugin.cli.isSupportedIacFile
 import com.cycode.plugin.cli.isSupportedPackageFile
 import com.cycode.plugin.services.cycode
@@ -37,17 +38,17 @@ class FileSaveListener(private val project: Project) : FileDocumentManagerListen
         }
 
         if (pathsToScan.isNotEmpty()) {
-            service.startPathSecretScan(pathsToScan)
+            service.startScan(CliScanType.Secret, pathsToScan, onDemand = false)
         }
 
         val scaPathsToScan = excludeNonScaRelatedPaths(pathsToScan)
         if (scaPathsToScan.isNotEmpty()) {
-            service.startPathScaScan(scaPathsToScan)
+            service.startScan(CliScanType.Sca, scaPathsToScan, onDemand = false)
         }
 
         val iacPathsToScan = excludeNonIacRelatedPaths(pathsToScan)
         if (iacPathsToScan.isNotEmpty()) {
-            service.startPathIacScan(iacPathsToScan)
+            service.startScan(CliScanType.Iac, iacPathsToScan, onDemand = false)
         }
     }
 

@@ -6,12 +6,12 @@ import com.cycode.plugin.components.toolWindow.components.violationCardContentTa
 import com.cycode.plugin.components.toolWindow.components.violationCardContentTab.convertMarkdownToHtml
 import javax.swing.JComponent
 
-class SastSummary : CardHtmlSummary() {
+class SastSummary : CardHtmlSummary(CycodeBundle.message("violationCardSummaryTitle")) {
     private fun getSummary(detection: SastDetection): String {
         return convertMarkdownToHtml(detection.detectionDetails.description)
     }
 
     fun getContent(detection: SastDetection): JComponent {
-        return getContent(CycodeBundle.message("violationCardSummaryTitle"), getSummary(detection))
+        return getContent(getSummary(detection))
     }
 }

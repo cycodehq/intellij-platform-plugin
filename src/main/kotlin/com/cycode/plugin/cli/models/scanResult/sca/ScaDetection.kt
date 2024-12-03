@@ -4,9 +4,10 @@ import com.cycode.plugin.CycodeBundle
 import com.cycode.plugin.cli.models.scanResult.DetectionBase
 
 data class ScaDetection(
-    val message: String,
-    override val detectionDetails: ScaDetectionDetails,
+    override val id: String,
     override val severity: String,
+    override val detectionDetails: ScaDetectionDetails,
+    val message: String,
     val type: String,
     val detectionRuleId: String,
     val detectionTypeId: String,

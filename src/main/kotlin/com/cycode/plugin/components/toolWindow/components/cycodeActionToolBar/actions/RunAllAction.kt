@@ -1,6 +1,7 @@
 package com.cycode.plugin.components.toolWindow.components.cycodeActionToolBar.actions
 
 import com.cycode.plugin.CycodeBundle
+import com.cycode.plugin.cli.CliScanType
 import com.cycode.plugin.services.cycode
 import com.cycode.plugin.services.pluginState
 import com.intellij.icons.AllIcons
@@ -27,10 +28,10 @@ class RunAllAction :
         val project = e.project ?: return
         val service = cycode(project)
 
-        service.startSecretScanForCurrentProject()
-        service.startScaScanForCurrentProject()
-        service.startIacScanForCurrentProject()
-        service.startSastScanForCurrentProject()
+        service.startScanForCurrentProject(CliScanType.Secret)
+        service.startScanForCurrentProject(CliScanType.Sca)
+        service.startScanForCurrentProject(CliScanType.Iac)
+        service.startScanForCurrentProject(CliScanType.Sast)
     }
 
     override fun update(e: AnActionEvent) {

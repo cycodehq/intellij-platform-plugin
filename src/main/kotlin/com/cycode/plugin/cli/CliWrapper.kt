@@ -27,7 +27,7 @@ class CliOSProcessHandler(commandLine: GeneralCommandLine) : OSProcessHandler(co
 }
 
 
-class CliWrapper(val executablePath: String, val workDirectory: String? = null) {
+class CliWrapper(val workDirectory: String? = null) {
     val pluginSettings = pluginSettings()
 
     var mapper: ObjectMapper = jacksonObjectMapper()
@@ -42,7 +42,7 @@ class CliWrapper(val executablePath: String, val workDirectory: String? = null) 
     ): CliResult<T> {
         val commandLine = GeneralCommandLine()
         commandLine.charset = Charset.forName("UTF-8")
-        commandLine.exePath = executablePath
+        commandLine.exePath = pluginSettings.cliPath
 
         if (workDirectory != null) {
             commandLine.workDirectory = File(workDirectory)

@@ -20,6 +20,7 @@ class CycodePersistentStateService : PersistentStateComponent<CycodePersistentSt
     var cliHash: String? = null
     var cliDirHashes: Map<String, String>? = null
     var cliLastUpdateCheckedAt: Long? = null
+    var isAiLargeLanguageModelEnabled: Boolean = false
 
     override fun getState(): CycodePersistentStateService {
         return this
@@ -35,5 +36,6 @@ class CycodePersistentStateService : PersistentStateComponent<CycodePersistentSt
         // TODO(MarshalX): should not be persistent state
         cliInstalled = false
         cliAuthed = false
+        isAiLargeLanguageModelEnabled = false
     }
 }

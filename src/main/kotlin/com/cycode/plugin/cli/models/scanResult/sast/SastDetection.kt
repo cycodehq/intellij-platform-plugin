@@ -4,9 +4,10 @@ import com.cycode.plugin.CycodeBundle
 import com.cycode.plugin.cli.models.scanResult.DetectionBase
 
 data class SastDetection(
-    val message: String,
-    override val detectionDetails: SastDetectionDetails,
+    override val id: String,
     override val severity: String,
+    override val detectionDetails: SastDetectionDetails,
+    val message: String,
     val type: String,
     val detectionRuleId: String,  // UUID
     val detectionTypeId: String,  // UUID

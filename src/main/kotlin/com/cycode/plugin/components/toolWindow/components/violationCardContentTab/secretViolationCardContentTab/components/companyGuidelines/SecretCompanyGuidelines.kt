@@ -6,16 +6,13 @@ import com.cycode.plugin.components.toolWindow.components.violationCardContentTa
 import com.cycode.plugin.components.toolWindow.components.violationCardContentTab.convertMarkdownToHtml
 import javax.swing.JComponent
 
-class SecretCompanyGuidelines : CardHtmlSummary() {
+class SecretCompanyGuidelines : CardHtmlSummary(CycodeBundle.message("violationCardCompanyGuidelinesTitle")) {
     private fun getCustomGuidelines(detection: SecretDetection): String? {
         val descriptionMarkdown = detection.detectionDetails.customRemediationGuidelines ?: return null
         return convertMarkdownToHtml(descriptionMarkdown)
     }
 
     fun getContent(detection: SecretDetection): JComponent {
-        return getContent(
-            CycodeBundle.message("violationCardCompanyGuidelinesTitle"),
-            getCustomGuidelines(detection)
-        )
+        return getContent(getCustomGuidelines(detection))
     }
 }
