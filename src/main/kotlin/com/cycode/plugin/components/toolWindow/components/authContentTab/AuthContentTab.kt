@@ -18,27 +18,20 @@ class AuthContentTab : Component<CycodeService>() {
         return BorderedPanel().apply {
             add(JPanel().apply {
                 layout = GridBagLayout()
-                add(add(JPanel().apply {
-                    add(createClickableLabel(CycodeBundle.message("cliReqInfoLabel")))
-                }), GridBagConstraints().apply {
-                    gridy = 0
-                    insets = JBUI.insetsBottom(10)
-                    anchor = GridBagConstraints.NORTHWEST
-                })
                 add(JButton(CycodeBundle.message("authBtn")).apply {
                     addActionListener {
                         this.setEnabled(false)
                         service.startAuth()
                     }
                 }, GridBagConstraints().apply {
-                    gridy = 1
+                    gridy = 0
                     insets = JBUI.insetsBottom(10)
                     fill = GridBagConstraints.HORIZONTAL
                 })
                 add(add(JPanel().apply {
                     add(createClickableLabel(CycodeBundle.message("howToUseLabel")))
                 }), GridBagConstraints().apply {
-                    gridy = 2
+                    gridy = 1
                     anchor = GridBagConstraints.NORTHWEST
                 })
             }, BorderLayout.NORTH)
