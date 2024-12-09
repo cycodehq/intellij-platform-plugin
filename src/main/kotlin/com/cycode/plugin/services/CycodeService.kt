@@ -105,7 +105,10 @@ class CycodeService(val project: Project) : Disposable {
 
     fun getAiRemediation(detectionId: String, onSuccess: (AiRemediationResultData) -> Unit) {
         runBackgroundTask(CycodeBundle.message("aiRemediationGenerating")) { indicator ->
+            thisLogger().debug("[AI REMEDIATION] Start generating remediation for $detectionId")
             val aiRemediation = cliService.getAiRemediation(detectionId)
+            thisLogger().debug("[AI REMEDIATION] Finish generating remediation for $detectionId")
+
             if (aiRemediation != null) {
                 onSuccess(aiRemediation)
             }
