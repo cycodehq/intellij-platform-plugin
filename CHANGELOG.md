@@ -4,7 +4,7 @@
 
 ## [Unreleased]
 
-## [2.2.0] - 2024-12-XX
+## [2.2.0] - 2024-12-10
 
 - Add AI remediations for IaC and SAST
 - Fix "Path to executable" field applying in the settings
