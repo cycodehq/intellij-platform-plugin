@@ -1,6 +1,7 @@
 package com.cycode.plugin.components.toolWindow.components.scanContentTab
 
 import com.cycode.plugin.CycodeBundle
+import com.cycode.plugin.cli.CliScanType
 import com.cycode.plugin.components.Component
 import com.cycode.plugin.components.common.createClickableLabel
 import com.cycode.plugin.services.CycodeService
@@ -29,22 +30,22 @@ class ScanContentTab : Component<CycodeService>() {
         addComponentToPanel(createClickableLabel(CycodeBundle.message("scanTabTitleLabel")))
         addComponentToPanel(
             JButton(CycodeBundle.message("scanTabSecretsBtn")).apply {
-                addActionListener { service.startSecretScanForCurrentProject() }
+                addActionListener { service.startScanForCurrentProject(CliScanType.Secret) }
             },
         )
         addComponentToPanel(
             JButton(CycodeBundle.message("scanTabScaBtn")).apply {
-                addActionListener { service.startScaScanForCurrentProject() }
+                addActionListener { service.startScanForCurrentProject(CliScanType.Sca) }
             },
         )
         addComponentToPanel(
             JButton(CycodeBundle.message("scanTabIacBtn")).apply {
-                addActionListener { service.startIacScanForCurrentProject() }
+                addActionListener { service.startScanForCurrentProject(CliScanType.Iac) }
             },
         )
         addComponentToPanel(
             JButton(CycodeBundle.message("scanTabSastBtn")).apply {
-                addActionListener { service.startSastScanForCurrentProject() }
+                addActionListener { service.startScanForCurrentProject(CliScanType.Sast) }
             },
         )
 

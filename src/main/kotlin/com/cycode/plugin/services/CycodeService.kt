@@ -3,6 +3,7 @@ package com.cycode.plugin.services
 import com.cycode.plugin.CycodeBundle
 import com.cycode.plugin.cli.CliIgnoreType
 import com.cycode.plugin.cli.CliScanType
+import com.cycode.plugin.cli.models.AiRemediationResultData
 import com.cycode.plugin.components.toolWindow.CycodeToolWindowFactory
 import com.cycode.plugin.components.toolWindow.updateToolWindowState
 import com.cycode.plugin.components.toolWindow.updateToolWindowStateForAllProjects
@@ -23,123 +24,95 @@ class CycodeService(val project: Project) : Disposable {
 
     private val pluginState = pluginState()
 
-    fun installCliIfNeededAndCheckAuthentication() {
-        object : Task.Backgroundable(project, CycodeBundle.message("pluginLoading"), false) {
+    fun <T> runBackgroundTask(
+        title: String,
+        canBeCancelled: Boolean = true,
+        task: (ProgressIndicator) -> T,
+    ) {
+        thisLogger().debug("Create background task: $title")
+        object : Task.Backgroundable(project, title, canBeCancelled) {
             override fun run(indicator: ProgressIndicator) {
-                // we are using lock of download service because it shared per application
-                // the current service is per project so, we can't create a lock here
-                synchronized(cliDownloadService.initCliLock) {
-                    cliDownloadService.initCli()
-
-                    // required to know CLI version.
-                    // we don't have a universal command that will cover the auth state and CLI version yet
-                    cliService.healthCheck()
-
-                    cliService.checkAuth()
-                    updateToolWindowState(project)
-                }
+                thisLogger().debug("Run background task: $title")
+                task(indicator)
+                thisLogger().debug("Finish background task: $title")
             }
         }.queue()
+        thisLogger().debug("Background task queued: $title")
+    }
+
+    fun installCliIfNeededAndCheckAuthentication() {
+        runBackgroundTask(CycodeBundle.message("pluginLoading"), canBeCancelled = false) { _ ->
+            thisLogger().debug("Check CLI installation and authentication")
+            // we are using lock of download service because it shared per application
+            // the current service is per project so, we can't create a lock here
+            synchronized(cliDownloadService.initCliLock) {
+                cliDownloadService.initCli()
+                cliService.syncStatus()
+                updateToolWindowState(project)
+            }
+        }
     }
 
     fun startAuth() {
-        object : Task.Backgroundable(project, CycodeBundle.message("authProcessing"), true) {
-            override fun run(indicator: ProgressIndicator) {
-                if (!pluginState.cliAuthed) {
-                    cliService.doAuth { indicator.isCanceled }
-                    cliService.checkAuth()
-
-                    updateToolWindowStateForAllProjects()
-                }
+        runBackgroundTask(CycodeBundle.message("authProcessing")) { indicator ->
+            if (!pluginState.cliAuthed) {
+                cliService.startAuth { indicator.isCanceled }
+                cliService.syncStatus()
+                updateToolWindowStateForAllProjects()
             }
-        }.queue()
+        }
     }
 
-    fun startPathSecretScan(path: String, onDemand: Boolean = false) {
-        startPathSecretScan(listOf(path), onDemand = onDemand)
+    private fun getBackgroundScanningLabel(scanType: CliScanType) = when (scanType) {
+        CliScanType.Secret -> CycodeBundle.message("secretScanning")
+        CliScanType.Sca -> CycodeBundle.message("scaScanning")
+        CliScanType.Iac -> CycodeBundle.message("iacScanning")
+        CliScanType.Sast -> CycodeBundle.message("sastScanning")
     }
 
-    fun startPathSecretScan(pathsToScan: List<String>, onDemand: Boolean = false) {
-        object : Task.Backgroundable(project, CycodeBundle.message("secretScanning"), true) {
-            override fun run(indicator: ProgressIndicator) {
-                if (!pluginState.cliAuthed) {
-                    return
-                }
+    fun startScanForCurrentProject(scanType: CliScanType) {
+        val projectRoot = cliService.getProjectRootDirectory()
+        if (projectRoot == null) {
+            CycodeNotifier.notifyInfo(project, CycodeBundle.message("noProjectRootErrorNotification"))
+            return
+        }
 
-                thisLogger().debug("[Secret] Start scanning paths: $pathsToScan")
-                cliService.scanPathsSecrets(
-                    pathsToScan,
-                    onDemand = onDemand,
-                    cancelledCallback = { indicator.isCanceled })
-                thisLogger().debug("[Secret] Finish scanning paths: $pathsToScan")
+        // the only way to run the entire project scans is by pressing the button
+        // so this is on demand scan
+        startScan(scanType, listOf(projectRoot))
+    }
+
+    fun startScan(scanType: CliScanType, pathsToScan: List<String>, onDemand: Boolean = true) {
+        runBackgroundTask(getBackgroundScanningLabel(scanType)) { indicator ->
+            if (!pluginState.cliAuthed) {
+                CycodeNotifier.notifyInfo(project, CycodeBundle.message("authorizationRequiredNotification"))
+                return@runBackgroundTask
             }
-        }.queue()
-    }
 
-    fun startPathScaScan(path: String, onDemand: Boolean = false) {
-        startPathScaScan(listOf(path), onDemand = onDemand)
-    }
+            thisLogger().debug("[$scanType] Start scanning paths: $pathsToScan")
 
-    fun startPathScaScan(pathsToScan: List<String>, onDemand: Boolean = false) {
-        object : Task.Backgroundable(project, CycodeBundle.message("scaScanning"), true) {
-            override fun run(indicator: ProgressIndicator) {
-                if (!pluginState.cliAuthed) {
-                    return
-                }
-
-                thisLogger().debug("[SCA] Start scanning paths: $pathsToScan")
-                cliService.scanPathsSca(
-                    pathsToScan,
-                    onDemand = onDemand,
-                    cancelledCallback = { indicator.isCanceled }
-                )
-                thisLogger().debug("[SCA] Finish scanning paths: $pathsToScan")
+            val cancelledCallback = { indicator.isCanceled }
+            when (scanType) {
+                CliScanType.Secret -> cliService.scanPathsSecrets(pathsToScan, onDemand, cancelledCallback)
+                CliScanType.Sca -> cliService.scanPathsSca(pathsToScan, onDemand, cancelledCallback)
+                CliScanType.Iac -> cliService.scanPathsIac(pathsToScan, onDemand, cancelledCallback)
+                CliScanType.Sast -> cliService.scanPathsSast(pathsToScan, onDemand, cancelledCallback)
             }
-        }.queue()
+
+            thisLogger().debug("[$scanType] Finish scanning paths: $pathsToScan")
+        }
     }
 
-    fun startPathIacScan(path: String, onDemand: Boolean = false) {
-        startPathIacScan(listOf(path), onDemand = onDemand)
-    }
+    fun getAiRemediation(detectionId: String, onSuccess: (AiRemediationResultData) -> Unit) {
+        runBackgroundTask(CycodeBundle.message("aiRemediationGenerating")) { indicator ->
+            thisLogger().debug("[AI REMEDIATION] Start generating remediation for $detectionId")
+            val aiRemediation = cliService.getAiRemediation(detectionId)
+            thisLogger().debug("[AI REMEDIATION] Finish generating remediation for $detectionId")
 
-    fun startPathIacScan(pathsToScan: List<String>, onDemand: Boolean = false) {
-        object : Task.Backgroundable(project, CycodeBundle.message("iacScanning"), true) {
-            override fun run(indicator: ProgressIndicator) {
-                if (!pluginState.cliAuthed) {
-                    return
-                }
-
-                thisLogger().debug("[IAC] Start scanning paths: $pathsToScan")
-                cliService.scanPathsIac(
-                    pathsToScan,
-                    onDemand = onDemand,
-                    cancelledCallback = { indicator.isCanceled }
-                )
-                thisLogger().debug("[IAC] Finish scanning paths: $pathsToScan")
+            if (aiRemediation != null) {
+                onSuccess(aiRemediation)
             }
-        }.queue()
-    }
-
-    fun startPathSastScan(path: String, onDemand: Boolean = false) {
-        startPathSastScan(listOf(path), onDemand = onDemand)
-    }
-
-    private fun startPathSastScan(pathsToScan: List<String>, onDemand: Boolean = false) {
-        object : Task.Backgroundable(project, CycodeBundle.message("sastScanning"), true) {
-            override fun run(indicator: ProgressIndicator) {
-                if (!pluginState.cliAuthed) {
-                    return
-                }
-
-                thisLogger().debug("[SAST] Start scanning paths: $pathsToScan")
-                cliService.scanPathsSast(
-                    pathsToScan,
-                    onDemand = onDemand,
-                    cancelledCallback = { indicator.isCanceled }
-                )
-                thisLogger().debug("[SAST] Finish scanning paths: $pathsToScan")
-            }
-        }.queue()
+        }
     }
 
     private fun mapTypeToOptionName(type: CliIgnoreType): String {
@@ -168,59 +141,18 @@ class CycodeService(val project: Project) : Disposable {
         // we are removing is from UI first to show how it's blazing fast and then apply it in the background
         applyIgnoreInUi(type, value)
 
-        object : Task.Backgroundable(project, CycodeBundle.message("ignoresApplying"), true) {
-            override fun run(indicator: ProgressIndicator) {
-                if (!pluginState.cliAuthed) {
-                    return
-                }
-
-                cliService.ignore(
-                    scanType.name.lowercase(),
-                    mapTypeToOptionName(type),
-                    value,
-                    cancelledCallback = { indicator.isCanceled })
+        runBackgroundTask(CycodeBundle.message("ignoresApplying"), canBeCancelled = false) { indicator ->
+            if (!pluginState.cliAuthed) {
+                return@runBackgroundTask
             }
-        }.queue()
-    }
 
-    fun startSecretScanForCurrentProject() {
-        val projectRoot = cliService.getProjectRootDirectory()
-        if (projectRoot == null) {
-            CycodeNotifier.notifyInfo(project, CycodeBundle.message("noProjectRootErrorNotification"))
-            return
+            cliService.ignore(
+                scanType.name.lowercase(),
+                mapTypeToOptionName(type),
+                value,
+                cancelledCallback = { indicator.isCanceled }
+            )
         }
-
-        startPathSecretScan(projectRoot, onDemand = true)
-    }
-
-    fun startScaScanForCurrentProject() {
-        val projectRoot = cliService.getProjectRootDirectory()
-        if (projectRoot == null) {
-            CycodeNotifier.notifyInfo(project, CycodeBundle.message("noProjectRootErrorNotification"))
-            return
-        }
-
-        startPathScaScan(projectRoot, onDemand = true)
-    }
-
-    fun startIacScanForCurrentProject() {
-        val projectRoot = cliService.getProjectRootDirectory()
-        if (projectRoot == null) {
-            CycodeNotifier.notifyInfo(project, CycodeBundle.message("noProjectRootErrorNotification"))
-            return
-        }
-
-        startPathIacScan(projectRoot, onDemand = true)
-    }
-
-    fun startSastScanForCurrentProject() {
-        val projectRoot = cliService.getProjectRootDirectory()
-        if (projectRoot == null) {
-            CycodeNotifier.notifyInfo(project, CycodeBundle.message("noProjectRootErrorNotification"))
-            return
-        }
-
-        startPathSastScan(projectRoot, onDemand = true)
     }
 
     override fun dispose() {

@@ -123,8 +123,8 @@ class TreeView(
         val card = when (detection) {
             is SecretDetection -> SecretViolationCardContentTab(project).getContent(detection)
             is ScaDetection -> ScaViolationCardContentTab().getContent(detection)
-            is IacDetection -> IacViolationCardContentTab().getContent(detection)
-            is SastDetection -> SastViolationCardContentTab().getContent(detection)
+            is IacDetection -> IacViolationCardContentTab(project).getContent(detection)
+            is SastDetection -> SastViolationCardContentTab(project).getContent(detection)
             else -> return
         }
 

@@ -2,9 +2,10 @@ package com.cycode.plugin.services
 
 import com.cycode.plugin.CycodeBundle
 import com.cycode.plugin.cli.*
-import com.cycode.plugin.cli.models.AuthCheckResult
+import com.cycode.plugin.cli.models.AiRemediationResult
+import com.cycode.plugin.cli.models.AiRemediationResultData
 import com.cycode.plugin.cli.models.AuthResult
-import com.cycode.plugin.cli.models.VersionResult
+import com.cycode.plugin.cli.models.StatusResult
 import com.cycode.plugin.cli.models.scanResult.ScanResultBase
 import com.cycode.plugin.cli.models.scanResult.iac.IacDetection
 import com.cycode.plugin.cli.models.scanResult.iac.IacScanResult
@@ -27,11 +28,8 @@ typealias TaskCancelledCallback = (() -> Boolean)?
 @Service(Service.Level.PROJECT)
 class CliService(private val project: Project) {
     private val pluginState = pluginState()
-    private val pluginSettings = pluginSettings()
-
     private val scanResults = scanResults(project)
-
-    private val cli = CliWrapper(pluginSettings.cliPath, getProjectRootDirectory())
+    private val cli = CliWrapper(getProjectRootDirectory())
 
     fun getProjectRootDirectory(): String? {
         val modules = ModuleManager.getInstance(project).modules
@@ -92,53 +90,36 @@ class CliService(private val project: Project) {
         return result
     }
 
-    fun healthCheck(cancelledCallback: TaskCancelledCallback = null): Boolean {
-        val result: CliResult<VersionResult> =
+    fun syncStatus(cancelledCallback: TaskCancelledCallback = null) {
+        val result: CliResult<StatusResult> =
             cli.executeCommand(
-                "version",
+                "status",
                 cancelledCallback = cancelledCallback
             )
 
         val processedResult = processResult(result)
-        if (processedResult is CliResult.Success) {
-            pluginState.cliInstalled = true
-            pluginState.cliVer = processedResult.result.version
-            return true
+        if (processedResult !is CliResult.Success) {
+            resetPluginCLiState()
+            return
         }
 
-        resetPluginCLiState()
-        return false
-    }
+        pluginState.cliInstalled = true
+        pluginState.cliVer = processedResult.result.version
+        pluginState.cliAuthed = processedResult.result.isAuthenticated
+        pluginState.isAiLargeLanguageModelEnabled = processedResult.result.supportedModules.aiLargeLanguageModel
 
-    fun checkAuth(cancelledCallback: TaskCancelledCallback = null): Boolean {
-        val result: CliResult<AuthCheckResult> =
-            cli.executeCommand(
-                "auth",
-                "check",
-                cancelledCallback = cancelledCallback
-            )
-
-        val processedResult = processResult(result)
-        if (processedResult is CliResult.Success) {
-            pluginState.cliInstalled = true
-            pluginState.cliAuthed = processedResult.result.result
-            if (!pluginState.cliAuthed) {
-                showErrorNotification(CycodeBundle.message("checkAuthErrorNotification"))
+        if (!pluginState.cliAuthed) {
+            showErrorNotification(CycodeBundle.message("checkAuthErrorNotification"))
+        } else {
+            if (processedResult.result.userId != null && processedResult.result.tenantId != null) {
+                SentryInit.setupScope(processedResult.result.userId, processedResult.result.tenantId)
             }
-
-            val sentryData = processedResult.result.data
-            if (sentryData != null) {
-                SentryInit.setupScope(sentryData.userId, sentryData.tenantId)
-            }
-
-            return pluginState.cliAuthed
         }
 
-        resetPluginCLiState()
-        return false
+        return
     }
 
-    fun doAuth(cancelledCallback: TaskCancelledCallback = null): Boolean {
+    fun startAuth(cancelledCallback: TaskCancelledCallback = null): Boolean {
         val result: CliResult<AuthResult> =
             cli.executeCommand(
                 "auth",
@@ -233,7 +214,7 @@ class CliService(private val project: Project) {
     ) {
         val results = scanPaths<SecretScanResult>(paths, CliScanType.Secret, cancelledCallback)
         if (results == null) {
-            thisLogger().warn("Failed to scan paths: $paths")
+            thisLogger().warn("Failed to scan Secret paths: $paths")
             return
         }
 
@@ -251,7 +232,7 @@ class CliService(private val project: Project) {
     fun scanPathsSca(paths: List<String>, onDemand: Boolean = true, cancelledCallback: TaskCancelledCallback = null) {
         val results = scanPaths<ScaScanResult>(paths, CliScanType.Sca, cancelledCallback)
         if (results == null) {
-            thisLogger().warn("Failed to scan paths: $paths")
+            thisLogger().warn("Failed to scan SCA paths: $paths")
             return
         }
 
@@ -281,7 +262,7 @@ class CliService(private val project: Project) {
     fun scanPathsIac(paths: List<String>, onDemand: Boolean = true, cancelledCallback: TaskCancelledCallback = null) {
         var results = scanPaths<IacScanResult>(paths, CliScanType.Iac, cancelledCallback)
         if (results == null) {
-            thisLogger().warn("Failed to scan paths: $paths")
+            thisLogger().warn("Failed to IaC scan paths: $paths")
             return
         }
 
@@ -307,7 +288,7 @@ class CliService(private val project: Project) {
     fun scanPathsSast(paths: List<String>, onDemand: Boolean = true, cancelledCallback: TaskCancelledCallback = null) {
         val results = scanPaths<SastScanResult>(paths, CliScanType.Sast, cancelledCallback)
         if (results == null) {
-            thisLogger().warn("Failed to scan paths: $paths")
+            thisLogger().warn("Failed to SAST scan paths: $paths")
             return
         }
 
@@ -320,5 +301,31 @@ class CliService(private val project: Project) {
 
         scanResults.setSastResults(results)
         rerunAnnotators()
+    }
+
+    fun getAiRemediation(
+        detectionId: String,
+        cancelledCallback: TaskCancelledCallback = null
+    ): AiRemediationResultData? {
+        val result: CliResult<AiRemediationResult> =
+            cli.executeCommand(
+                "ai_remediation",
+                detectionId,
+                cancelledCallback = cancelledCallback
+            )
+
+        val processedResult = processResult(result)
+        if (processedResult !is CliResult.Success) {
+            thisLogger().warn("Failed to get AI remediation for detection: $detectionId")
+            return null
+        }
+
+        if (!processedResult.result.result || processedResult.result.data?.remediation == null) {
+            thisLogger().warn("AI remediation is not available for detection: $detectionId")
+            showErrorNotification(CycodeBundle.message("aiRemediationNotAvailableNotification"))
+            return null
+        }
+
+        return processedResult.result.data
     }
 }

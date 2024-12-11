@@ -4,6 +4,11 @@
 
 ## [Unreleased]
 
+## [2.2.0] - 2024-12-11
+
+- Add AI remediations for IaC and SAST
+- Fix "Path to executable" field applying in the settings
+
 ## [2.1.0] - 2024-10-07
 
 - Add sync flow for Secrets and IaC
@@ -125,6 +130,8 @@
 
 The first public release of the plugin.
 
+[2.2.0]: https://github.com/cycodehq/intellij-platform-plugin/releases/tag/v2.2.0
+
 [2.1.0]: https://github.com/cycodehq/intellij-platform-plugin/releases/tag/v2.1.0
 
 [2.0.1]: https://github.com/cycodehq/intellij-platform-plugin/releases/tag/v2.0.1 
@@ -175,4 +182,4 @@ The first public release of the plugin.
 
 [1.0.0]: https://github.com/cycodehq/intellij-platform-plugin/releases/tag/v1.0.0
 
-[Unreleased]: https://github.com/cycodehq/intellij-platform-plugin/compare/v2.1.0...HEAD
+[Unreleased]: https://github.com/cycodehq/intellij-platform-plugin/compare/v2.2.0...HEAD

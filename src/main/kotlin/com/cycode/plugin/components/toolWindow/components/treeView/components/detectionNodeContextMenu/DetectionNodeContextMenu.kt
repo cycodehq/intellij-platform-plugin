@@ -1,6 +1,7 @@
 package com.cycode.plugin.components.toolWindow.components.treeView.components.detectionNodeContextMenu
 
 import com.cycode.plugin.CycodeBundle
+import com.cycode.plugin.cli.CliScanType
 import com.cycode.plugin.components.toolWindow.components.treeView.TreeView
 import com.cycode.plugin.components.toolWindow.components.treeView.nodes.*
 import com.cycode.plugin.components.toolWindow.components.treeView.openDetectionInFile
@@ -69,33 +70,33 @@ class DetectionNodeContextMenu(
 
         // FIXME(MarshalX): add some key field instead of abusing name?
         when (node.name) {
-            CycodeBundle.message("secretDisplayName") -> service.startSecretScanForCurrentProject()
-            CycodeBundle.message("scaDisplayName") -> service.startScaScanForCurrentProject()
-            CycodeBundle.message("iacDisplayName") -> service.startIacScanForCurrentProject()
-            CycodeBundle.message("sastDisplayName") -> service.startSastScanForCurrentProject()
+            CycodeBundle.message("secretDisplayName") -> service.startScanForCurrentProject(CliScanType.Secret)
+            CycodeBundle.message("scaDisplayName") -> service.startScanForCurrentProject(CliScanType.Sca)
+            CycodeBundle.message("iacDisplayName") -> service.startScanForCurrentProject(CliScanType.Iac)
+            CycodeBundle.message("sastDisplayName") -> service.startScanForCurrentProject(CliScanType.Sast)
         }
     }
 
     private fun onRescanOptionClicked() {
         when (val node = getUnknownNode()) {
-            is SecretDetectionNode -> service.startPathSecretScan(
-                node.detection.detectionDetails.getFilepath(),
-                onDemand = true
+            is SecretDetectionNode -> service.startScan(
+                CliScanType.Secret,
+                listOf(node.detection.detectionDetails.getFilepath()),
             )
 
-            is ScaDetectionNode -> service.startPathScaScan(
-                node.detection.detectionDetails.getFilepath(),
-                onDemand = true
+            is ScaDetectionNode -> service.startScan(
+                CliScanType.Sca,
+                listOf(node.detection.detectionDetails.getFilepath()),
             )
 
-            is IacDetectionNode -> service.startPathIacScan(
-                node.detection.detectionDetails.getFilepath(),
-                onDemand = true
+            is IacDetectionNode -> service.startScan(
+                CliScanType.Iac,
+                listOf(node.detection.detectionDetails.getFilepath()),
             )
 
-            is SastDetectionNode -> service.startPathSastScan(
-                node.detection.detectionDetails.getFilepath(),
-                onDemand = true
+            is SastDetectionNode -> service.startScan(
+                CliScanType.Sast,
+                listOf(node.detection.detectionDetails.getFilepath()),
             )
         }
     }
