@@ -120,6 +120,7 @@ class CycodeService(val project: Project) : Disposable {
             CliIgnoreType.VALUE -> "--by-value"
             CliIgnoreType.RULE -> "--by-rule"
             CliIgnoreType.PATH -> "--by-path"
+            CliIgnoreType.CVE -> "--by-cve"
         }
     }
 
@@ -131,6 +132,7 @@ class CycodeService(val project: Project) : Disposable {
             CliIgnoreType.VALUE -> scanResults.excludeResults(byValue = value)
             CliIgnoreType.RULE -> scanResults.excludeResults(byRuleId = value)
             CliIgnoreType.PATH -> scanResults.excludeResults(byPath = value)
+            CliIgnoreType.CVE -> scanResults.excludeResults(byCve = value)
         }
 
         DaemonCodeAnalyzer.getInstance(project).restart()

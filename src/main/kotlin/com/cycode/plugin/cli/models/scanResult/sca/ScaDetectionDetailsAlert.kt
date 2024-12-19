@@ -6,4 +6,5 @@ data class ScaDetectionDetailsAlert(
     val description: String,
     val vulnerableRequirements: String?,
     val firstPatchedVersion: String?,
+    val cveIdentifier: String?,
 )

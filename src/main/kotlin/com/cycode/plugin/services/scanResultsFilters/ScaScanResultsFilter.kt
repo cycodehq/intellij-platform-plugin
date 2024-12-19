@@ -29,6 +29,12 @@ class ScaScanResultsFilter(scanResults: ScaScanResult) : ScanResultsFilterBase<S
         }
     }
 
+    override fun excludeByCve(cve: String) {
+        filter { detection ->
+            detection.detectionDetails.alert?.cveIdentifier != cve
+        }
+    }
+
     override fun getFilteredScanResults(): ScaScanResult {
         return filteredScanResults
     }

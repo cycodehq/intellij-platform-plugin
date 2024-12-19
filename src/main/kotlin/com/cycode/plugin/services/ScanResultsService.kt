@@ -92,25 +92,27 @@ class ScanResultsService {
         detectedSegments.filter { it.key.first == scanType }.forEach { detectedSegments.remove(it.key) }
     }
 
-    fun excludeResults(byValue: String? = null, byPath: String? = null, byRuleId: String? = null) {
+    fun excludeResults(
+        byValue: String? = null, byPath: String? = null, byRuleId: String? = null, byCve: String? = null
+    ) {
         if (secretResults is CliResult.Success) {
             val filter = SecretScanResultsFilter((secretResults as CliResult.Success<SecretScanResult>).result)
-            filter.exclude(byValue, byPath, byRuleId)
+            filter.exclude(byValue, byPath, byRuleId, byCve)
             secretResults = CliResult.Success(filter.getFilteredScanResults())
         }
         if (scaResults is CliResult.Success) {
             val filter = ScaScanResultsFilter((scaResults as CliResult.Success<ScaScanResult>).result)
-            filter.exclude(byValue, byPath, byRuleId)
+            filter.exclude(byValue, byPath, byRuleId, byCve)
             scaResults = CliResult.Success(filter.getFilteredScanResults())
         }
         if (iacResults is CliResult.Success) {
             val filter = IacScanResultsFilter((iacResults as CliResult.Success<IacScanResult>).result)
-            filter.exclude(byValue, byPath, byRuleId)
+            filter.exclude(byValue, byPath, byRuleId, byCve)
             iacResults = CliResult.Success(filter.getFilteredScanResults())
         }
         if (sastResults is CliResult.Success) {
             val filter = SastScanResultsFilter((sastResults as CliResult.Success<SastScanResult>).result)
-            filter.exclude(byValue, byPath, byRuleId)
+            filter.exclude(byValue, byPath, byRuleId, byCve)
             sastResults = CliResult.Success(filter.getFilteredScanResults())
         }
     }

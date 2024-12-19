@@ -29,6 +29,10 @@ class IacScanResultsFilter(scanResults: IacScanResult) : ScanResultsFilterBase<I
         }
     }
 
+    override fun excludeByCve(cve: String) {
+        // do nothing because we don't have a value field in IaC
+    }
+
     override fun getFilteredScanResults(): IacScanResult {
         return filteredScanResults
     }
