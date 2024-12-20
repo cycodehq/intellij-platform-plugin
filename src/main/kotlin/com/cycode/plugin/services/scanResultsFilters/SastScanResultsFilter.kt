@@ -14,7 +14,7 @@ class SastScanResultsFilter(scanResults: SastScanResult) : ScanResultsFilterBase
     }
 
     override fun excludeByValue(value: String) {
-        // do nothing because we don't have a value field in IaC
+        // do nothing because we don't have a value field in SAST
     }
 
     override fun excludeByPath(path: String) {
@@ -27,6 +27,10 @@ class SastScanResultsFilter(scanResults: SastScanResult) : ScanResultsFilterBase
         filter { detection ->
             detection.detectionRuleId != ruleId
         }
+    }
+
+    override fun excludeByCve(cve: String) {
+        // do nothing because we don't have a value field in SAST
     }
 
     override fun getFilteredScanResults(): SastScanResult {

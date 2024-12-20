@@ -31,6 +31,10 @@ class SecretScanResultsFilter(scanResults: SecretScanResult) : ScanResultsFilter
         }
     }
 
+    override fun excludeByCve(cve: String) {
+        // do nothing because we don't have a value field in Secrets
+    }
+
     override fun getFilteredScanResults(): SecretScanResult {
         return filteredScanResults
     }

@@ -11,7 +11,7 @@ import javax.swing.JComponent
 
 class SecretActions(val project: Project) : CardActions() {
     fun addContent(detection: SecretDetection): JComponent {
-        addActionButton(CycodeBundle.message("secretViolationCardIgnoreViolationBtn"), onClick = {
+        addActionButton(CycodeBundle.message("violationCardIgnoreViolationBtn"), onClick = {
             if (detection.detectionDetails.detectedValue != null) {
                 cycode(project).applyIgnoreFromFileAnnotation(
                     CliScanType.Secret,

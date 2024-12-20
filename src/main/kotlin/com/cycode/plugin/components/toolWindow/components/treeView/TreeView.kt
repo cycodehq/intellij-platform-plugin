@@ -122,7 +122,7 @@ class TreeView(
     fun displayViolationCard(detection: DetectionBase) {
         val card = when (detection) {
             is SecretDetection -> SecretViolationCardContentTab(project).getContent(detection)
-            is ScaDetection -> ScaViolationCardContentTab().getContent(detection)
+            is ScaDetection -> ScaViolationCardContentTab(project).getContent(detection)
             is IacDetection -> IacViolationCardContentTab(project).getContent(detection)
             is SastDetection -> SastViolationCardContentTab(project).getContent(detection)
             else -> return

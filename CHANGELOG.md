@@ -4,6 +4,11 @@
 
 ## [Unreleased]
 
+## [2.3.0] - 2024-12-20
+
+- Add the "Ignore this violation" button for violation card of SCA
+- Add support of `.gitignore` files for a file excluding from scans
+
 ## [2.2.0] - 2024-12-11
 
 - Add AI remediations for IaC and SAST
@@ -130,6 +135,8 @@
 
 The first public release of the plugin.
 
+[2.3.0]: https://github.com/cycodehq/intellij-platform-plugin/releases/tag/v2.3.0
+
 [2.2.0]: https://github.com/cycodehq/intellij-platform-plugin/releases/tag/v2.2.0
 
 [2.1.0]: https://github.com/cycodehq/intellij-platform-plugin/releases/tag/v2.1.0
@@ -182,4 +189,4 @@ The first public release of the plugin.
 
 [1.0.0]: https://github.com/cycodehq/intellij-platform-plugin/releases/tag/v1.0.0
 
-[Unreleased]: https://github.com/cycodehq/intellij-platform-plugin/compare/v2.2.0...HEAD
+[Unreleased]: https://github.com/cycodehq/intellij-platform-plugin/compare/v2.3.0...HEAD
