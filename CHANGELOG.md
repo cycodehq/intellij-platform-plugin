@@ -4,6 +4,10 @@
 
 ## [Unreleased]
 
+## [2.4.0] - 2025-01-20
+
+- Add support for IDEs 2025.1
+
 ## [2.3.0] - 2024-12-20
 
 - Add the "Ignore this violation" button for violation card of SCA
@@ -135,6 +139,8 @@
 
 The first public release of the plugin.
 
+[2.4.0]: https://github.com/cycodehq/intellij-platform-plugin/releases/tag/v2.4.0
+
 [2.3.0]: https://github.com/cycodehq/intellij-platform-plugin/releases/tag/v2.3.0
 
 [2.2.0]: https://github.com/cycodehq/intellij-platform-plugin/releases/tag/v2.2.0
@@ -189,4 +195,4 @@ The first public release of the plugin.
 
 [1.0.0]: https://github.com/cycodehq/intellij-platform-plugin/releases/tag/v1.0.0
 
-[Unreleased]: https://github.com/cycodehq/intellij-platform-plugin/compare/v2.3.0...HEAD
+[Unreleased]: https://github.com/cycodehq/intellij-platform-plugin/compare/v2.4.0...HEAD
