@@ -157,6 +157,7 @@ jobs:
             plugins.jetbrains.com
             raw.githubusercontent.com
             teamcity.jetbrains.com
+            downloads.gradle.org
 
       - name: Maximize Build Space
         run: |
