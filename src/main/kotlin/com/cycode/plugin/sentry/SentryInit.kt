@@ -27,13 +27,11 @@ object SentryInit {
     }
 
     fun setupScope(userId: String, tenantId: String) {
-        Sentry.configureScope { scope ->
-            scope.setTag("tenant_id", tenantId)
-            scope.user = User().apply {
-                id = userId
-                data = mapOf("tenant_id" to tenantId)
-            }
-        }
+        Sentry.setTag("tenant_id", tenantId)
+        Sentry.setUser(User().apply {
+            id = userId
+            data = mapOf("tenant_id" to tenantId)
+        })
     }
 
     private fun isSentryDisabled(): Boolean {
