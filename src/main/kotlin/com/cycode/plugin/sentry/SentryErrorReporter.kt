@@ -2,7 +2,6 @@ package com.cycode.plugin.sentry
 
 import com.cycode.plugin.Consts
 import com.cycode.plugin.CycodeBundle
-import com.intellij.diagnostic.IdeaReportingEvent
 import com.intellij.ide.DataManager
 import com.intellij.idea.IdeaLogger
 import com.intellij.openapi.actionSystem.CommonDataKeys
@@ -18,7 +17,15 @@ import io.sentry.Sentry
 import io.sentry.SentryEvent
 import io.sentry.SentryLevel
 import java.awt.Component
+import java.io.PrintWriter
+import java.io.StringWriter
 
+
+fun getStackTraceAsString(throwable: Throwable): String {
+    val sw = StringWriter()
+    throwable.printStackTrace(PrintWriter(sw))
+    return sw.toString()
+}
 
 class SentryErrorReporter : ErrorReportSubmitter() {
     override fun getReportActionText(): String {
@@ -38,20 +45,19 @@ class SentryErrorReporter : ErrorReportSubmitter() {
         object : Task.Backgroundable(project, CycodeBundle.message("sentryReporting"), false) {
             override fun run(indicator: ProgressIndicator) {
                 for (ideaEvent in events) {
-                    if (ideaEvent !is IdeaReportingEvent) {
-                        continue
-                    }
-
                     val event = SentryEvent()
                     event.level = SentryLevel.ERROR
                     event.release = Consts.SENTRY_RELEASE
-                    event.throwable = ideaEvent.data.throwable
+                    event.throwable = ideaEvent.throwable
                     event.serverName = ""
 
                     event.extras = mapOf(
-                        "message" to ideaEvent.data.message,
+                        "message" to ideaEvent.message,
                         "additional_info" to additionalInfo,
                         "last_action" to IdeaLogger.ourLastActionId,
+                        // before 2025.1 it will contain more useful information
+                        // since 2025.1 throwable is close to the original
+                        "stacktrace" to getStackTraceAsString(ideaEvent.throwable)
                     )
 
                     Sentry.captureEvent(event)
