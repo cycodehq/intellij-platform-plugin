@@ -21,7 +21,7 @@ class IacApplier(private val scanResults: ScanResultsService) : AnnotationApplie
     }
 
     override fun apply(psiFile: PsiFile, holder: AnnotationHolder) {
-        val latestScanResult = scanResults.getIacResults()
+        val latestScanResult = scanResults.iacResults
         if (latestScanResult !is CliResult.Success) {
             return
         }

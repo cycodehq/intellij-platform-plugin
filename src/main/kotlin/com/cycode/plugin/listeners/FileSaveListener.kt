@@ -5,8 +5,8 @@ import com.cycode.plugin.cli.CliScanType
 import com.cycode.plugin.cli.isSupportedIacFile
 import com.cycode.plugin.cli.isSupportedPackageFile
 import com.cycode.plugin.services.cycode
+import com.cycode.plugin.services.pluginLocalState
 import com.cycode.plugin.services.pluginSettings
-import com.cycode.plugin.services.pluginState
 import com.intellij.openapi.diagnostic.thisLogger
 import com.intellij.openapi.editor.Document
 import com.intellij.openapi.fileEditor.FileDocumentManager
@@ -20,7 +20,7 @@ import java.util.concurrent.TimeUnit
 
 class FileSaveListener(private val project: Project) : FileDocumentManagerListener {
     private val service = cycode(project)
-    private val pluginState = pluginState()
+    private val pluginLocalState = pluginLocalState(project)
     private val pluginSettings = pluginSettings()
     private val collectedPathsToScan = mutableSetOf<String>() // we use a set to avoid duplicates
 
@@ -33,21 +33,21 @@ class FileSaveListener(private val project: Project) : FileDocumentManagerListen
         val pathsToScan = excludeNotExistingPaths(collectedPathsToScan.toMutableList())
         collectedPathsToScan.clear()
 
-        if (!pluginState.cliAuthed) {
+        if (!pluginLocalState.cliAuthed) {
             return
         }
 
-        if (pathsToScan.isNotEmpty()) {
+        if (pluginLocalState.isSecretScanningEnabled && pathsToScan.isNotEmpty()) {
             service.startScan(CliScanType.Secret, pathsToScan, onDemand = false)
         }
 
         val scaPathsToScan = excludeNonScaRelatedPaths(pathsToScan)
-        if (scaPathsToScan.isNotEmpty()) {
+        if (pluginLocalState.isScaScanningEnabled && scaPathsToScan.isNotEmpty()) {
             service.startScan(CliScanType.Sca, scaPathsToScan, onDemand = false)
         }
 
         val iacPathsToScan = excludeNonIacRelatedPaths(pathsToScan)
-        if (iacPathsToScan.isNotEmpty()) {
+        if (pluginLocalState.isIacScanningEnabled && iacPathsToScan.isNotEmpty()) {
             service.startScan(CliScanType.Iac, iacPathsToScan, onDemand = false)
         }
     }
@@ -78,7 +78,7 @@ class FileSaveListener(private val project: Project) : FileDocumentManagerListen
     override fun beforeDocumentSaving(document: Document) {
         thisLogger().debug("FileSaveListener.beforeDocumentSaving")
 
-        if (!pluginSettings.scanOnSave || !pluginState.cliAuthed) {
+        if (!pluginSettings.scanOnSave || !pluginLocalState.cliAuthed) {
             return
         }
 

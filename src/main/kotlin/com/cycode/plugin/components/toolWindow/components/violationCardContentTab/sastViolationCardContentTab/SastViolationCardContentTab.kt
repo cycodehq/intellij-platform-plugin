@@ -11,13 +11,13 @@ import com.cycode.plugin.components.toolWindow.components.violationCardContentTa
 import com.cycode.plugin.components.toolWindow.components.violationCardContentTab.sastViolationCardContentTab.components.shortSummary.SastShortSummary
 import com.cycode.plugin.components.toolWindow.components.violationCardContentTab.sastViolationCardContentTab.components.summary.SastSummary
 import com.cycode.plugin.components.toolWindow.components.violationCardContentTab.sastViolationCardContentTab.components.title.SastTitle
-import com.cycode.plugin.services.pluginState
+import com.cycode.plugin.services.pluginLocalState
 import com.intellij.openapi.project.Project
 import javax.swing.JComponent
 
 class SastViolationCardContentTab(val project: Project) : CommonViolationCardContentTab() {
     fun getContent(detection: SastDetection): JComponent {
-        val pluginState = pluginState()
+        val pluginLocalState = pluginLocalState(project)
 
         val titlePanel = SastTitle().getContent(detection)
         val shortSummaryPanel = SastShortSummary().getContent(detection)
@@ -35,7 +35,7 @@ class SastViolationCardContentTab(val project: Project) : CommonViolationCardCon
             cycodeGuidelines,
         )
 
-        if (pluginState.isAiLargeLanguageModelEnabled) {
+        if (pluginLocalState.isAiLargeLanguageModelEnabled) {
             val aiRemediationComponent = CardHtmlSummary(CycodeBundle.message("violationCardAiRemediationTitle"))
             val actionsPanel = SastActions(project).addContent(detection, aiRemediationComponent)
             componentsToRender.add(aiRemediationComponent.getContent())

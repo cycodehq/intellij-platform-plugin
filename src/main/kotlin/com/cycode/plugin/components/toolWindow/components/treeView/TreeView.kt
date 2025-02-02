@@ -182,7 +182,7 @@ class TreeView(
     }
 
     private fun createSecretDetectionNodes() {
-        val secretDetections = scanResults.getSecretResults()
+        val secretDetections = scanResults.secretResults
         if (secretDetections !is CliResult.Success) {
             return
         }
@@ -201,7 +201,7 @@ class TreeView(
     }
 
     private fun createScaDetectionNodes() {
-        val scaDetections = scanResults.getScaResults()
+        val scaDetections = scanResults.scaResults
         if (scaDetections !is CliResult.Success) {
             return
         }
@@ -220,7 +220,7 @@ class TreeView(
     }
 
     private fun createIacDetectionNodes() {
-        val iacDetections = scanResults.getIacResults()
+        val iacDetections = scanResults.iacResults
         if (iacDetections !is CliResult.Success) {
             return
         }
@@ -239,7 +239,7 @@ class TreeView(
     }
 
     private fun createSastDetectionNodes() {
-        val sastDetections = scanResults.getSastResults()
+        val sastDetections = scanResults.sastResults
         if (sastDetections !is CliResult.Success) {
             return
         }

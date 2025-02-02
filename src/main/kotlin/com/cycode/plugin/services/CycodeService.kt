@@ -22,7 +22,7 @@ class CycodeService(val project: Project) : Disposable {
     private val cliService = cli(project)
     private val cliDownloadService = cliDownload()
 
-    private val pluginState = pluginState()
+    private val pluginLocalState = pluginLocalState(project)
 
     fun <T> runBackgroundTask(
         title: String,
@@ -55,7 +55,7 @@ class CycodeService(val project: Project) : Disposable {
 
     fun startAuth() {
         runBackgroundTask(CycodeBundle.message("authProcessing")) { indicator ->
-            if (!pluginState.cliAuthed) {
+            if (!pluginLocalState.cliAuthed) {
                 cliService.startAuth { indicator.isCanceled }
                 cliService.syncStatus()
                 updateToolWindowStateForAllProjects()
@@ -84,7 +84,7 @@ class CycodeService(val project: Project) : Disposable {
 
     fun startScan(scanType: CliScanType, pathsToScan: List<String>, onDemand: Boolean = true) {
         runBackgroundTask(getBackgroundScanningLabel(scanType)) { indicator ->
-            if (!pluginState.cliAuthed) {
+            if (!pluginLocalState.cliAuthed) {
                 CycodeNotifier.notifyInfo(project, CycodeBundle.message("authorizationRequiredNotification"))
                 return@runBackgroundTask
             }
@@ -144,7 +144,7 @@ class CycodeService(val project: Project) : Disposable {
         applyIgnoreInUi(type, value)
 
         runBackgroundTask(CycodeBundle.message("ignoresApplying"), canBeCancelled = false) { indicator ->
-            if (!pluginState.cliAuthed) {
+            if (!pluginLocalState.cliAuthed) {
                 return@runBackgroundTask
             }
 

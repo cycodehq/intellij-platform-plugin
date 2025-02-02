@@ -11,13 +11,13 @@ import com.cycode.plugin.components.toolWindow.components.violationCardContentTa
 import com.cycode.plugin.components.toolWindow.components.violationCardContentTab.iacViolationCardContentTab.components.shortSummary.IacShortSummary
 import com.cycode.plugin.components.toolWindow.components.violationCardContentTab.iacViolationCardContentTab.components.summary.IacSummary
 import com.cycode.plugin.components.toolWindow.components.violationCardContentTab.iacViolationCardContentTab.components.title.IacTitle
-import com.cycode.plugin.services.pluginState
+import com.cycode.plugin.services.pluginLocalState
 import com.intellij.openapi.project.Project
 import javax.swing.JComponent
 
 class IacViolationCardContentTab(val project: Project) : CommonViolationCardContentTab() {
     fun getContent(detection: IacDetection): JComponent {
-        val pluginState = pluginState()
+        val pluginLocalState = pluginLocalState(project)
 
         val titlePanel = IacTitle().getContent(detection)
         val shortSummaryPanel = IacShortSummary().getContent(detection)
@@ -35,7 +35,7 @@ class IacViolationCardContentTab(val project: Project) : CommonViolationCardCont
             cycodeGuidelines,
         )
 
-        if (pluginState.isAiLargeLanguageModelEnabled) {
+        if (pluginLocalState.isAiLargeLanguageModelEnabled) {
             val aiRemediationComponent = CardHtmlSummary(CycodeBundle.message("violationCardAiRemediationTitle"))
             val actionsPanel = IacActions(project).addContent(detection, aiRemediationComponent)
             componentsToRender.add(aiRemediationComponent.getContent())

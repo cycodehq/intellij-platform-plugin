@@ -14,13 +14,10 @@ import java.nio.file.Paths
     // https://plugins.jetbrains.com/docs/intellij/plugin-services.html#light-service-restrictions
 )
 class CycodePersistentStateService : PersistentStateComponent<CycodePersistentStateService> {
-    var cliInstalled: Boolean = false
-    var cliAuthed: Boolean = false
     var cliVer: String? = null
     var cliHash: String? = null
     var cliDirHashes: Map<String, String>? = null
     var cliLastUpdateCheckedAt: Long? = null
-    var isAiLargeLanguageModelEnabled: Boolean = false
 
     override fun getState(): CycodePersistentStateService {
         return this
@@ -32,10 +29,5 @@ class CycodePersistentStateService : PersistentStateComponent<CycodePersistentSt
         Files.createDirectories(Paths.get(Consts.PLUGIN_PATH))
 
         XmlSerializerUtil.copyBean(state, this)
-
-        // TODO(MarshalX): should not be persistent state
-        cliInstalled = false
-        cliAuthed = false
-        isAiLargeLanguageModelEnabled = false
     }
 }
