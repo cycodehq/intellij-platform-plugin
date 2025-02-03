@@ -3,7 +3,7 @@ package com.cycode.plugin.components.toolWindow.components.cycodeActionToolBar.a
 import com.cycode.plugin.CycodeBundle
 import com.cycode.plugin.cli.CliScanType
 import com.cycode.plugin.services.cycode
-import com.cycode.plugin.services.pluginState
+import com.cycode.plugin.services.pluginLocalState
 import com.intellij.icons.AllIcons
 import com.intellij.openapi.actionSystem.ActionUpdateThread
 import com.intellij.openapi.actionSystem.AnActionEvent
@@ -27,16 +27,25 @@ class RunAllAction :
         //  we can provide "stop" action only after that
         val project = e.project ?: return
         val service = cycode(project)
+        val pluginLocalState = pluginLocalState(project)
 
-        service.startScanForCurrentProject(CliScanType.Secret)
-        service.startScanForCurrentProject(CliScanType.Sca)
-        service.startScanForCurrentProject(CliScanType.Iac)
-        service.startScanForCurrentProject(CliScanType.Sast)
+        if (pluginLocalState.isSecretScanningEnabled) {
+            service.startScanForCurrentProject(CliScanType.Secret)
+        }
+        if (pluginLocalState.isScaScanningEnabled) {
+            service.startScanForCurrentProject(CliScanType.Sca)
+        }
+        if (pluginLocalState.isIacScanningEnabled) {
+            service.startScanForCurrentProject(CliScanType.Iac)
+        }
+        if (pluginLocalState.isSastScanningEnabled) {
+            service.startScanForCurrentProject(CliScanType.Sast)
+        }
     }
 
     override fun update(e: AnActionEvent) {
         e.presentation.isEnabled = e.project != null &&
                 !e.project!!.isDisposed &&
-                pluginState().cliAuthed
+                pluginLocalState(e.project).cliAuthed
     }
 }

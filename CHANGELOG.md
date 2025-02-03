@@ -4,6 +4,8 @@
 
 ## [Unreleased]
 
+- Add proper support for disabled modules
+
 ## [2.4.1] - 2025-01-29
 
 - Fix usage of internal API in 2025.1

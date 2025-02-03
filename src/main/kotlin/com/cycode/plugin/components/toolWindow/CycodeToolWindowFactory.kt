@@ -7,7 +7,7 @@ import com.cycode.plugin.components.toolWindow.components.loadingContentTab.Load
 import com.cycode.plugin.components.toolWindow.components.scanContentTab.ScanContentTab
 import com.cycode.plugin.icons.PluginIcons
 import com.cycode.plugin.services.cycode
-import com.cycode.plugin.services.pluginState
+import com.cycode.plugin.services.pluginLocalState
 import com.intellij.openapi.application.ApplicationManager
 import com.intellij.openapi.application.WriteAction
 import com.intellij.openapi.project.DumbAware
@@ -75,13 +75,13 @@ private fun createToolWindowContent(component: JPanel): Content {
 
 fun getRightPanelDependingOnState(project: Project): JPanel {
     val service = cycode(project)
-    val pluginState = pluginState()
+    val pluginLocalState = pluginLocalState(project)
 
-    if (!pluginState.cliInstalled) {
+    if (!pluginLocalState.cliInstalled) {
         return LoadingContentTab().getContent(service)
     }
 
-    return if (pluginState.cliAuthed) {
+    return if (pluginLocalState.cliAuthed) {
         ScanContentTab().getContent(service)
     } else {
         AuthContentTab().getContent(service)
@@ -89,7 +89,7 @@ fun getRightPanelDependingOnState(project: Project): JPanel {
 }
 
 fun updateToolWindowStateForAllProjects() {
-    // we are using this method to sync the state of the tool window for all open projects
+    // we are using this method to sync the state of the tool window for all open projects,
     // for example, after changing the auth state
     ApplicationManager.getApplication().runReadAction {
         val projects = ProjectManager.getInstance().openProjects

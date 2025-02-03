@@ -15,6 +15,8 @@ inline fun <reified T : Any> getCycodeService(project: Project? = null): T {
 
 fun pluginState(project: Project? = null): CycodePersistentStateService = getCycodeService(project)
 
+fun pluginLocalState(project: Project? = null): CycodeTemporaryStateService = getCycodeService(project)
+
 fun pluginSettings(project: Project? = null): CycodePersistentSettingsService = getCycodeService(project)
 
 fun scanResults(project: Project? = null): ScanResultsService = getCycodeService(project)

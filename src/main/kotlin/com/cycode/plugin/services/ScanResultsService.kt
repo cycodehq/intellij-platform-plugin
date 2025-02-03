@@ -18,49 +18,32 @@ import com.intellij.openapi.util.TextRange
 class ScanResultsService {
     private val detectedSegments = mutableMapOf<Pair<CliScanType, TextRange>, String>()
 
-    private var secretResults: CliResult<SecretScanResult>? = null
-    private var scaResults: CliResult<ScaScanResult>? = null
-    private var iacResults: CliResult<IacScanResult>? = null
-    private var sastResults: CliResult<SastScanResult>? = null
+    var secretResults: CliResult<SecretScanResult>? = null
+        set(value) {
+            clearDetectedSegments(CliScanType.Secret)
+            field = value
+        }
+
+    var scaResults: CliResult<ScaScanResult>? = null
+        set(value) {
+            clearDetectedSegments(CliScanType.Sca)
+            field = value
+        }
+
+    var iacResults: CliResult<IacScanResult>? = null
+        set(value) {
+            clearDetectedSegments(CliScanType.Iac)
+            field = value
+        }
+
+    var sastResults: CliResult<SastScanResult>? = null
+        set(value) {
+            clearDetectedSegments(CliScanType.Sast)
+            field = value
+        }
 
     init {
         thisLogger().info("CycodeResultsService init")
-    }
-
-    fun setSecretResults(result: CliResult<SecretScanResult>) {
-        clearDetectedSegments(CliScanType.Secret)
-        secretResults = result
-    }
-
-    fun getSecretResults(): CliResult<SecretScanResult>? {
-        return secretResults
-    }
-
-    fun setScaResults(result: CliResult<ScaScanResult>) {
-        clearDetectedSegments(CliScanType.Sca)
-        scaResults = result
-    }
-
-    fun getScaResults(): CliResult<ScaScanResult>? {
-        return scaResults
-    }
-
-    fun setIacResults(result: CliResult<IacScanResult>) {
-        clearDetectedSegments(CliScanType.Iac)
-        iacResults = result
-    }
-
-    fun getIacResults(): CliResult<IacScanResult>? {
-        return iacResults
-    }
-
-    fun setSastResults(result: CliResult<SastScanResult>) {
-        clearDetectedSegments(CliScanType.Sast)
-        sastResults = result
-    }
-
-    fun getSastResults(): CliResult<SastScanResult>? {
-        return sastResults
     }
 
     fun clear() {

@@ -28,6 +28,7 @@ typealias TaskCancelledCallback = (() -> Boolean)?
 @Service(Service.Level.PROJECT)
 class CliService(private val project: Project) {
     private val pluginState = pluginState()
+    private val pluginLocalState = pluginLocalState(project)
     private val scanResults = scanResults(project)
     private val cli = CliWrapper(getProjectRootDirectory())
 
@@ -48,8 +49,8 @@ class CliService(private val project: Project) {
     }
 
     private fun resetPluginCLiState() {
-        pluginState.cliAuthed = false
-        pluginState.cliInstalled = false
+        pluginLocalState.cliAuthed = false
+        pluginLocalState.cliInstalled = false
         pluginState.cliVer = null
     }
 
@@ -103,12 +104,12 @@ class CliService(private val project: Project) {
             return
         }
 
-        pluginState.cliInstalled = true
+        pluginLocalState.cliInstalled = true
+        pluginLocalState.cliAuthed = processedResult.result.isAuthenticated
+        pluginLocalState.cliStatus = processedResult.result
         pluginState.cliVer = processedResult.result.version
-        pluginState.cliAuthed = processedResult.result.isAuthenticated
-        pluginState.isAiLargeLanguageModelEnabled = processedResult.result.supportedModules.aiLargeLanguageModel
 
-        if (!pluginState.cliAuthed) {
+        if (!pluginLocalState.cliAuthed) {
             showErrorNotification(CycodeBundle.message("checkAuthErrorNotification"))
         } else {
             if (processedResult.result.userId != null && processedResult.result.tenantId != null) {
@@ -128,11 +129,11 @@ class CliService(private val project: Project) {
 
         val processedResult = processResult(result)
         if (processedResult is CliResult.Success) {
-            pluginState.cliAuthed = processedResult.result.result
-            if (!pluginState.cliAuthed) {
+            pluginLocalState.cliAuthed = processedResult.result.result
+            if (!pluginLocalState.cliAuthed) {
                 showErrorNotification(CycodeBundle.message("authErrorNotification"))
             }
-            return pluginState.cliAuthed
+            return pluginLocalState.cliAuthed
         }
 
         return false
@@ -225,7 +226,7 @@ class CliService(private val project: Project) {
 
         showScanFileResultNotification(CliScanType.Secret, detectionsCount, onDemand)
 
-        scanResults.setSecretResults(results)
+        scanResults.secretResults = results
         rerunAnnotators()
     }
 
@@ -243,7 +244,7 @@ class CliService(private val project: Project) {
 
         showScanFileResultNotification(CliScanType.Sca, detectionsCount, onDemand)
 
-        scanResults.setScaResults(results)
+        scanResults.scaResults = results
         rerunAnnotators()
     }
 
@@ -281,7 +282,7 @@ class CliService(private val project: Project) {
 
         showScanFileResultNotification(CliScanType.Iac, detectionsCount, onDemand)
 
-        scanResults.setIacResults(results)
+        scanResults.iacResults = results
         rerunAnnotators()
     }
 
@@ -299,7 +300,7 @@ class CliService(private val project: Project) {
 
         showScanFileResultNotification(CliScanType.Sast, detectionsCount, onDemand)
 
-        scanResults.setSastResults(results)
+        scanResults.sastResults = results
         rerunAnnotators()
     }
 

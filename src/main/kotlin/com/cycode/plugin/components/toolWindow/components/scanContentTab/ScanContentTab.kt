@@ -5,6 +5,7 @@ import com.cycode.plugin.cli.CliScanType
 import com.cycode.plugin.components.Component
 import com.cycode.plugin.components.common.createClickableLabel
 import com.cycode.plugin.services.CycodeService
+import com.cycode.plugin.services.pluginLocalState
 import com.intellij.util.ui.JBUI
 import java.awt.GridBagConstraints
 import java.awt.GridBagLayout
@@ -27,24 +28,31 @@ class ScanContentTab : Component<CycodeService>() {
     }
 
     override fun getContent(service: CycodeService): JPanel {
+        // do not get local state on class level because will be outdated
+        val pluginLocalState = pluginLocalState(service.project)
+
         addComponentToPanel(createClickableLabel(CycodeBundle.message("scanTabTitleLabel")))
         addComponentToPanel(
             JButton(CycodeBundle.message("scanTabSecretsBtn")).apply {
+                isEnabled = pluginLocalState.isSecretScanningEnabled
                 addActionListener { service.startScanForCurrentProject(CliScanType.Secret) }
             },
         )
         addComponentToPanel(
             JButton(CycodeBundle.message("scanTabScaBtn")).apply {
+                isEnabled = pluginLocalState.isScaScanningEnabled
                 addActionListener { service.startScanForCurrentProject(CliScanType.Sca) }
             },
         )
         addComponentToPanel(
             JButton(CycodeBundle.message("scanTabIacBtn")).apply {
+                isEnabled = pluginLocalState.isIacScanningEnabled
                 addActionListener { service.startScanForCurrentProject(CliScanType.Iac) }
             },
         )
         addComponentToPanel(
             JButton(CycodeBundle.message("scanTabSastBtn")).apply {
+                isEnabled = pluginLocalState.isSastScanningEnabled
                 addActionListener { service.startScanForCurrentProject(CliScanType.Sast) }
             },
         )

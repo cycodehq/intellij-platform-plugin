@@ -20,7 +20,7 @@ class SastApplier(private val scanResults: ScanResultsService) : AnnotationAppli
     }
 
     override fun apply(psiFile: PsiFile, holder: AnnotationHolder) {
-        val latestScanResult = scanResults.getSastResults()
+        val latestScanResult = scanResults.sastResults
         if (latestScanResult !is CliResult.Success) {
             return
         }

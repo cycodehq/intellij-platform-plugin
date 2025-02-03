@@ -31,7 +31,7 @@ class SecretApplier(private val scanResults: ScanResultsService) : AnnotationApp
     }
 
     override fun apply(psiFile: PsiFile, holder: AnnotationHolder) {
-        val latestScanResult = scanResults.getSecretResults()
+        val latestScanResult = scanResults.secretResults
         if (latestScanResult !is CliResult.Success) {
             return
         }
