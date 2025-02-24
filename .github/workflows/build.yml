@@ -44,9 +44,6 @@ jobs:
       - name: Fetch Sources
         uses: actions/checkout@v4
 
-      - name: Gradle Wrapper Validation
-        uses: gradle/actions/wrapper-validation@v3
-
       - name: Setup Java
         uses: actions/setup-java@v3
         with:
@@ -54,9 +51,9 @@ jobs:
           java-version: 17
 
       - name: Setup Gradle
-        uses: gradle/actions/setup-gradle@v3
+        uses: gradle/actions/setup-gradle@v4
         with:
-          gradle-home-cache-cleanup: true
+          validate-wrappers: true
 
       - name: Export Properties
         id: properties
@@ -190,9 +187,9 @@ jobs:
           java-version: 17
 
       - name: Setup Gradle
-        uses: gradle/actions/setup-gradle@v3
+        uses: gradle/actions/setup-gradle@v4
         with:
-          gradle-home-cache-cleanup: true
+          validate-wrappers: true
 
       - name: Setup Plugin Verifier IDEs Cache
         uses: actions/cache@v3

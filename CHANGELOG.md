@@ -4,6 +4,8 @@
 
 ## [Unreleased]
 
+## [2.5.0] - 2025-02-24
+
 - Add proper support for disabled modules
 
 ## [2.4.1] - 2025-01-29
@@ -145,6 +147,8 @@
 
 The first public release of the plugin.
 
+[2.5.0]: https://github.com/cycodehq/intellij-platform-plugin/releases/tag/v2.5.0
+
 [2.4.1]: https://github.com/cycodehq/intellij-platform-plugin/releases/tag/v2.4.1
 
 [2.4.0]: https://github.com/cycodehq/intellij-platform-plugin/releases/tag/v2.4.0
@@ -203,4 +207,4 @@ The first public release of the plugin.
 
 [1.0.0]: https://github.com/cycodehq/intellij-platform-plugin/releases/tag/v1.0.0
 
-[Unreleased]: https://github.com/cycodehq/intellij-platform-plugin/compare/v2.4.1...HEAD
+[Unreleased]: https://github.com/cycodehq/intellij-platform-plugin/compare/v2.5.0...HEAD
