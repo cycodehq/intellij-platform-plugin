@@ -10,9 +10,7 @@ import com.intellij.psi.PsiFile
 import com.intellij.psi.PsiManager
 import java.io.File
 
-const val DIFFERENCE_BETWEEN_SCA_LINE_NUMBERS = 1
-const val DIFFERENCE_BETWEEN_IAC_LINE_NUMBERS = 1
-const val DIFFERENCE_BETWEEN_SAST_LINE_NUMBERS = 1
+const val DIFFERENCE_BETWEEN_CYCODE_AND_IDE_LINE_NUMBER = 1
 
 fun getPsiFile(project: Project, filePath: String): PsiFile? {
     val virtualFile = VirtualFileManager.getInstance().findFileByUrl("file://$filePath") ?: return null
@@ -31,25 +29,25 @@ private fun openFileInEditor(project: Project, filePath: String, lineNumber: Int
 
 private fun openSecretDetectionInFile(project: Project, node: SecretDetectionNode) {
     val filePath = node.detection.detectionDetails.getFilepath()
-    val line = node.detection.detectionDetails.line
+    val line = node.detection.detectionDetails.getLineNumber() - DIFFERENCE_BETWEEN_CYCODE_AND_IDE_LINE_NUMBER
     openFileInEditor(project, filePath, line)
 }
 
 private fun openScaDetectionInFile(project: Project, node: ScaDetectionNode) {
     val filePath = node.detection.detectionDetails.getFilepath()
-    val line = node.detection.detectionDetails.lineInFile - DIFFERENCE_BETWEEN_SCA_LINE_NUMBERS
+    val line = node.detection.detectionDetails.getLineNumber() - DIFFERENCE_BETWEEN_CYCODE_AND_IDE_LINE_NUMBER
     openFileInEditor(project, filePath, line)
 }
 
 private fun openIacDetectionInFile(project: Project, node: IacDetectionNode) {
     val filePath = node.detection.detectionDetails.getFilepath()
-    val line = node.detection.detectionDetails.lineInFile - DIFFERENCE_BETWEEN_IAC_LINE_NUMBERS
+    val line = node.detection.detectionDetails.getLineNumber() - DIFFERENCE_BETWEEN_CYCODE_AND_IDE_LINE_NUMBER
     openFileInEditor(project, filePath, line)
 }
 
 private fun openSastDetectionInFile(project: Project, node: SastDetectionNode) {
     val filePath = node.detection.detectionDetails.getFilepath()
-    val line = node.detection.detectionDetails.lineInFile - DIFFERENCE_BETWEEN_SAST_LINE_NUMBERS
+    val line = node.detection.detectionDetails.getLineNumber() - DIFFERENCE_BETWEEN_CYCODE_AND_IDE_LINE_NUMBER
     openFileInEditor(project, filePath, line)
 }
 

@@ -34,7 +34,7 @@ class IacApplier(private val scanResults: ScanResultsService) : AnnotationApplie
             val severity = convertSeverity(detection.severity)
 
             // IaC doesn't provide start and end positions, so we have to calculate them from the line number
-            val line = detection.detectionDetails.lineInFile - 1
+            val line = detection.detectionDetails.getLineNumber() - 1
             val startOffset = psiFile.text.lines().take(line).sumOf { it.length + 1 }
             val endOffset = startOffset + psiFile.text.lines()[line].length
 

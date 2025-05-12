@@ -4,6 +4,10 @@
 
 ## [Unreleased]
 
+## [2.6.0] - 2025-05-12
+
+- Add detection sorting by line number in addition to severity
+
 ## [2.5.0] - 2025-02-24
 
 - Add proper support for disabled modules
@@ -147,6 +151,8 @@
 
 The first public release of the plugin.
 
+[2.6.0]: https://github.com/cycodehq/intellij-platform-plugin/releases/tag/v2.6.0
+
 [2.5.0]: https://github.com/cycodehq/intellij-platform-plugin/releases/tag/v2.5.0
 
 [2.4.1]: https://github.com/cycodehq/intellij-platform-plugin/releases/tag/v2.4.1
@@ -207,4 +213,4 @@ The first public release of the plugin.
 
 [1.0.0]: https://github.com/cycodehq/intellij-platform-plugin/releases/tag/v1.0.0
 
-[Unreleased]: https://github.com/cycodehq/intellij-platform-plugin/compare/v2.5.0...HEAD
+[Unreleased]: https://github.com/cycodehq/intellij-platform-plugin/compare/v2.6.0...HEAD

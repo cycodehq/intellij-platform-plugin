@@ -2,6 +2,8 @@ package com.cycode.plugin.cli.models.scanResult.secret
 
 import com.cycode.plugin.cli.models.scanResult.ScanDetectionDetailsBase
 
+const val IDE_ENTRY_LINE_NUMBER = 1
+
 data class SecretDetectionDetails(
     val sha512: String,
     val provider: String,
@@ -21,5 +23,9 @@ data class SecretDetectionDetails(
 ) : ScanDetectionDetailsBase {
     override fun getFilepath(): String {
         return "$filePath$fileName"
+    }
+
+    override fun getLineNumber(): Int {
+        return line + IDE_ENTRY_LINE_NUMBER
     }
 }

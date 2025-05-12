@@ -21,4 +21,8 @@ data class SastDetectionDetails(
     override fun getFilepath(): String {
         return if (filePath.startsWith("/")) filePath else "/$filePath"
     }
+
+    override fun getLineNumber(): Int {
+        return lineInFile
+    }
 }
