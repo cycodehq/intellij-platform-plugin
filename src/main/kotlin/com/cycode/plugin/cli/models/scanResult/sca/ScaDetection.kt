@@ -29,7 +29,7 @@ data class ScaDetection(
     override fun getFormattedNodeTitle(): String {
         return CycodeBundle.message(
             "scaNodeTitle",
-            detectionDetails.lineInFile,
+            detectionDetails.getLineNumber(),
             getFormattedTitle(),
         )
     }

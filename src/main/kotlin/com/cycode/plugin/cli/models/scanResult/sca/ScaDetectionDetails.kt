@@ -23,4 +23,8 @@ data class ScaDetectionDetails(
     override fun getFilepath(): String {
         return fileName
     }
+
+    override fun getLineNumber(): Int {
+        return lineInFile
+    }
 }

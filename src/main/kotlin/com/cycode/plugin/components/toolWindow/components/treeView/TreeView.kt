@@ -154,12 +154,11 @@ class TreeView(
         createNodeCallback: (detection: DetectionBase) -> DefaultMutableTreeNode
     ) {
         val filteredDetections = scanResults.detections.filter {
-            severityFilter?.getOrDefault(it.severity.lowercase(), true) ?: true
+            severityFilter?.getOrDefault(it.severity.lowercase(), true) != false
         }
-        val sortedDetections = filteredDetections.sortedByDescending { getSeverityWeight(it.severity) }
-        val detectionsByFile = sortedDetections.groupBy { it.detectionDetails.getFilepath() }
+        val detectionsByFile = filteredDetections.groupBy { it.detectionDetails.getFilepath() }
 
-        rootNodes.setNodeSummary(scanType, getDetectionSummary(sortedDetections))
+        rootNodes.setNodeSummary(scanType, getDetectionSummary(filteredDetections))
 
         val projectRoot = project.basePath?.let { File(it) } ?: File("")
 
@@ -173,7 +172,13 @@ class TreeView(
                 AllIcons.Actions.Annotate
 
             val fileNode = createNode(FileNode(projectRelativePath, summary, icon))
-            for (detection in detections) {
+
+            val sortedDetections = detections.sortedWith(
+                compareByDescending<DetectionBase> { getSeverityWeight(it.severity) }
+                    .thenBy { it.detectionDetails.getLineNumber() }
+            )
+
+            for (detection in sortedDetections) {
                 fileNode.add(createNodeCallback(detection))
             }
 

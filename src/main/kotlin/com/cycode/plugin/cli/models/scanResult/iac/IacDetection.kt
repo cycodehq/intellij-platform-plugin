@@ -21,6 +21,6 @@ data class IacDetection(
     }
 
     override fun getFormattedNodeTitle(): String {
-        return CycodeBundle.message("iacNodeTitle", detectionDetails.lineInFile, getFormattedMessage())
+        return CycodeBundle.message("iacNodeTitle", detectionDetails.getLineNumber(), getFormattedMessage())
     }
 }

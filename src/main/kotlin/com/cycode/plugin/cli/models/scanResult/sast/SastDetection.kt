@@ -21,6 +21,6 @@ data class SastDetection(
     }
 
     override fun getFormattedNodeTitle(): String {
-        return CycodeBundle.message("sastNodeTitle", detectionDetails.lineInFile, getFormattedMessage())
+        return CycodeBundle.message("sastNodeTitle", detectionDetails.getLineNumber(), getFormattedMessage())
     }
 }
