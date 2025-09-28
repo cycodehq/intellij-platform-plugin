@@ -10,15 +10,24 @@ import com.intellij.openapi.project.Project
 import javax.swing.JComponent
 
 class ScaActions(val project: Project) : CardActions() {
+
+    companion object {
+        private const val IGNORE_VIOLATION_ID = "ignore_violation"
+    }
+
     fun addContent(detection: ScaDetection): JComponent {
         if (detection.detectionDetails.alert?.cveIdentifier != null) {
-            addActionButton(CycodeBundle.message("violationCardIgnoreViolationBtn"), onClick = {
-                cycode(project).applyIgnoreFromFileAnnotation(
-                    CliScanType.Sca,
-                    CliIgnoreType.CVE,
-                    detection.detectionDetails.alert.cveIdentifier
-                )
-            })
+            addActionButton(
+                id = IGNORE_VIOLATION_ID,
+                text = CycodeBundle.message("violationCardIgnoreViolationBtn"),
+                onClick = {
+                    cycode(project).applyIgnoreFromFileAnnotation(
+                        CliScanType.Sca,
+                        CliIgnoreType.CVE,
+                        detection.detectionDetails.alert.cveIdentifier
+                    )
+                }
+            )
         }
 
         return getContent()

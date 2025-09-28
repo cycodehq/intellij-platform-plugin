@@ -103,7 +103,11 @@ class CycodeService(val project: Project) : Disposable {
         }
     }
 
-    fun getAiRemediation(detectionId: String, onSuccess: (AiRemediationResultData) -> Unit) {
+    fun getAiRemediation(
+        detectionId: String,
+        onSuccess: (AiRemediationResultData) -> Unit,
+        onFailure: () -> Unit = {}
+    ) {
         runBackgroundTask(CycodeBundle.message("aiRemediationGenerating")) { indicator ->
             thisLogger().debug("[AI REMEDIATION] Start generating remediation for $detectionId")
             val aiRemediation = cliService.getAiRemediation(detectionId)
@@ -111,6 +115,8 @@ class CycodeService(val project: Project) : Disposable {
 
             if (aiRemediation != null) {
                 onSuccess(aiRemediation)
+            } else {
+                onFailure()
             }
         }
     }
