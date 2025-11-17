@@ -14,7 +14,6 @@ import com.intellij.openapi.ui.popup.LightweightWindowEvent
 import com.intellij.openapi.util.text.StringUtil.convertLineSeparators
 import com.intellij.openapi.util.text.StringUtil.first
 import com.intellij.ui.ColoredListCellRenderer
-import com.intellij.vcs.commit.message.CommitMessageInspectionProfile.getSubjectRightMargin
 import org.jetbrains.annotations.Nls
 import java.awt.event.MouseEvent
 import javax.swing.JList
@@ -121,7 +120,7 @@ class DetectionNodeContextMenu(
             return
         }
 
-        val rightMargin = getSubjectRightMargin(project)
+        val rightMargin = 50
         JBPopupFactory.getInstance().createPopupChooserBuilder(options)
             .setVisibleRowCount(7)
             .setSelectionMode(SINGLE_SELECTION)
