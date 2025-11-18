@@ -33,6 +33,8 @@ dependencies {
 
     intellijPlatform {
         intellijIdea(properties("platformVersion"))
+        // Plugin Dependencies -> https://plugins.jetbrains.com/docs/intellij/plugin-dependencies.html
+        // Example: platformPlugins = com.intellij.java, com.jetbrains.php:203.4449.22
         bundledPlugin("com.intellij.java")
     }
 }
@@ -50,9 +52,10 @@ java {
 }
 
 intellijPlatform {
+    projectName = project.name
+
     // required for Auto-Reload development mode
     buildSearchableOptions = false
-    projectName = project.name
 
     pluginConfiguration {
         name = properties("pluginName").get()
@@ -110,9 +113,7 @@ intellijPlatform {
 
     pluginVerification {
         ides {
-            ide("IC-2025.2")
-            // test on available 2025.3 version
-            ide("IU-253.17525.95")
+            recommended()
         }
     }
 }
