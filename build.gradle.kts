@@ -32,7 +32,7 @@ dependencies {
     implementation(libs.flexmark)
 
     intellijPlatform {
-        intellijIdea(properties("platformVersion"))
+        intellijIdeaCommunity(properties("platformVersion"))
         // Plugin Dependencies -> https://plugins.jetbrains.com/docs/intellij/plugin-dependencies.html
         // Example: platformPlugins = com.intellij.java, com.jetbrains.php:203.4449.22
         bundledPlugin("com.intellij.java")
