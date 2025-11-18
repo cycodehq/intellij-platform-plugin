@@ -92,11 +92,13 @@ class CliWrapper(val workDirectory: String? = null) {
         }
 
         if (T::class == Unit::class) {
+            @Suppress("UNCHECKED_CAST")
             return CliResult.Success(Unit) as CliResult<T>
         }
 
         try {
             val result: T = mapper.readValue(stdout)
+            @Suppress("UNCHECKED_CAST")
             return CliResult.Success(result)
         } catch (e: Exception) {
             thisLogger().warn("Failed to parse success CLI output: $stdout", e)

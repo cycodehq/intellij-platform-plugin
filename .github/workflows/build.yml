@@ -70,7 +70,7 @@ jobs:
           echo "$CHANGELOG" >> $GITHUB_OUTPUT
           echo "EOF" >> $GITHUB_OUTPUT
 
-          ./gradlew listProductsReleases # prepare list of IDEs for Plugin Verifier
+          ./gradlew printProductsReleases # prepare list of IDEs for Plugin Verifier
 
       - name: Build plugin
         run: ./gradlew buildPlugin
@@ -144,6 +144,7 @@ jobs:
           client-id: ${{ secrets.CIMON_CLIENT_ID }}
           secret: ${{ secrets.CIMON_SECRET }}
           allowed-hosts: >
+            download.jetbrains.com
             cache-redirector.jetbrains.com
             cdn.azul.com
             data.services.jetbrains.com
@@ -158,10 +159,15 @@ jobs:
 
       - name: Maximize Build Space
         run: |
+          sudo docker image prune --all --force || true
+
           sudo rm -rf /usr/share/dotnet
           sudo rm -rf /usr/local/lib/android
           sudo rm -rf /opt/ghc
           sudo rm -rf /usr/local/.ghcup
+          sudo rm -rf /opt/hostedtoolcache
+          sudo rm -rf /usr/share/swift
+          sudo rm -rf /usr/local/share/powershell
 
           sudo apt-get remove -y '^aspnetcore-.*' || echo "::warning::The command [sudo apt-get remove -y '^aspnetcore-.*'] failed to complete successfully. Proceeding..."
           sudo apt-get remove -y '^dotnet-.*' --fix-missing || echo "::warning::The command [sudo apt-get remove -y '^dotnet-.*' --fix-missing] failed to complete successfully. Proceeding..."
@@ -174,8 +180,6 @@ jobs:
           sudo apt-get remove -y google-cloud-cli --fix-missing || echo "::debug::The command [sudo apt-get remove -y google-cloud-cli --fix-missing] failed to complete successfully. Proceeding..."
           sudo apt-get autoremove -y || echo "::warning::The command [sudo apt-get autoremove -y] failed to complete successfully. Proceeding..."
           sudo apt-get clean || echo "::warning::The command [sudo apt-get clean] failed to complete successfully. Proceeding..."
-
-          sudo docker image prune --all --force || true
 
       - name: Fetch Sources
         uses: actions/checkout@v4
@@ -195,10 +199,10 @@ jobs:
         uses: actions/cache@v3
         with:
           path: ${{ needs.build.outputs.pluginVerifierHomeDir }}/ides
-          key: plugin-verifier-${{ hashFiles('build/listProductsReleases.txt') }}
+          key: plugin-verifier-${{ hashFiles('build/printProductsReleases.txt') }}
 
       - name: Run Plugin Verification tasks
-        run: ./gradlew runPluginVerifier -Dplugin.verifier.home.dir=${{ needs.build.outputs.pluginVerifierHomeDir }}
+        run: ./gradlew verifyPlugin -Dplugin.verifier.home.dir=${{ needs.build.outputs.pluginVerifierHomeDir }}
 
       - name: Collect Plugin Verifier Result
         if: ${{ always() }}

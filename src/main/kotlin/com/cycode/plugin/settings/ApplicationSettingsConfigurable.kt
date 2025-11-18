@@ -7,9 +7,8 @@ import com.cycode.plugin.services.pluginSettings
 import com.intellij.openapi.options.SearchableConfigurable
 import com.intellij.openapi.project.Project
 import java.io.File
-import java.net.MalformedURLException
 import java.net.URISyntaxException
-import java.net.URL
+import java.net.URI
 import javax.swing.JComponent
 
 
@@ -41,11 +40,9 @@ class ApplicationSettingsConfigurable(val project: Project) : SearchableConfigur
 
     private fun isValidUrl(url: String): Boolean {
         return try {
-            // toURI() method is important here as it ensures that any URL string that complies with RFC 2396
-            URL(url).toURI()
+            // URI is important here as it ensures that any URL string complies with RFC 2396
+            URI(url)
             true
-        } catch (e: MalformedURLException) {
-            false
         } catch (e: URISyntaxException) {
             false
         }

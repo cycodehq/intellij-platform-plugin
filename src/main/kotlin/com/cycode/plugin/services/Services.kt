@@ -1,6 +1,6 @@
 package com.cycode.plugin.services
 
-import com.intellij.openapi.components.ServiceManager.getService
+import com.intellij.openapi.application.ApplicationManager
 import com.intellij.openapi.components.service
 import com.intellij.openapi.project.Project
 
@@ -10,7 +10,7 @@ inline fun <reified T : Any> getCycodeService(project: Project? = null): T {
         return project.service<T>()
     }
 
-    return getService(T::class.java)
+    return ApplicationManager.getApplication().service<T>()
 }
 
 fun pluginState(project: Project? = null): CycodePersistentStateService = getCycodeService(project)

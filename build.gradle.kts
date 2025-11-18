@@ -19,6 +19,10 @@ version = properties("pluginVersion").get()
 // Configure project's dependencies
 repositories {
     mavenCentral()
+
+    intellijPlatform {
+        defaultRepositories()
+    }
 }
 
 // Dependencies are managed with Gradle version catalog - read more: https://docs.gradle.org/current/userguide/platforms.html#sub:version-catalog
@@ -26,6 +30,13 @@ dependencies {
     implementation(libs.annotations)
     implementation(libs.jackson)
     implementation(libs.flexmark)
+
+    intellijPlatform {
+        intellijIdeaCommunity(properties("platformVersion"))
+        // Plugin Dependencies -> https://plugins.jetbrains.com/docs/intellij/plugin-dependencies.html
+        // Example: platformPlugins = com.intellij.java, com.jetbrains.php:203.4449.22
+        bundledPlugin("com.intellij.java")
+    }
 }
 
 // Set the JVM language level used to build the project. We are using Java 17 for 2022.2+.
@@ -40,16 +51,71 @@ java {
     }
 }
 
-// Configure Gradle IntelliJ Plugin - read more: https://plugins.jetbrains.com/docs/intellij/tools-gradle-intellij-plugin.html
-intellij {
-    pluginName = properties("pluginName")
-    version = properties("platformVersion")
-    type = properties("platformType")
+intellijPlatform {
+    projectName = project.name
 
-    // Plugin Dependencies. Uses `platformPlugins` property from the gradle.properties file.
-    plugins = properties("platformPlugins").map { it.split(',').map(String::trim).filter(String::isNotEmpty) }
+    // required for Auto-Reload development mode
+    buildSearchableOptions = false
 
-    updateSinceUntilBuild = false
+    pluginConfiguration {
+        name = properties("pluginName").get()
+        version = properties("pluginVersion").get()
+
+        ideaVersion {
+            sinceBuild = properties("pluginSinceBuild")
+            untilBuild = properties("pluginUntilBuild")
+        }
+
+        description = providers.fileContents(layout.projectDirectory.file("README.md")).asText.map {
+            val start = "<!-- Plugin description -->"
+            val end = "<!-- Plugin description end -->"
+
+            with(it.lines()) {
+                if (!containsAll(listOf(start, end))) {
+                    throw GradleException("Plugin description section not found in README.md:\n$start ... $end")
+                }
+                subList(indexOf(start) + 1, indexOf(end)).joinToString("\n").let(::markdownToHTML)
+            }
+        }
+
+        val changelog = project.changelog // local variable for configuration cache compatibility
+        // Get the latest available change notes from the changelog file
+        changeNotes = properties("pluginVersion").map { pluginVersion ->
+            with(changelog) {
+                renderItem(
+                    (getOrNull(pluginVersion) ?: getUnreleased())
+                        .withHeader(false)
+                        .withEmptySections(false),
+                    Changelog.OutputType.HTML,
+                )
+            }
+        }
+    }
+
+    publishing {
+        token = environment("PUBLISH_TOKEN")
+        // The pluginVersion is based on the SemVer (https://semver.org) and supports pre-release labels, like 2.1.7-alpha.3
+        // Specify pre-release label to publish the plugin in a custom Release Channel automatically. Read more:
+        // https://plugins.jetbrains.com/docs/intellij/deployment.html#specifying-a-release-channel
+        channels.set(
+            properties("pluginVersion").map { pluginVersion: String ->
+                val channel = pluginVersion.substringAfter('-', "default").substringBefore('.')
+                listOf<String>(channel)
+            }
+        )
+    }
+
+    signing {
+        certificateChain = environment("CERTIFICATE_CHAIN")
+        privateKey = environment("PRIVATE_KEY")
+        password = environment("PRIVATE_KEY_PASSWORD")
+    }
+
+    pluginVerification {
+        ides {
+            recommended()
+        }
+    }
 }
 
 // Configure Gradle Changelog Plugin - read more: https://github.com/JetBrains/gradle-changelog-plugin
@@ -86,70 +152,33 @@ tasks {
         gradleVersion = properties("gradleVersion").get()
     }
 
-    patchPluginXml {
-        version = properties("pluginVersion")
-        sinceBuild = properties("pluginSinceBuild")
-        untilBuild = properties("pluginUntilBuild")
-
-        // Extract the <!-- Plugin description --> section from README.md and provide for the plugin's manifest
-        pluginDescription = providers.fileContents(layout.projectDirectory.file("README.md")).asText.map {
-            val start = "<!-- Plugin description -->"
-            val end = "<!-- Plugin description end -->"
-
-            with(it.lines()) {
-                if (!containsAll(listOf(start, end))) {
-                    throw GradleException("Plugin description section not found in README.md:\n$start ... $end")
-                }
-                subList(indexOf(start) + 1, indexOf(end)).joinToString("\n").let(::markdownToHTML)
-            }
-        }
-
-        val changelog = project.changelog // local variable for configuration cache compatibility
-        // Get the latest available change notes from the changelog file
-        changeNotes = properties("pluginVersion").map { pluginVersion ->
-            with(changelog) {
-                renderItem(
-                    (getOrNull(pluginVersion) ?: getUnreleased())
-                        .withHeader(false)
-                        .withEmptySections(false),
-                    Changelog.OutputType.HTML,
-                )
-            }
-        }
-    }
-
-    // Configure UI tests plugin
-    // Read more: https://github.com/JetBrains/intellij-ui-test-robot
-    runIdeForUiTests {
-        systemProperty("robot-server.port", "8082")
-        systemProperty("ide.mac.message.dialogs.as.sheets", "false")
-        systemProperty("jb.privacy.policy.text", "<!--999.999-->")
-        systemProperty("jb.consents.confirmation.enabled", "false")
-    }
-
     runIde {
-        systemProperty("idea.log.debug.categories", "com.cycode.plugin")
+        jvmArgumentProviders += CommandLineArgumentProvider {
+            listOf(
+                "-Didea.log.debug.categories=com.cycode.plugin"
+            )
+        }
     }
+}
 
-    signPlugin {
-        certificateChain = environment("CERTIFICATE_CHAIN")
-        privateKey = environment("PRIVATE_KEY")
-        password = environment("PRIVATE_KEY_PASSWORD")
+val runIdeForUiTests by intellijPlatformTesting.runIde.registering {
+  task {
+    jvmArgumentProviders += CommandLineArgumentProvider {
+      listOf(
+        "-Drobot-server.port=8082",
+        "-Dide.mac.message.dialogs.as.sheets=false",
+        "-Djb.privacy.policy.text=<!--999.999-->",
+        "-Djb.consents.confirmation.enabled=false",
+      )
     }
+  }
 
-    publishPlugin {
-        dependsOn("patchChangelog")
-        dependsOn("sentryUploadSourceBundleJava")
-        token = environment("PUBLISH_TOKEN")
-        // The pluginVersion is based on the SemVer (https://semver.org) and supports pre-release labels, like 2.1.7-alpha.3
-        // Specify pre-release label to publish the plugin in a custom Release Channel automatically. Read more:
-        // https://plugins.jetbrains.com/docs/intellij/deployment.html#specifying-a-release-channel
-        channels =
-            properties("pluginVersion").map { listOf(it.split('-').getOrElse(1) { "default" }.split('.').first()) }
-    }
+  plugins {
+    robotServerPlugin()
+  }
+}
 
-    buildSearchableOptions {
-        // required for Auto-Reload development mode
-        enabled = false
-    }
+tasks.named("publishPlugin") {
+    dependsOn("patchChangelog")
+    dependsOn("sentryUploadSourceBundleJava")
 }
