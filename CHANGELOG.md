@@ -4,6 +4,11 @@
 
 ## [Unreleased]
 
+## [3.0.0] - 2025-11-18
+
+- Add support for IDEs 2025.3
+- Drop support for IDEs 2023
+
 ## [2.6.0] - 2025-05-12
 
 - Add detection sorting by line number in addition to severity
@@ -151,6 +156,8 @@
 
 The first public release of the plugin.
 
+[3.0.0]: https://github.com/cycodehq/intellij-platform-plugin/releases/tag/v3.0.0
+
 [2.6.0]: https://github.com/cycodehq/intellij-platform-plugin/releases/tag/v2.6.0
 
 [2.5.0]: https://github.com/cycodehq/intellij-platform-plugin/releases/tag/v2.5.0
@@ -213,4 +220,4 @@ The first public release of the plugin.
 
 [1.0.0]: https://github.com/cycodehq/intellij-platform-plugin/releases/tag/v1.0.0
 
-[Unreleased]: https://github.com/cycodehq/intellij-platform-plugin/compare/v2.6.0...HEAD
+[Unreleased]: https://github.com/cycodehq/intellij-platform-plugin/compare/v3.0.0...HEAD
