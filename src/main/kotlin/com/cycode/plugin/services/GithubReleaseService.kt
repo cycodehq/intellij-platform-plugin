@@ -6,7 +6,7 @@ import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import com.fasterxml.jackson.module.kotlin.readValue
 import com.intellij.openapi.components.Service
 import io.sentry.Sentry
-import java.net.URL
+import java.net.URI
 
 
 data class GitHubReleaseAsset(
@@ -29,7 +29,7 @@ class GithubReleaseService {
 
     private fun getJson(url: String): String? {
         try {
-            val urlObj = URL(url)
+            val urlObj = URI(url).toURL()
             val connection = urlObj.openConnection()
             connection.setRequestProperty("Accept", "application/vnd.github.v3+json")
 

@@ -7,7 +7,7 @@ import io.sentry.Sentry
 import java.io.BufferedInputStream
 import java.io.File
 import java.io.FileOutputStream
-import java.net.URL
+import java.net.URI
 import java.nio.file.Files
 
 
@@ -22,7 +22,7 @@ class DownloadService {
         thisLogger().warn("Retrieving $url")
 
         try {
-            val urlObj = URL(url)
+            val urlObj = URI(url).toURL()
             val connection = urlObj.openConnection()
             connection.connect()
 
@@ -53,7 +53,7 @@ class DownloadService {
         thisLogger().warn("Temp path: ${tempFile.absolutePath}")
 
         try {
-            val urlObj = URL(url)
+            val urlObj = URI(url).toURL()
             val connection = urlObj.openConnection()
             connection.connect()
 
