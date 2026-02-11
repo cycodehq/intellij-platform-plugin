@@ -1,5 +1,6 @@
 import org.jetbrains.changelog.Changelog
 import org.jetbrains.changelog.markdownToHTML
+import org.jetbrains.intellij.platform.gradle.TestFrameworkType
 
 fun properties(key: String) = providers.gradleProperty(key)
 fun environment(key: String) = providers.environmentVariable(key)
@@ -10,7 +11,6 @@ plugins {
     alias(libs.plugins.gradleIntelliJPlugin) // Gradle IntelliJ Plugin
     alias(libs.plugins.changelog) // Gradle Changelog Plugin
     alias(libs.plugins.kover) // Gradle Kover Plugin
-    alias(libs.plugins.sentry)
 }
 
 group = properties("pluginGroup").get()
@@ -36,7 +36,11 @@ dependencies {
         // Plugin Dependencies -> https://plugins.jetbrains.com/docs/intellij/plugin-dependencies.html
         // Example: platformPlugins = com.intellij.java, com.jetbrains.php:203.4449.22
         bundledPlugin("com.intellij.java")
+
+        testFramework(TestFrameworkType.Platform)
     }
+
+    testImplementation("junit:junit:4.13.2")
 }
 
 // Set the JVM language level used to build the project. We are using Java 17 for 2022.2+.
@@ -125,26 +129,13 @@ changelog {
 }
 
 // Configure Gradle Kover Plugin - read more: https://github.com/Kotlin/kotlinx-kover#configuration
-koverReport {
-    defaults {
-        xml {
-            onCheck = true
+kover {
+    // Disable Kover instrumentation for tests to avoid conflicts with IntelliJ Platform test framework
+    currentProject {
+        instrumentation {
+            disabledForTestTasks.add("test")
         }
     }
-}
-
-// Configure Sentry
-sentry {
-    includeDependenciesReport = false
-
-    // Generates a JVM (Java, Kotlin, etc.) source bundle and uploads your source code to Sentry.
-    // This enables source context, allowing you to see your source
-    // code as part of your stack traces in Sentry.
-    includeSourceContext = true
-
-    org = "cycode"
-    projectName = "intellij-platform-plugin"
-    authToken = environment("SENTRY_AUTH_TOKEN")
 }
 
 tasks {
@@ -180,5 +171,4 @@ val runIdeForUiTests by intellijPlatformTesting.runIde.registering {
 
 tasks.named("publishPlugin") {
     dependsOn("patchChangelog")
-    dependsOn("sentryUploadSourceBundleJava")
 }

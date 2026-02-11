@@ -13,7 +13,6 @@ import com.cycode.plugin.cli.models.scanResult.sast.SastScanResult
 import com.cycode.plugin.cli.models.scanResult.sca.ScaScanResult
 import com.cycode.plugin.cli.models.scanResult.secret.SecretScanResult
 import com.cycode.plugin.components.toolWindow.updateToolWindowState
-import com.cycode.plugin.sentry.SentryInit
 import com.cycode.plugin.utils.CycodeNotifier
 import com.cycode.plugin.utils.isValidExistedFilePath
 import com.intellij.codeInsight.daemon.DaemonCodeAnalyzer
@@ -111,10 +110,6 @@ class CliService(private val project: Project) {
 
         if (!pluginLocalState.cliAuthed) {
             showErrorNotification(CycodeBundle.message("checkAuthErrorNotification"))
-        } else {
-            if (processedResult.result.userId != null && processedResult.result.tenantId != null) {
-                SentryInit.setupScope(processedResult.result.userId, processedResult.result.tenantId)
-            }
         }
 
         return

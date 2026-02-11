@@ -15,7 +15,6 @@ import com.intellij.execution.process.ProcessOutputTypes
 import com.intellij.openapi.diagnostic.thisLogger
 import com.intellij.openapi.util.Key
 import com.intellij.util.io.BaseOutputReader
-import io.sentry.Sentry
 import java.io.File
 import java.nio.charset.Charset
 
@@ -108,7 +107,6 @@ class CliWrapper(val workDirectory: String? = null) {
                 val result: CliError = mapper.readValue(stdout)
                 return CliResult.Error(result)
             } catch (e: Exception) {
-                Sentry.captureException(e)
                 thisLogger().error("Failed to parse ANY CLI output: $stdout", e)
             }
 

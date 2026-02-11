@@ -3,7 +3,6 @@ package com.cycode.plugin.services
 import com.cycode.plugin.utils.verifyFileChecksum
 import com.intellij.openapi.components.Service
 import com.intellij.openapi.diagnostic.thisLogger
-import io.sentry.Sentry
 import java.io.BufferedInputStream
 import java.io.File
 import java.io.FileOutputStream
@@ -32,7 +31,6 @@ class DownloadService {
 
             return content
         } catch (e: Exception) {
-            Sentry.captureException(e)
             thisLogger().error("Failed to download file $e", e)
         }
 
@@ -90,7 +88,6 @@ class DownloadService {
                 return file
             }
         } catch (e: Exception) {
-            Sentry.captureException(e)
             thisLogger().error("Failed to download file $e", e)
         } finally {
             tempFile.delete()
