@@ -4,6 +4,8 @@
 
 ## [Unreleased]
 
+## [3.0.1] - 2026-02-11
+
 - Remove Sentry error tracking
 - Update required CLI version to 3.9.2
 
@@ -159,6 +161,8 @@
 
 The first public release of the plugin.
 
+[3.0.1]: https://github.com/cycodehq/intellij-platform-plugin/releases/tag/v3.0.1
+
 [3.0.0]: https://github.com/cycodehq/intellij-platform-plugin/releases/tag/v3.0.0
 
 [2.6.0]: https://github.com/cycodehq/intellij-platform-plugin/releases/tag/v2.6.0
@@ -223,4 +227,4 @@ The first public release of the plugin.
 
 [1.0.0]: https://github.com/cycodehq/intellij-platform-plugin/releases/tag/v1.0.0
 
-[Unreleased]: https://github.com/cycodehq/intellij-platform-plugin/compare/v3.0.0...HEAD
+[Unreleased]: https://github.com/cycodehq/intellij-platform-plugin/compare/v3.0.1...HEAD
