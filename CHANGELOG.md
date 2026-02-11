@@ -4,6 +4,9 @@
 
 ## [Unreleased]
 
+- Remove Sentry error tracking
+- Update required CLI version to 3.9.2
+
 ## [3.0.0] - 2025-11-18
 
 - Add support for IDEs 2025.3
