@@ -5,7 +5,6 @@ import com.fasterxml.jackson.databind.PropertyNamingStrategies
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import com.fasterxml.jackson.module.kotlin.readValue
 import com.intellij.openapi.components.Service
-import io.sentry.Sentry
 import java.net.URI
 
 
@@ -76,7 +75,6 @@ class GithubReleaseService {
 
             null
         } catch (e: Exception) {
-            Sentry.captureException(e)
             e.printStackTrace()
             null
         }
