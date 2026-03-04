@@ -4,6 +4,10 @@
 
 ## [Unreleased]
 
+## [3.0.2] - 2026-03-04
+
+- Increase required CLI version to 3.11.1
+
 ## [3.0.1] - 2026-02-11
 
 - Remove Sentry error tracking
