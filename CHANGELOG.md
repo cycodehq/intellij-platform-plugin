@@ -4,6 +4,10 @@
 
 ## [Unreleased]
 
+## [3.0.3] - 2026-03-23
+
+- Increase required CLI version to 3.12.0
+
 ## [3.0.2] - 2026-03-04
 
 - Increase required CLI version to 3.11.1
