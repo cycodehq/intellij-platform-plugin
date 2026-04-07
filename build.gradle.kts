@@ -32,7 +32,7 @@ dependencies {
     implementation(libs.flexmark)
 
     intellijPlatform {
-        intellijIdea(properties("platformVersion"))
+        intellijIdeaCommunity(properties("platformVersion"))
         // Plugin Dependencies -> https://plugins.jetbrains.com/docs/intellij/plugin-dependencies.html
         // Example: platformPlugins = com.intellij.java, com.jetbrains.php:203.4449.22
         bundledPlugin("com.intellij.java")
@@ -150,11 +150,6 @@ tasks {
             )
         }
     }
-}
-
-val runIde2026 by intellijPlatformTesting.runIde.registering {
-    useInstaller = false
-    localPath = file("/Applications/IntelliJ IDEA.app")
 }
 
 val runIdeForUiTests by intellijPlatformTesting.runIde.registering {
