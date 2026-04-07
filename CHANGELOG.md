@@ -4,6 +4,10 @@
 
 ## [Unreleased]
 
+## [3.1.0] - 2026-04-07
+
+- Add support for IntelliJ IDEA 2026.1
+
 ## [3.0.4] - 2026-04-02
 
 - Increase required CLI version to 3.12.2
