@@ -10,16 +10,25 @@ import com.intellij.openapi.project.Project
 import javax.swing.JComponent
 
 class SecretActions(val project: Project) : CardActions() {
+
+    companion object {
+        private const val IGNORE_VIOLATION_ID = "ignore_violation"
+    }
+
     fun addContent(detection: SecretDetection): JComponent {
-        addActionButton(CycodeBundle.message("violationCardIgnoreViolationBtn"), onClick = {
-            if (detection.detectionDetails.detectedValue != null) {
-                cycode(project).applyIgnoreFromFileAnnotation(
-                    CliScanType.Secret,
-                    CliIgnoreType.VALUE,
-                    detection.detectionDetails.detectedValue!!
-                )
+        addActionButton(
+            id = IGNORE_VIOLATION_ID,
+            text = CycodeBundle.message("violationCardIgnoreViolationBtn"),
+            onClick = {
+                if (detection.detectionDetails.detectedValue != null) {
+                    cycode(project).applyIgnoreFromFileAnnotation(
+                        CliScanType.Secret,
+                        CliIgnoreType.VALUE,
+                        detection.detectionDetails.detectedValue!!
+                    )
+                }
             }
-        })
+        )
 
         return getContent()
     }
