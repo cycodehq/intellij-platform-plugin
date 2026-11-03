@@ -58,7 +58,7 @@ class CycodeToolWindowFactory : DumbAware, ToolWindowFactory {
                 val anchor = toolWindowManager.getToolWindow(CycodeBundle.message("toolWindowId"))?.anchor ?: return
                 if (anchor != lastAnchor) {
                     lastAnchor = anchor
-                    updateToolWindowState(project, forceRebuild = true)
+                    updateToolWindowState(project, forceRebuild = true, reloadResults = false)
                 }
             }
         })
@@ -84,9 +84,9 @@ class CycodeToolWindowFactory : DumbAware, ToolWindowFactory {
 
 }
 
-private fun replaceToolWindowRightPanel(project: Project, panel: JPanel) {
+private fun replaceToolWindowRightPanel(project: Project, panel: JPanel, reloadResults: Boolean) {
     val contentTab = CycodeToolWindowFactory.TabManager.getTab(project) ?: return
-    contentTab.updateContent(panel)
+    contentTab.updateContent(panel, reloadResults)
 }
 
 private fun createToolWindowContent(component: JPanel): Content {
@@ -159,8 +159,8 @@ private fun refreshScanTabInPlace(project: Project, reloadResults: Boolean): Boo
 /**
  * [forceRebuild] replaces the right panel even when the scan tab is already shown; use it when the layout changes
  * (scope, collapse, docking). Otherwise the visible scan tab is only refreshed in place, to avoid flicker.
- * [reloadResults] reloads the results tree; pass false when only the running state changed (a scan started or
- * finished), so the user's expanded nodes are kept.
+ * [reloadResults] reloads the results tree; pass false when the results did not change (a scan started or
+ * finished, or only the layout changed), so the user's expanded nodes are kept.
  */
 fun updateToolWindowState(project: Project, forceRebuild: Boolean = false, reloadResults: Boolean = true) {
     ApplicationManager.getApplication().invokeLater {
@@ -177,7 +177,7 @@ fun updateToolWindowState(project: Project, forceRebuild: Boolean = false, reloa
         }
 
         WriteAction.run<Error> {
-            replaceToolWindowRightPanel(project, getRightPanelDependingOnState(project))
+            replaceToolWindowRightPanel(project, getRightPanelDependingOnState(project), reloadResults)
         }
     }
 }

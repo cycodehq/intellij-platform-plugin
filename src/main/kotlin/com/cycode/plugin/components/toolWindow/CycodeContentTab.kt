@@ -25,10 +25,13 @@ class CycodeContentTab(private val project: Project) : SimpleToolWindowPanel(fal
 
     private fun getCollapsedExtent() = JBUI.scale(if (isStacked()) COLLAPSED_HEIGHT else COLLAPSED_WIDTH)
 
-    fun updateContent(rightPanel: JPanel): JPanel {
+    /** [reloadResults] = false keeps the results tree (and its expanded nodes) untouched, for layout-only changes. */
+    fun updateContent(rightPanel: JPanel, reloadResults: Boolean = true): JPanel {
         treeView.setStacked(isStacked())
         treeView.setSecondPaneCollapsed(pluginLocalState(project).scanControlsCollapsed, getCollapsedExtent())
-        treeView.refreshTree()
+        if (reloadResults) {
+            treeView.refreshTree()
+        }
         return treeView.replaceRightPanel(rightPanel)
     }
 

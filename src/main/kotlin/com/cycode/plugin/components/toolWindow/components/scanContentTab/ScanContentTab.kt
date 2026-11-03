@@ -214,7 +214,7 @@ class ScanContentTab : Component<CycodeService>() {
             addMouseListener(object : MouseAdapter() {
                 override fun mouseClicked(e: MouseEvent) {
                     pluginLocalState(service.project).scanControlsCollapsed = !collapsed
-                    updateToolWindowState(service.project, forceRebuild = true)
+                    updateToolWindowState(service.project, forceRebuild = true, reloadResults = false)
                 }
             })
         }
@@ -276,7 +276,7 @@ class ScanContentTab : Component<CycodeService>() {
                 addActionListener {
                     if (scope != service.getScanScope()) {
                         service.setScanScope(scope)
-                        updateToolWindowState(service.project, forceRebuild = true)
+                        updateToolWindowState(service.project, forceRebuild = true, reloadResults = false)
                     }
                 }
             }
