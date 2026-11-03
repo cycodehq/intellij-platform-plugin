@@ -16,6 +16,7 @@ import com.cycode.plugin.components.toolWindow.components.violationCardContentTa
 import com.cycode.plugin.components.toolWindow.components.violationCardContentTab.scaViolationCardContentTab.ScaViolationCardContentTab
 import com.cycode.plugin.components.toolWindow.components.violationCardContentTab.secretViolationCardContentTab.SecretViolationCardContentTab
 import com.cycode.plugin.icons.PluginIcons
+import com.cycode.plugin.services.pluginLocalState
 import com.cycode.plugin.services.scanResults
 import com.intellij.icons.AllIcons
 import com.intellij.openapi.project.Project
@@ -32,6 +33,7 @@ import java.awt.event.MouseEvent
 import java.io.File
 import javax.swing.JComponent
 import javax.swing.JPanel
+import javax.swing.Timer
 import javax.swing.event.TreeSelectionEvent
 import javax.swing.event.TreeSelectionListener
 import javax.swing.tree.DefaultMutableTreeNode
@@ -52,6 +54,14 @@ class TreeView(
     private val splitPane: JBSplitter = JBSplitter()
 
     private val scanResults = scanResults(project)
+    private val pluginLocalState = pluginLocalState(project)
+
+    private lateinit var treeScrollPane: JBScrollPane
+
+    // the spinner icons are time-based; the tree only needs to be repainted while a scan is running
+    private val spinnerTimer = Timer(SPINNER_REPAINT_DELAY_MS) {
+        if (pluginLocalState.runningScans.isNotEmpty()) tree.repaint()
+    }
 
     private var severityFilter: Map<String, Boolean>? = null
 
@@ -69,6 +79,7 @@ class TreeView(
         val minimumSize = Dimension(400, 100)
 
         val treeView = JBScrollPane(tree)
+        treeScrollPane = treeView
         treeView.border = SideBorder(JBColor.GRAY, SideBorder.RIGHT)
         treeView.minimumSize = minimumSize
 
@@ -128,6 +139,11 @@ class TreeView(
             else -> return
         }
 
+        // a violation card needs the room: expand the pane if the scan options were collapsed
+        if (collapsed) {
+            pluginLocalState.scanControlsCollapsed = false
+            setSecondPaneCollapsed(false, 0)
+        }
         replaceRightPanel(card)
     }
 
@@ -262,6 +278,39 @@ class TreeView(
         createDetectionNodes(CliScanType.Sast, sastDetections.result, ::createSastDetectionNode)
     }
 
+    private var collapsed = false
+    private var proportionBeforeCollapse = 0.5f
+
+    /** Shrinks the lower/right pane to [extent] pixels when collapsed and restores the previous split when expanded. */
+    fun setSecondPaneCollapsed(collapse: Boolean, extent: Int) {
+        val total = if (splitPane.orientation) splitPane.height else splitPane.width
+        if (collapse) {
+            if (!collapsed) proportionBeforeCollapse = splitPane.proportion
+            if (total > 0) splitPane.proportion = 1f - extent.toFloat() / total
+        } else if (collapsed) {
+            splitPane.proportion = proportionBeforeCollapse
+        }
+        collapsed = collapse
+    }
+
+    fun setStacked(stacked: Boolean) {
+        if (splitPane.orientation == stacked) return
+        splitPane.orientation = stacked
+        treeScrollPane.minimumSize = if (stacked) Dimension(100, 100) else Dimension(400, 100)
+    }
+
+    override fun addNotify() {
+        super.addNotify()
+        spinnerTimer.start()
+    }
+
+    override fun removeNotify() {
+        spinnerTimer.stop()
+        super.removeNotify()
+    }
+
+    fun getRightPanel(): JComponent? = splitPane.secondComponent
+
     fun replaceRightPanel(newRightPanel: JComponent): TreeView {
         splitPane.secondComponent = newRightPanel
         return this
@@ -282,6 +331,7 @@ class TreeView(
 
     private fun createNodes(top: DefaultMutableTreeNode) {
         rootNodes.createNodes(top)
+        CliScanType.entries.forEach { rootNodes.setRunning(it, pluginLocalState.runningScans.contains(it)) }
         createSecretDetectionNodes()
         createScaDetectionNodes()
         createIacDetectionNodes()
@@ -293,5 +343,9 @@ class TreeView(
     fun updateSeverityFilter(newSeverityFilter: Map<String, Boolean>) {
         severityFilter = newSeverityFilter
         refreshTree()
+    }
+
+    companion object {
+        private const val SPINNER_REPAINT_DELAY_MS = 100
     }
 }

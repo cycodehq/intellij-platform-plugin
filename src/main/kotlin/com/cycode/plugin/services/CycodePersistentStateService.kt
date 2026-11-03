@@ -1,6 +1,7 @@
 package com.cycode.plugin.services
 
 import com.cycode.plugin.Consts
+import com.cycode.plugin.cli.ScanScope
 import com.intellij.openapi.components.*
 import com.intellij.util.xmlb.XmlSerializerUtil
 import java.nio.file.Files
@@ -18,6 +19,9 @@ class CycodePersistentStateService : PersistentStateComponent<CycodePersistentSt
     var cliHash: String? = null
     var cliDirHashes: Map<String, String>? = null
     var cliLastUpdateCheckedAt: Long? = null
+
+    // persisted globally; the diff revisions are session-only (see CycodeTemporaryStateService)
+    var scanScope: String = ScanScope.Project.name
 
     override fun getState(): CycodePersistentStateService {
         return this

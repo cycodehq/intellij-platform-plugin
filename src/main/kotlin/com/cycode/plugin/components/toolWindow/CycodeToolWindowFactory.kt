@@ -17,6 +17,7 @@ import com.intellij.openapi.util.Disposer
 import com.intellij.openapi.wm.ToolWindow
 import com.intellij.openapi.wm.ToolWindowFactory
 import com.intellij.openapi.wm.ToolWindowManager
+import com.intellij.openapi.wm.ex.ToolWindowManagerListener
 import com.intellij.ui.content.Content
 import com.intellij.ui.content.ContentFactory
 import javax.swing.JPanel
@@ -42,6 +43,18 @@ class CycodeToolWindowFactory : DumbAware, ToolWindowFactory {
         toolWindow.contentManager.addContent(toolWindowContent)
 
         Disposer.register(service, toolWindowContent)
+
+        // re-layout the scan tab when the tool window is moved to another side
+        var lastAnchor = toolWindow.anchor
+        project.messageBus.connect(service).subscribe(ToolWindowManagerListener.TOPIC, object : ToolWindowManagerListener {
+            override fun stateChanged(toolWindowManager: ToolWindowManager) {
+                val anchor = toolWindowManager.getToolWindow(CycodeBundle.message("toolWindowId"))?.anchor ?: return
+                if (anchor != lastAnchor) {
+                    lastAnchor = anchor
+                    updateToolWindowState(project, forceRebuild = true)
+                }
+            }
+        })
     }
 
     override fun shouldBeAvailable(project: Project) = true
@@ -82,7 +95,9 @@ fun getRightPanelDependingOnState(project: Project): JPanel {
     }
 
     return if (pluginLocalState.cliAuthed) {
-        ScanContentTab().getContent(service)
+        val scanTab = ScanContentTab()
+        ScanTabs.tabs[project] = scanTab
+        scanTab.getContent(service)
     } else {
         AuthContentTab().getContent(service)
     }
@@ -100,8 +115,36 @@ fun updateToolWindowStateForAllProjects() {
 }
 
 
-fun updateToolWindowState(project: Project) {
+object ScanTabs {
+    val tabs = mutableMapOf<Project, ScanContentTab>()
+}
+
+/** Updates the scan buttons of the visible scan tab without replacing the panel; false if a rebuild is needed. */
+private fun refreshScanTabInPlace(project: Project): Boolean {
+    val local = pluginLocalState(project)
+    val scanTab = ScanTabs.tabs[project] ?: return false
+    val contentTab = CycodeToolWindowFactory.TabManager.getTab(project) ?: return false
+    if (!local.cliInstalled || !local.cliAuthed || contentTab.getTreeView().getRightPanel() !== scanTab.panel) {
+        return false
+    }
+    if (!scanTab.refresh(cycode(project))) {
+        return false
+    }
+
+    contentTab.getTreeView().refreshTree()
+    return true
+}
+
+/**
+ * [forceRebuild] replaces the right panel even when the scan tab is already shown; use it when the layout changes
+ * (scope, collapse, docking). Otherwise the visible scan tab is only refreshed in place, to avoid flicker.
+ */
+fun updateToolWindowState(project: Project, forceRebuild: Boolean = false) {
     ApplicationManager.getApplication().invokeLater {
+        if (!forceRebuild && refreshScanTabInPlace(project)) {
+            return@invokeLater
+        }
+
         WriteAction.run<Error> {
             replaceToolWindowRightPanel(project, getRightPanelDependingOnState(project))
         }
