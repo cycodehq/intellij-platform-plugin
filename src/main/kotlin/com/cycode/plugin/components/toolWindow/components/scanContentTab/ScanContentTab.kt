@@ -45,6 +45,18 @@ class ScanContentTab : Component<CycodeService>() {
      * every time a scan started or finished. Returns false when something structural changed and the owner
      * must rebuild the tab.
      */
+    /**
+     * Disabling the focused button makes Swing move focus to the next button (it shows up highlighted).
+     * Park the focus on the panel first so nothing else gets selected.
+     */
+    private fun setEnabledKeepingFocus(button: JButton, enabled: Boolean) {
+        if (button.isEnabled == enabled) return
+        if (!enabled && button.isFocusOwner) {
+            panel?.requestFocusInWindow()
+        }
+        button.isEnabled = enabled
+    }
+
     fun refresh(service: CycodeService): Boolean {
         val local = pluginLocalState(service.project)
         if (builtScope != service.getEffectiveScanScope() ||
@@ -56,11 +68,11 @@ class ScanContentTab : Component<CycodeService>() {
 
         scanAllButton?.let {
             val enabled = !local.hasRunningScans()
-            if (it.isEnabled != enabled) it.isEnabled = enabled
+            setEnabledKeepingFocus(it, enabled)
         }
         scanButtons.forEach {
             val enabled = it.isModuleEnabled() && !local.isScanRunning(it.scanType)
-            if (it.button.isEnabled != enabled) it.button.isEnabled = enabled
+            setEnabledKeepingFocus(it.button, enabled)
         }
         return true
     }
@@ -174,6 +186,7 @@ class ScanContentTab : Component<CycodeService>() {
                 horizontalScrollBarPolicy = ScrollPaneConstants.HORIZONTAL_SCROLLBAR_NEVER
             }, BorderLayout.CENTER)
         }
+        outer.isFocusable = true
         panel = outer
         return outer
     }
