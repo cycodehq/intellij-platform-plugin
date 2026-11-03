@@ -20,8 +20,20 @@ class CycodeTemporaryStateService {
         }
 
     // per-repository and therefore session-only; persisting them globally leaks picks between projects
-    // scan types that are currently running; drives the spinner in the scan tab
-    val runningScans: MutableSet<CliScanType> = java.util.concurrent.ConcurrentHashMap.newKeySet()
+    // number of running scans per type (e.g. an on-save scan can overlap a manual one); drives the spinners
+    private val runningScanCounts = java.util.concurrent.ConcurrentHashMap<CliScanType, java.util.concurrent.atomic.AtomicInteger>()
+
+    fun scanStarted(scanType: CliScanType) {
+        runningScanCounts.computeIfAbsent(scanType) { java.util.concurrent.atomic.AtomicInteger() }.incrementAndGet()
+    }
+
+    fun scanFinished(scanType: CliScanType) {
+        runningScanCounts[scanType]?.updateAndGet { maxOf(0, it - 1) }
+    }
+
+    fun isScanRunning(scanType: CliScanType): Boolean = (runningScanCounts[scanType]?.get() ?: 0) > 0
+
+    fun hasRunningScans(): Boolean = runningScanCounts.values.any { it.get() > 0 }
 
     // collapsed state of the scan options section in the tool window (session-only)
     @Volatile

@@ -5,6 +5,7 @@ import com.cycode.plugin.cli.*
 import com.cycode.plugin.git.*
 import com.cycode.plugin.cli.models.AiRemediationResultData
 import com.cycode.plugin.components.toolWindow.CycodeToolWindowFactory
+import com.cycode.plugin.components.toolWindow.ScanTabs
 import com.cycode.plugin.components.toolWindow.updateToolWindowState
 import com.cycode.plugin.components.toolWindow.updateToolWindowStateForAllProjects
 import com.cycode.plugin.utils.CycodeNotifier
@@ -47,13 +48,13 @@ class CycodeService(val project: Project) : Disposable {
 
     /** Background task for a scan that also marks the scan type as running (spinner in the scan tab). */
     private fun runScanBackgroundTask(scanType: CliScanType, task: (ProgressIndicator) -> Unit) {
-        pluginLocalState.runningScans.add(scanType)
+        pluginLocalState.scanStarted(scanType)
         updateToolWindowState(project)
         runBackgroundTask(getBackgroundScanningLabel(scanType)) { indicator ->
             try {
                 task(indicator)
             } finally {
-                pluginLocalState.runningScans.remove(scanType)
+                pluginLocalState.scanFinished(scanType)
                 updateToolWindowState(project)
             }
         }
@@ -167,31 +168,40 @@ class CycodeService(val project: Project) : Disposable {
     }
 
     /**
-     * Scans according to the selected scope. [quiet] suppresses "not applicable" notifications when a
-     * single action fans out to every scan type.
+     * Scans according to the selected scope.
      */
-    fun startScanForCurrentScope(scanType: CliScanType, quiet: Boolean = false) {
+    fun startScanForCurrentScope(scanType: CliScanType) {
         when (getEffectiveScanScope()) {
             ScanScope.Project -> startScanForCurrentProject(scanType)
-            ScanScope.File -> startScanForCurrentFile(scanType, quiet)
+            ScanScope.File -> startScanForCurrentFile(scanType)
             ScanScope.Diff -> startDiffScan(scanType)
         }
     }
 
     /** Runs every scan type enabled for the tenant, according to the selected scope. */
     fun startAllScansForCurrentScope() {
+        // without an open file every scan type would show the same message: say it once
+        if (getEffectiveScanScope() == ScanScope.File && currentLocalFilePath() == null) {
+            CycodeNotifier.notifyInfo(project, CycodeBundle.message("noOpenFileErrorNotification"))
+            return
+        }
+
         val local = pluginLocalState
-        if (local.isSecretScanningEnabled) startScanForCurrentScope(CliScanType.Secret, quiet = true)
-        if (local.isScaScanningEnabled) startScanForCurrentScope(CliScanType.Sca, quiet = true)
-        if (local.isIacScanningEnabled) startScanForCurrentScope(CliScanType.Iac, quiet = true)
-        if (local.isSastScanningEnabled) startScanForCurrentScope(CliScanType.Sast, quiet = true)
+        if (local.isSecretScanningEnabled) startScanForCurrentScope(CliScanType.Secret)
+        if (local.isScaScanningEnabled) startScanForCurrentScope(CliScanType.Sca)
+        if (local.isIacScanningEnabled) startScanForCurrentScope(CliScanType.Iac)
+        if (local.isSastScanningEnabled) startScanForCurrentScope(CliScanType.Sast)
     }
 
-    private fun startScanForCurrentFile(scanType: CliScanType, quiet: Boolean) {
+    private fun currentLocalFilePath(): String? {
         val file = FileEditorManager.getInstance(project).selectedFiles.firstOrNull()
-        val filePath = file?.takeIf { it.isInLocalFileSystem }?.canonicalPath
+        return file?.takeIf { it.isInLocalFileSystem }?.canonicalPath
+    }
+
+    private fun startScanForCurrentFile(scanType: CliScanType) {
+        val filePath = currentLocalFilePath()
         if (filePath == null) {
-            if (!quiet) CycodeNotifier.notifyInfo(project, CycodeBundle.message("noOpenFileErrorNotification"))
+            CycodeNotifier.notifyInfo(project, CycodeBundle.message("noOpenFileErrorNotification"))
             return
         }
 
@@ -201,12 +211,10 @@ class CycodeService(val project: Project) : Disposable {
             else -> true
         }
         if (!supported) {
-            if (!quiet) {
-                CycodeNotifier.notifyInfo(
-                    project,
-                    CycodeBundle.message("scanFileUnsupportedNotification", getScanTypeDisplayName(scanType))
-                )
-            }
+            CycodeNotifier.notifyInfo(
+                project,
+                CycodeBundle.message("scanFileUnsupportedNotification", getScanTypeDisplayName(scanType))
+            )
             return
         }
 
@@ -216,10 +224,6 @@ class CycodeService(val project: Project) : Disposable {
     private fun startDiffScan(scanType: CliScanType) {
         val from = pluginLocalState.diffFromRef
         val to = pluginLocalState.diffToRef
-        if (from == to) {
-            CycodeNotifier.notifyInfo(project, CycodeBundle.message("diffSameRevisionNotification"))
-            return
-        }
 
         val projectRoot = cliService.getProjectRootDirectory()
         if (projectRoot == null) {
@@ -233,48 +237,18 @@ class CycodeService(val project: Project) : Disposable {
                 return@runScanBackgroundTask
             }
 
-            val cancelledCallback = { indicator.isCanceled }
-
-            // IaC does not support diffs in the CLI: run it as a normal project scan
-            if (!supportsDiffScan(scanType)) {
-                cliService.scan(scanType, ScanTarget.Paths(listOf(projectRoot)), true, cancelledCallback)
-                return@runScanBackgroundTask
+            val target = when (val plan = planDiffScan(scanType, from, to, projectRoot, GitRepository(projectRoot))) {
+                is DiffScanPlan.Run -> plan.target
+                is DiffScanPlan.Refused -> {
+                    CycodeNotifier.notifyInfo(project, CycodeBundle.message(plan.messageKey))
+                    return@runScanBackgroundTask
+                }
             }
-
-            val git = GitRepository(projectRoot)
-            if (!git.isGitRepository()) {
-                CycodeNotifier.notifyInfo(project, CycodeBundle.message("diffNotGitRepositoryNotification"))
-                return@runScanBackgroundTask
-            }
-
-            val target = resolveDiffTarget(git, from, to, projectRoot) ?: return@runScanBackgroundTask
 
             thisLogger().debug("[$scanType] Start diff scan: $target")
-            cliService.scan(scanType, target, true, cancelledCallback)
+            cliService.scan(scanType, target, true) { indicator.isCanceled }
             thisLogger().debug("[$scanType] Finish diff scan: $target")
         }
-    }
-
-    private fun resolveDiffTarget(git: GitRepository, from: String, to: String, projectRoot: String): ScanTarget? {
-        if (from == LOCAL_DIRECTORY_REF || to == LOCAL_DIRECTORY_REF) {
-            val ref = if (from == LOCAL_DIRECTORY_REF) to else from
-            if (!isSafeRefArg(ref)) {
-                CycodeNotifier.notifyInfo(project, CycodeBundle.message("diffUnknownRevisionNotification"))
-                return null
-            }
-            return ScanTarget.Diff(DiffScanMode.LocalDiff, ref, projectRoot)
-        }
-
-        val message = when (val result = git.getCommitRange(from, to)) {
-            is CommitRangeResult.Range -> return ScanTarget.Diff(DiffScanMode.CommitRange, result.range, projectRoot)
-            CommitRangeResult.SameCommit -> "diffSameCommitNotification"
-            CommitRangeResult.NoCommonHistory -> "diffNoCommonHistoryNotification"
-            CommitRangeResult.UnknownRevision -> "diffUnknownRevisionNotification"
-            CommitRangeResult.NotARepository -> "diffNotGitRepositoryNotification"
-            CommitRangeResult.GitFailure -> "diffGitFailureNotification"
-        }
-        CycodeNotifier.notifyInfo(project, CycodeBundle.message(message))
-        return null
     }
 
     // endregion
@@ -334,6 +308,7 @@ class CycodeService(val project: Project) : Disposable {
     }
 
     override fun dispose() {
+        ScanTabs.remove(project)
         CycodeToolWindowFactory.TabManager.removeTab(project)
     }
 }

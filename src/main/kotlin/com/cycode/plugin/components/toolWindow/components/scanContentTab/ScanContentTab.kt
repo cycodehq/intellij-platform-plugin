@@ -55,11 +55,11 @@ class ScanContentTab : Component<CycodeService>() {
         }
 
         scanAllButton?.let {
-            val enabled = local.runningScans.isEmpty()
+            val enabled = !local.hasRunningScans()
             if (it.isEnabled != enabled) it.isEnabled = enabled
         }
         scanButtons.forEach {
-            val enabled = it.isModuleEnabled() && !local.runningScans.contains(it.scanType)
+            val enabled = it.isModuleEnabled() && !local.isScanRunning(it.scanType)
             if (it.button.isEnabled != enabled) it.button.isEnabled = enabled
         }
         return true
@@ -119,7 +119,7 @@ class ScanContentTab : Component<CycodeService>() {
 
         // "Ready to scan." with a scan-all button at the end of the line
         val scanAll = JButton(CycodeBundle.message("scanTabScanAllBtn")).apply {
-            isEnabled = pluginLocalState.runningScans.isEmpty()
+            isEnabled = !pluginLocalState.hasRunningScans()
             toolTipText = CycodeBundle.message("toolbarRunAllAction")
             addActionListener { service.startAllScansForCurrentScope() }
         }
@@ -233,7 +233,7 @@ class ScanContentTab : Component<CycodeService>() {
         key: String,
         isModuleEnabled: () -> Boolean
     ): JButton {
-        val running = pluginLocalState(service.project).runningScans.contains(scanType)
+        val running = pluginLocalState(service.project).isScanRunning(scanType)
         return JButton(CycodeBundle.message(key)).apply {
             isEnabled = isModuleEnabled() && !running
             addActionListener { service.startScanForCurrentScope(scanType) }

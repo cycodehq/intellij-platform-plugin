@@ -60,7 +60,7 @@ class TreeView(
 
     // the spinner icons are time-based; the tree only needs to be repainted while a scan is running
     private val spinnerTimer = Timer(SPINNER_REPAINT_DELAY_MS) {
-        if (pluginLocalState.runningScans.isNotEmpty()) tree.repaint()
+        if (pluginLocalState.hasRunningScans()) tree.repaint()
     }
 
     private var severityFilter: Map<String, Boolean>? = null
@@ -316,6 +316,14 @@ class TreeView(
         return this
     }
 
+    /** Swaps the spinner icons of the scan type nodes without reloading the tree (keeps expanded nodes). */
+    fun refreshRunningState() {
+        CliScanType.entries.forEach {
+            rootNodes.setRunning(it, pluginLocalState.isScanRunning(it))
+            model.nodeChanged(rootNodes.getScanTypeNode(it))
+        }
+    }
+
     fun refreshTree() {
         // TODO(MarshalX): is possible to optimize this to only update the nodes that have changed
         dummyRootNode.removeAllChildren()
@@ -331,7 +339,7 @@ class TreeView(
 
     private fun createNodes(top: DefaultMutableTreeNode) {
         rootNodes.createNodes(top)
-        CliScanType.entries.forEach { rootNodes.setRunning(it, pluginLocalState.runningScans.contains(it)) }
+        CliScanType.entries.forEach { rootNodes.setRunning(it, pluginLocalState.isScanRunning(it)) }
         createSecretDetectionNodes()
         createScaDetectionNodes()
         createIacDetectionNodes()

@@ -18,6 +18,7 @@ import com.intellij.openapi.wm.ToolWindow
 import com.intellij.openapi.wm.ToolWindowFactory
 import com.intellij.openapi.wm.ToolWindowManager
 import com.intellij.openapi.wm.ex.ToolWindowManagerListener
+import com.intellij.openapi.wm.ex.ToolWindowManagerListener.ToolWindowManagerEventType
 import com.intellij.ui.content.Content
 import com.intellij.ui.content.ContentFactory
 import javax.swing.JPanel
@@ -47,7 +48,12 @@ class CycodeToolWindowFactory : DumbAware, ToolWindowFactory {
         // re-layout the scan tab when the tool window is moved to another side
         var lastAnchor = toolWindow.anchor
         project.messageBus.connect(service).subscribe(ToolWindowManagerListener.TOPIC, object : ToolWindowManagerListener {
-            override fun stateChanged(toolWindowManager: ToolWindowManager) {
+            override fun stateChanged(
+                toolWindowManager: ToolWindowManager,
+                changedToolWindow: ToolWindow,
+                changeType: ToolWindowManagerEventType
+            ) {
+                if (changeType != ToolWindowManagerEventType.MovedOrResized) return
                 val anchor = toolWindowManager.getToolWindow(CycodeBundle.message("toolWindowId"))?.anchor ?: return
                 if (anchor != lastAnchor) {
                     lastAnchor = anchor
@@ -96,7 +102,7 @@ fun getRightPanelDependingOnState(project: Project): JPanel {
 
     return if (pluginLocalState.cliAuthed) {
         val scanTab = ScanContentTab()
-        ScanTabs.tabs[project] = scanTab
+        ScanTabs.add(project, scanTab)
         scanTab.getContent(service)
     } else {
         AuthContentTab().getContent(service)
@@ -116,13 +122,23 @@ fun updateToolWindowStateForAllProjects() {
 
 
 object ScanTabs {
-    val tabs = mutableMapOf<Project, ScanContentTab>()
+    private val tabs = java.util.concurrent.ConcurrentHashMap<Project, ScanContentTab>()
+
+    fun add(project: Project, tab: ScanContentTab) {
+        tabs[project] = tab
+    }
+
+    fun get(project: Project): ScanContentTab? = tabs[project]
+
+    fun remove(project: Project) {
+        tabs.remove(project)
+    }
 }
 
 /** Updates the scan buttons of the visible scan tab without replacing the panel; false if a rebuild is needed. */
 private fun refreshScanTabInPlace(project: Project): Boolean {
     val local = pluginLocalState(project)
-    val scanTab = ScanTabs.tabs[project] ?: return false
+    val scanTab = ScanTabs.get(project) ?: return false
     val contentTab = CycodeToolWindowFactory.TabManager.getTab(project) ?: return false
     if (!local.cliInstalled || !local.cliAuthed || contentTab.getTreeView().getRightPanel() !== scanTab.panel) {
         return false
@@ -131,7 +147,8 @@ private fun refreshScanTabInPlace(project: Project): Boolean {
         return false
     }
 
-    contentTab.getTreeView().refreshTree()
+    // only the spinners change here; the results tree is reloaded when results arrive (rerunAnnotators)
+    contentTab.getTreeView().refreshRunningState()
     return true
 }
 
