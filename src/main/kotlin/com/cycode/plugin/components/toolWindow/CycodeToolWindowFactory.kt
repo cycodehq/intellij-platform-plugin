@@ -136,7 +136,7 @@ object ScanTabs {
 }
 
 /** Updates the scan buttons of the visible scan tab without replacing the panel; false if a rebuild is needed. */
-private fun refreshScanTabInPlace(project: Project): Boolean {
+private fun refreshScanTabInPlace(project: Project, reloadResults: Boolean): Boolean {
     val local = pluginLocalState(project)
     val scanTab = ScanTabs.get(project) ?: return false
     val contentTab = CycodeToolWindowFactory.TabManager.getTab(project) ?: return false
@@ -147,18 +147,23 @@ private fun refreshScanTabInPlace(project: Project): Boolean {
         return false
     }
 
-    // only the spinners change here; the results tree is reloaded when results arrive (rerunAnnotators)
-    contentTab.getTreeView().refreshRunningState()
+    if (reloadResults) {
+        contentTab.getTreeView().refreshTree()
+    } else {
+        contentTab.getTreeView().refreshRunningState()
+    }
     return true
 }
 
 /**
  * [forceRebuild] replaces the right panel even when the scan tab is already shown; use it when the layout changes
  * (scope, collapse, docking). Otherwise the visible scan tab is only refreshed in place, to avoid flicker.
+ * [reloadResults] reloads the results tree; pass false when only the running state changed (a scan started or
+ * finished), so the user's expanded nodes are kept.
  */
-fun updateToolWindowState(project: Project, forceRebuild: Boolean = false) {
+fun updateToolWindowState(project: Project, forceRebuild: Boolean = false, reloadResults: Boolean = true) {
     ApplicationManager.getApplication().invokeLater {
-        if (!forceRebuild && refreshScanTabInPlace(project)) {
+        if (!forceRebuild && refreshScanTabInPlace(project, reloadResults)) {
             return@invokeLater
         }
 

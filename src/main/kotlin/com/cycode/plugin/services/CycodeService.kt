@@ -49,13 +49,14 @@ class CycodeService(val project: Project) : Disposable {
     /** Background task for a scan that also marks the scan type as running (spinner in the scan tab). */
     private fun runScanBackgroundTask(scanType: CliScanType, task: (ProgressIndicator) -> Unit) {
         pluginLocalState.scanStarted(scanType)
-        updateToolWindowState(project)
+        updateToolWindowState(project, reloadResults = false)
         runBackgroundTask(getBackgroundScanningLabel(scanType)) { indicator ->
             try {
                 task(indicator)
             } finally {
                 pluginLocalState.scanFinished(scanType)
-                updateToolWindowState(project)
+                // the results (if any) were already reloaded by CliService; only the spinners change here
+                updateToolWindowState(project, reloadResults = false)
             }
         }
     }
