@@ -1,45 +1,11 @@
 package com.cycode.plugin
 
 import com.cycode.plugin.git.*
-import org.junit.After
 import org.junit.Assert.*
-import org.junit.Before
 import org.junit.Test
-import java.io.File
-import java.nio.file.Files
 
 /** Uses real temporary git repositories: the exit-code semantics are the point. */
-class GitRepositoryTest {
-    private lateinit var dir: File
-    private lateinit var git: GitRepository
-
-    private fun sh(vararg args: String): String {
-        val process = ProcessBuilder(listOf("git", "-c", "user.name=t", "-c", "user.email=t@t", *args))
-            .directory(dir).redirectErrorStream(true).start()
-        val out = process.inputStream.bufferedReader().readText().trim()
-        check(process.waitFor() == 0) { "git ${args.toList()} failed: $out" }
-        return out
-    }
-
-    private fun commit(name: String) {
-        File(dir, name).writeText(name)
-        sh("add", name)
-        sh("commit", "-m", name)
-    }
-
-    @Before
-    fun setUp() {
-        dir = Files.createTempDirectory("cycode-git").toFile()
-        sh("init", "-b", "main")
-        commit("base")
-        git = GitRepository(dir.path)
-    }
-
-    @After
-    fun tearDown() {
-        dir.deleteRecursively()
-    }
-
+class GitRepositoryTest : GitTestBase() {
     private fun diverge() {
         sh("checkout", "-b", "feature")
         commit("feature-1")
@@ -93,7 +59,7 @@ class GitRepositoryTest {
 
     @Test
     fun nonGitFolder() {
-        val plain = Files.createTempDirectory("cycode-plain").toFile()
+        val plain = createPlainDirectory()
         try {
             assertFalse(GitRepository(plain.path).isGitRepository())
             assertTrue(git.isGitRepository())
@@ -201,5 +167,31 @@ class GitRepositoryTest {
     fun labelWithoutRefNameOrSubject() {
         assertEquals("abc123", GitRepository.buildLabel(null, "abc123", ""))
         assertEquals("abc123 │ subject", GitRepository.buildLabel("", "abc123", "subject"))
+    }
+
+    @Test
+    fun headFingerprintChangesOnCommitAndBranchSwitchOnly() {
+        val first = git.getHeadFingerprint()!!
+        assertEquals(first, git.getHeadFingerprint())
+
+        sh("branch", "other") // a new ref that is not checked out does not change it
+        assertEquals(first, git.getHeadFingerprint())
+
+        commit("second")
+        val afterCommit = git.getHeadFingerprint()!!
+        assertNotEquals(first, afterCommit)
+
+        sh("checkout", "other")
+        assertNotEquals(afterCommit, git.getHeadFingerprint())
+    }
+
+    @Test
+    fun headFingerprintIsNullOutsideARepository() {
+        val plain = createPlainDirectory()
+        try {
+            assertNull(GitRepository(plain.path).getHeadFingerprint())
+        } finally {
+            plain.deleteRecursively()
+        }
     }
 }

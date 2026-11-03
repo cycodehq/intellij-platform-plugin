@@ -7,42 +7,17 @@ import com.cycode.plugin.git.DiffScanPlan
 import com.cycode.plugin.git.GitRepository
 import com.cycode.plugin.git.LOCAL_DIRECTORY_REF
 import com.cycode.plugin.git.planDiffScan
-import org.junit.After
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Test
 import java.io.File
-import java.nio.file.Files
 
-class DiffScanPlannerTest {
-    private lateinit var dir: File
-    private lateinit var git: GitRepository
-
-    private fun sh(vararg args: String) {
-        val process = ProcessBuilder(listOf("git", "-c", "user.name=t", "-c", "user.email=t@t", *args))
-            .directory(dir).redirectErrorStream(true).start()
-        val out = process.inputStream.bufferedReader().readText()
-        check(process.waitFor() == 0) { "git ${args.toList()} failed: $out" }
-    }
-
+class DiffScanPlannerTest : GitTestBase() {
     @Before
-    fun setUp() {
-        dir = Files.createTempDirectory("cycode-plan").toFile()
-        sh("init", "-b", "main")
-        File(dir, "a").writeText("a")
-        sh("add", "a")
-        sh("commit", "-m", "a")
+    fun addBranchAndCommit() {
         sh("branch", "other")
-        File(dir, "b").writeText("b")
-        sh("add", "b")
-        sh("commit", "-m", "b")
-        git = GitRepository(dir.path)
-    }
-
-    @After
-    fun tearDown() {
-        dir.deleteRecursively()
+        commit("b")
     }
 
     private fun plan(type: CliScanType, from: String, to: String, repo: GitRepository = git) =
@@ -69,7 +44,7 @@ class DiffScanPlannerTest {
 
     @Test
     fun iacFallsBackToFullScanEvenOutsideGit() {
-        val plain = Files.createTempDirectory("cycode-plain").toFile()
+        val plain = createPlainDirectory()
         try {
             val expected = DiffScanPlan.Run(ScanTarget.Paths(listOf(dir.path)))
             val iac = CliScanType.Iac
@@ -93,7 +68,7 @@ class DiffScanPlannerTest {
     fun gitProblemsAreReportedAndStartNoScan() {
         assertEquals(DiffScanPlan.Refused("diffUnknownRevisionNotification"), plan(secret, "main", "nope"))
 
-        val plain = Files.createTempDirectory("cycode-plain").toFile()
+        val plain = createPlainDirectory()
         try {
             assertEquals(
                 DiffScanPlan.Refused("diffNotGitRepositoryNotification"),

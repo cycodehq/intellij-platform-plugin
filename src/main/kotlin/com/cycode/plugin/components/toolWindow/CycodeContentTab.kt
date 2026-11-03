@@ -1,11 +1,11 @@
 package com.cycode.plugin.components.toolWindow
 
-import com.cycode.plugin.components.toolWindow.components.treeView.TreeView
 import com.cycode.plugin.CycodeBundle
-import com.intellij.openapi.project.Project
-import com.intellij.openapi.wm.ToolWindowManager
-import com.intellij.openapi.ui.SimpleToolWindowPanel
+import com.cycode.plugin.components.toolWindow.components.treeView.TreeView
 import com.cycode.plugin.services.pluginLocalState
+import com.intellij.openapi.project.Project
+import com.intellij.openapi.ui.SimpleToolWindowPanel
+import com.intellij.openapi.wm.ToolWindowManager
 import com.intellij.util.ui.JBUI
 import javax.swing.JPanel
 
@@ -14,16 +14,20 @@ class CycodeContentTab(private val project: Project) : SimpleToolWindowPanel(fal
 
     init {
         setContent(treeView)
+        treeView.collapsedExtent = ::getCollapsedExtent
     }
 
-    fun updateContent(rightPanel: JPanel): JPanel {
-        // left/right docking is narrow and tall: results above the scan controls; bottom: side by side
+    // left/right docking is narrow and tall: results above the scan controls; bottom: side by side
+    private fun isStacked(): Boolean {
         val anchor = ToolWindowManager.getInstance(project).getToolWindow(CycodeBundle.message("toolWindowId"))?.anchor
-        treeView.setStacked(anchor != null && !anchor.isHorizontal)
-        treeView.setSecondPaneCollapsed(
-            pluginLocalState(project).scanControlsCollapsed,
-            if (anchor != null && !anchor.isHorizontal) JBUI.scale(COLLAPSED_HEIGHT) else JBUI.scale(COLLAPSED_WIDTH)
-        )
+        return anchor != null && !anchor.isHorizontal
+    }
+
+    private fun getCollapsedExtent() = JBUI.scale(if (isStacked()) COLLAPSED_HEIGHT else COLLAPSED_WIDTH)
+
+    fun updateContent(rightPanel: JPanel): JPanel {
+        treeView.setStacked(isStacked())
+        treeView.setSecondPaneCollapsed(pluginLocalState(project).scanControlsCollapsed, getCollapsedExtent())
         treeView.refreshTree()
         return treeView.replaceRightPanel(rightPanel)
     }

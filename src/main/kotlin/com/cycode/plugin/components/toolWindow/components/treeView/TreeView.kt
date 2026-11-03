@@ -143,7 +143,12 @@ class TreeView(
             else -> return
         }
 
-        // a violation card needs the room: expand the pane if the scan options were collapsed
+        // a violation card needs the room: expand the pane if the scan options were collapsed, and collapse it
+        // again when the card is closed
+        val cardAlreadyShown = splitPane.secondComponent?.getClientProperty(VIOLATION_CARD_KEY) == true
+        if (!cardAlreadyShown) {
+            collapsedBeforeCard = collapsed
+        }
         if (collapsed) {
             pluginLocalState.scanControlsCollapsed = false
             setSecondPaneCollapsed(false, 0)
@@ -155,6 +160,11 @@ class TreeView(
     private fun wrapWithCloseButton(card: JComponent): JPanel {
         val closeButton = InplaceButton(CycodeBundle.message("violationCardCloseTooltip"), AllIcons.Actions.Close) {
             tree.clearSelection()
+            if (collapsedBeforeCard) {
+                collapsedBeforeCard = false
+                pluginLocalState.scanControlsCollapsed = true
+                setSecondPaneCollapsed(true, collapsedExtent())
+            }
             replaceRightPanel(getRightPanelDependingOnState(project))
         }
 
@@ -164,6 +174,7 @@ class TreeView(
         }
 
         return JPanel(BorderLayout()).apply {
+            putClientProperty(VIOLATION_CARD_KEY, true)
             add(header, BorderLayout.NORTH)
             add(card, BorderLayout.CENTER)
         }
@@ -301,6 +312,10 @@ class TreeView(
     }
 
     private var collapsed = false
+    private var collapsedBeforeCard = false
+
+    /** Size of the collapsed scan options; set by the owner because it depends on the docking. */
+    var collapsedExtent: () -> Int = { 0 }
     private var proportionBeforeCollapse = 0.5f
 
     /** Shrinks the lower/right pane to [extent] pixels when collapsed and restores the previous split when expanded. */
@@ -377,5 +392,6 @@ class TreeView(
 
     companion object {
         private const val SPINNER_REPAINT_DELAY_MS = 100
+        private const val VIOLATION_CARD_KEY = "cycode.violationCard"
     }
 }

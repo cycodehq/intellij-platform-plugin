@@ -164,8 +164,16 @@ private fun refreshScanTabInPlace(project: Project, reloadResults: Boolean): Boo
  */
 fun updateToolWindowState(project: Project, forceRebuild: Boolean = false, reloadResults: Boolean = true) {
     ApplicationManager.getApplication().invokeLater {
-        if (!forceRebuild && refreshScanTabInPlace(project, reloadResults)) {
-            return@invokeLater
+        if (!forceRebuild) {
+            if (refreshScanTabInPlace(project, reloadResults)) {
+                return@invokeLater
+            }
+
+            if (!reloadResults) {
+                // only the running state changed: do not replace whatever else is shown (e.g. an open finding)
+                CycodeToolWindowFactory.TabManager.getTab(project)?.getTreeView()?.refreshRunningState()
+                return@invokeLater
+            }
         }
 
         WriteAction.run<Error> {

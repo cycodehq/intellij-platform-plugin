@@ -48,11 +48,6 @@ class ScanContentTab : Component<CycodeService>() {
     private var builtCollapsed: Boolean? = null
 
     /**
-     * Updates the scan buttons in place (enabled state) instead of rebuilding the whole panel, which flickered
-     * every time a scan started or finished. Returns false when something structural changed and the owner
-     * must rebuild the tab.
-     */
-    /**
      * Disabling the focused button makes Swing move focus to the next button (it shows up highlighted).
      * Park the focus on the panel first so nothing else gets selected.
      */
@@ -64,6 +59,11 @@ class ScanContentTab : Component<CycodeService>() {
         button.isEnabled = enabled
     }
 
+    /**
+     * Updates the scan buttons in place (enabled state) instead of rebuilding the whole panel, which flickered
+     * every time a scan started or finished. Returns false when something structural changed and the owner
+     * must rebuild the tab.
+     */
     fun refresh(service: CycodeService): Boolean {
         val local = pluginLocalState(service.project)
         if (builtScope != service.getEffectiveScanScope() ||

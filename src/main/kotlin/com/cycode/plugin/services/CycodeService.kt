@@ -158,7 +158,14 @@ class CycodeService(val project: Project) : Disposable {
                 CycodeNotifier.notifyInfo(project, CycodeBundle.message("diffGitUnavailableNotification"))
             }
 
-            val refs = git.getAvailableRefs(pinned)
+            // the lists are rebuilt only when the branch changes or a commit is created
+            val fingerprint = git.getHeadFingerprint()
+            val cached = pluginLocalState.diffRefs
+            val refs = if (fingerprint != null && fingerprint == pluginLocalState.diffRefsFingerprint && cached.isNotEmpty()) {
+                cached
+            } else {
+                git.getAvailableRefs(pinned).also { pluginLocalState.diffRefsFingerprint = fingerprint }
+            }
             if (requestId != refreshRequestId.get() || project.isDisposed) {
                 return@executeOnPooledThread
             }

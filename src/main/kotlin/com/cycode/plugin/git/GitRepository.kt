@@ -57,6 +57,16 @@ class GitRepository(private val workDirectory: String) {
         return output != null && output.exitCode == 0
     }
 
+    /**
+     * Changes when the checked out branch changes or a commit is created on it. Null if git could not tell.
+     * Used to cache the revision lists, which are expensive to build.
+     */
+    fun getHeadFingerprint(): String? {
+        val sha = run("rev-parse", "HEAD")?.takeIf { it.exitCode == 0 }?.stdout ?: return null
+        val branch = run("symbolic-ref", "-q", "HEAD")?.takeIf { it.exitCode == 0 }?.stdout ?: HEAD_REF
+        return "$branch@$sha"
+    }
+
     /** Only an explicit "not a git repository" answer returns false; other failures are left to later steps. */
     fun isGitRepository(): Boolean {
         val output = run("rev-parse", "--is-inside-work-tree") ?: return true

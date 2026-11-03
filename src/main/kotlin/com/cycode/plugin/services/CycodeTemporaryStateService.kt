@@ -51,6 +51,10 @@ class CycodeTemporaryStateService {
     @Volatile
     var diffToRef: String = HEAD_REF
 
+    // identifies the git state the cached diffRefs were built for (see GitRepository.getHeadFingerprint)
+    @Volatile
+    var diffRefsFingerprint: String? = null
+
     @Volatile
     var diffRefs: List<RefOption> = emptyList()
 
