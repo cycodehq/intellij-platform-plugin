@@ -197,8 +197,8 @@ class CycodeService(val project: Project) : Disposable {
         val scanTypes = listOf(
             CliScanType.Secret to local.isSecretScanningEnabled,
             CliScanType.Sca to local.isScaScanningEnabled,
-            CliScanType.Iac to local.isIacScanningEnabled,
             CliScanType.Sast to local.isSastScanningEnabled,
+            CliScanType.Iac to local.isIacScanningEnabled,
         ).filter { it.second }.map { it.first }
 
         if (getEffectiveScanScope() != ScanScope.File) {

@@ -21,7 +21,6 @@ class CycodeTemporaryStateService {
             thisLogger().info("cliStatus set")
         }
 
-    // per-repository and therefore session-only; persisting them globally leaks picks between projects
     // number of running scans per type (e.g. an on-save scan can overlap a manual one); drives the spinners
     private val runningScanCounts = ConcurrentHashMap<CliScanType, AtomicInteger>()
 
@@ -45,6 +44,7 @@ class CycodeTemporaryStateService {
     @Volatile
     var gitUnavailableNotified: Boolean = false
 
+    // per-repository and therefore session-only; persisting them globally leaks picks between projects
     @Volatile
     var diffFromRef: String = LOCAL_DIRECTORY_REF
 

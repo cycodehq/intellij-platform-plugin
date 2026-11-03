@@ -128,8 +128,8 @@ class ScanContentTab : Component<CycodeService>() {
         val buttons = listOf(
             createScanButton(service, CliScanType.Secret, "scanTabSecretsBtn") { pluginLocalState.isSecretScanningEnabled },
             createScanButton(service, CliScanType.Sca, "scanTabScaBtn") { pluginLocalState.isScaScanningEnabled },
-            createScanButton(service, CliScanType.Iac, "scanTabIacBtn") { pluginLocalState.isIacScanningEnabled },
             createScanButton(service, CliScanType.Sast, "scanTabSastBtn") { pluginLocalState.isSastScanningEnabled },
+            createScanButton(service, CliScanType.Iac, "scanTabIacBtn") { pluginLocalState.isIacScanningEnabled },
         )
         val footer = arrayOf<JComponent>(
             createWrappedHtmlPane(CycodeBundle.message("scanTabOnSaveTip")),

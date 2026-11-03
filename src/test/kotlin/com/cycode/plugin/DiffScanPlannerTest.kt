@@ -103,4 +103,34 @@ class DiffScanPlannerTest {
             plain.deleteRecursively()
         }
     }
+
+    @Test
+    fun unsafeRefsAreRefusedInBothFlavours() {
+        assertEquals(
+            DiffScanPlan.Refused("diffUnknownRevisionNotification"),
+            plan(secret, LOCAL_DIRECTORY_REF, "--output=x")
+        )
+        assertEquals(DiffScanPlan.Refused("diffUnknownRevisionNotification"), plan(secret, "--output=x", "main"))
+    }
+
+    @Test
+    fun sameCommitUnderDifferentNamesIsRefused() {
+        assertEquals(DiffScanPlan.Refused("diffSameCommitNotification"), plan(secret, "main", "HEAD"))
+    }
+
+    @Test
+    fun noCommonHistoryIsRefused() {
+        sh("checkout", "--orphan", "orphan")
+        File(dir, "o").writeText("o")
+        sh("add", "o")
+        sh("commit", "-m", "o")
+        assertEquals(DiffScanPlan.Refused("diffNoCommonHistoryNotification"), plan(secret, "main", "orphan"))
+    }
+
+    @Test
+    fun everyDiffScanTypeGetsAPlan() {
+        CliScanType.entries.forEach {
+            assertTrue(plan(it, LOCAL_DIRECTORY_REF, "main") is DiffScanPlan.Run)
+        }
+    }
 }

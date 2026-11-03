@@ -120,4 +120,86 @@ class GitRepositoryTest {
     fun labelFormat() {
         assertEquals("main │ abc123 │ subject", GitRepository.buildLabel("main", "abc123", "subject"))
     }
+
+    @Test
+    fun refListsAreCapped() {
+        repeat(GitRepository.MAX_REFS + 5) { sh("branch", "b$it") }
+        repeat(GitRepository.MAX_COMMITS + 5) { commit("c$it") }
+
+        val refs = git.getAvailableRefs()
+        val sha = Regex("[0-9a-f]{40}")
+        val branchesAndTags = refs.count { it.value != HEAD_REF && !sha.matches(it.value) }
+        assertTrue(branchesAndTags <= GitRepository.MAX_REFS)
+        // HEAD + capped refs + capped commits
+        assertTrue(refs.size <= 1 + GitRepository.MAX_REFS + GitRepository.MAX_COMMITS)
+    }
+
+    @Test
+    fun tagsAreListed() {
+        sh("tag", "v1")
+        assertTrue(git.getAvailableRefs().any { it.value == "v1" })
+    }
+
+    @Test
+    fun commitsAreLabelledWithTheCurrentBranch() {
+        commit("second")
+        val commitOption = git.getAvailableRefs().first { it.label.endsWith("base") }
+        assertTrue(commitOption.label.startsWith("main$LABEL_SEPARATOR"))
+    }
+
+    @Test
+    fun detachedHeadCommitsHaveNoBranchPrefix() {
+        commit("second")
+        sh("checkout", "--detach", "HEAD~1")
+        val refs = git.getAvailableRefs()
+        val baseCommit = refs.first { it.label.endsWith("base") && it.value.length == 40 }
+        assertFalse(baseCommit.label.contains("main"))
+        assertEquals(HEAD_REF, refs.first().value)
+    }
+
+    @Test
+    fun remoteHeadSymbolicRefIsSkipped() {
+        sh("update-ref", "refs/remotes/origin/main", "HEAD")
+        sh("symbolic-ref", "refs/remotes/origin/HEAD", "refs/remotes/origin/main")
+        val refs = git.getAvailableRefs()
+        assertTrue(refs.any { it.value == "origin/main" })
+        assertFalse(refs.any { it.value.endsWith("/HEAD") })
+    }
+
+    @Test
+    fun commitRangeWithTagsAndRelativeRevisions() {
+        sh("tag", "v1")
+        commit("second")
+        val result = git.getCommitRange("v1", "HEAD") as CommitRangeResult.Range
+        assertTrue(result.range.matches(Regex("[0-9a-f]{40}\\.\\.[0-9a-f]{40}")))
+        assertEquals(result, git.getCommitRange("v1", "main"))
+    }
+
+    @Test
+    fun unknownOrUnsafeFromRevision() {
+        assertEquals(CommitRangeResult.UnknownRevision, git.getCommitRange("nope", "main"))
+        assertEquals(CommitRangeResult.UnknownRevision, git.getCommitRange("--output=x", "main"))
+        assertEquals(CommitRangeResult.UnknownRevision, git.getCommitRange("", "main"))
+    }
+
+    @Test
+    fun pinnedRefThatScrolledOutOfTheListIsKept() {
+        val oldest = sh("rev-parse", "HEAD")
+        repeat(GitRepository.MAX_COMMITS + 5) { commit("c$it") }
+        val refs = git.getAvailableRefs(listOf(oldest, LOCAL_DIRECTORY_REF, "HEAD"))
+        assertEquals(1, refs.count { it.value == oldest })
+        assertEquals(1, refs.count { it.value == HEAD_REF })
+        assertFalse(refs.any { it.value == LOCAL_DIRECTORY_REF })
+    }
+
+    @Test
+    fun unsafePinnedRefIsDropped() {
+        assertFalse(git.getAvailableRefs(listOf("--output=x")).any { it.value == "--output=x" })
+    }
+
+    @Test
+    fun labelWithoutRefNameOrSubject() {
+        assertEquals("abc123", GitRepository.buildLabel(null, "abc123", ""))
+        assertEquals("abc123 │ subject", GitRepository.buildLabel("", "abc123", "subject"))
+    }
 }
