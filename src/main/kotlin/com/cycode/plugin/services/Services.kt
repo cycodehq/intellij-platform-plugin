@@ -30,3 +30,5 @@ fun download(project: Project? = null): DownloadService = getCycodeService(proje
 fun githubReleases(project: Project? = null): GithubReleaseService = getCycodeService(project)
 
 fun cycode(project: Project? = null): CycodeService = getCycodeService(project)
+
+fun scanScope(project: Project? = null): ScanScopeService = getCycodeService(project)

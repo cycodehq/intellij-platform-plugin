@@ -1,8 +1,8 @@
 package com.cycode.plugin.components.toolWindow.components.cycodeActionToolBar.actions
 
 import com.cycode.plugin.CycodeBundle
-import com.cycode.plugin.services.cycode
 import com.cycode.plugin.services.pluginLocalState
+import com.cycode.plugin.services.scanScope
 import com.intellij.icons.AllIcons
 import com.intellij.openapi.actionSystem.ActionUpdateThread
 import com.intellij.openapi.actionSystem.AnActionEvent
@@ -25,8 +25,7 @@ class RunAllAction :
         // TODO(MarshalX): we should tracks all running scans and use pub-sub messaging to update UI
         //  we can provide "stop" action only after that
         val project = e.project ?: return
-        val service = cycode(project)
-        service.startAllScansForCurrentScope()
+        scanScope(project).startAllScansForCurrentScope()
     }
 
     override fun update(e: AnActionEvent) {

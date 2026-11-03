@@ -6,12 +6,14 @@ import com.cycode.plugin.cli.ScanScope
 import com.cycode.plugin.components.Component
 import com.cycode.plugin.components.common.createClickableLabel
 import com.cycode.plugin.components.common.createWrappedHtmlPane
+import com.cycode.plugin.components.toolWindow.ToolWindowUpdate
 import com.cycode.plugin.components.toolWindow.updateToolWindowState
 import com.cycode.plugin.git.HEAD_REF
 import com.cycode.plugin.git.LOCAL_DIRECTORY_REF
 import com.cycode.plugin.git.RefOption
 import com.cycode.plugin.services.CycodeService
 import com.cycode.plugin.services.pluginLocalState
+import com.cycode.plugin.services.scanScope
 import com.intellij.icons.AllIcons
 import com.intellij.openapi.ui.ComboBox
 import com.intellij.openapi.wm.ToolWindowManager
@@ -66,9 +68,9 @@ class ScanContentTab : Component<CycodeService>() {
      */
     fun refresh(service: CycodeService): Boolean {
         val local = pluginLocalState(service.project)
-        if (builtScope != service.getEffectiveScanScope() ||
-            builtDiffSupported != service.isDiffScanSupported() ||
-            builtCollapsed != local.scanControlsCollapsed
+        if (builtScope != scanScope(service.project).getEffectiveScanScope() ||
+            builtDiffSupported != scanScope(service.project).isDiffScanSupported() ||
+            builtCollapsed != local.scanOptionsCollapse.collapsed
         ) {
             return false
         }
@@ -118,9 +120,9 @@ class ScanContentTab : Component<CycodeService>() {
 
         scanButtons.clear()
         scanAllButton = null
-        builtScope = service.getEffectiveScanScope()
-        builtDiffSupported = service.isDiffScanSupported()
-        builtCollapsed = pluginLocalState.scanControlsCollapsed
+        builtScope = scanScope(service.project).getEffectiveScanScope()
+        builtDiffSupported = scanScope(service.project).isDiffScanSupported()
+        builtCollapsed = pluginLocalState.scanOptionsCollapse.collapsed
 
         val scopeComponents = mutableListOf<JComponent>()
         addScopeControls(service, horizontal, scopeComponents)
@@ -140,7 +142,7 @@ class ScanContentTab : Component<CycodeService>() {
         val scanAll = JButton(CycodeBundle.message("scanTabScanAllBtn")).apply {
             isEnabled = !pluginLocalState.hasRunningScans()
             toolTipText = CycodeBundle.message("toolbarRunAllAction")
-            addActionListener { service.startAllScansForCurrentScope() }
+            addActionListener { scanScope(service.project).startAllScansForCurrentScope() }
         }
         scanAllButton = scanAll
         val titleLabel = createClickableLabel(CycodeBundle.message("scanTabTitleLabel"))
@@ -185,7 +187,7 @@ class ScanContentTab : Component<CycodeService>() {
         }
 
         // the scan options are collapsible so the results can use the whole window
-        val collapsed = pluginLocalState.scanControlsCollapsed
+        val collapsed = pluginLocalState.scanOptionsCollapse.collapsed
         val outer = JPanel(BorderLayout())
         outer.add(createHeader(service, collapsed), BorderLayout.NORTH)
         if (!collapsed) {
@@ -202,7 +204,7 @@ class ScanContentTab : Component<CycodeService>() {
         val label = JBLabel(
             // the chosen scope stays visible while the section is collapsed
             if (collapsed) CycodeBundle.message("scanTabHeaderCollapsed",
-                CycodeBundle.message("scanScope${service.getEffectiveScanScope().name}"))
+                CycodeBundle.message("scanScope${scanScope(service.project).getEffectiveScanScope().name}"))
             else CycodeBundle.message("scanTabHeader"),
             if (collapsed) AllIcons.General.ArrowRight else AllIcons.General.ArrowDown,
             SwingConstants.LEFT
@@ -213,8 +215,8 @@ class ScanContentTab : Component<CycodeService>() {
             cursor = Cursor.getPredefinedCursor(Cursor.HAND_CURSOR)
             addMouseListener(object : MouseAdapter() {
                 override fun mouseClicked(e: MouseEvent) {
-                    pluginLocalState(service.project).scanControlsCollapsed = !collapsed
-                    updateToolWindowState(service.project, forceRebuild = true, reloadResults = false)
+                    pluginLocalState(service.project).scanOptionsCollapse.toggle()
+                    updateToolWindowState(service.project, ToolWindowUpdate.LayoutChanged)
                 }
             })
         }
@@ -256,15 +258,15 @@ class ScanContentTab : Component<CycodeService>() {
         val running = pluginLocalState(service.project).isScanRunning(scanType)
         return JButton(CycodeBundle.message(key)).apply {
             isEnabled = isModuleEnabled() && !running
-            addActionListener { service.startScanForCurrentScope(scanType) }
+            addActionListener { scanScope(service.project).startScanForCurrentScope(scanType) }
             scanButtons.add(ScanButton(this, scanType, isModuleEnabled))
         }
     }
 
     private fun addScopeControls(service: CycodeService, horizontal: Boolean, out: MutableList<JComponent>) {
         val pluginLocalState = pluginLocalState(service.project)
-        val effectiveScope = service.getEffectiveScanScope()
-        val scopes = ScanScope.entries.filter { it != ScanScope.Diff || service.isDiffScanSupported() }
+        val effectiveScope = scanScope(service.project).getEffectiveScanScope()
+        val scopes = ScanScope.entries.filter { it != ScanScope.Diff || scanScope(service.project).isDiffScanSupported() }
 
         out.add(createClickableLabel(CycodeBundle.message("scanScopeLabel")))
 
@@ -274,9 +276,9 @@ class ScanContentTab : Component<CycodeService>() {
             JBRadioButton(CycodeBundle.message("scanScope${scope.name}"), scope == effectiveScope).apply {
                 group.add(this)
                 addActionListener {
-                    if (scope != service.getScanScope()) {
-                        service.setScanScope(scope)
-                        updateToolWindowState(service.project, forceRebuild = true, reloadResults = false)
+                    if (scope != scanScope(service.project).getScanScope()) {
+                        scanScope(service.project).setScanScope(scope)
+                        updateToolWindowState(service.project, ToolWindowUpdate.LayoutChanged)
                     }
                 }
             }
@@ -309,7 +311,7 @@ class ScanContentTab : Component<CycodeService>() {
         out.add(createWrappedNote(CycodeBundle.message("scanScopeDiffIacNote"), AllIcons.General.Warning))
 
         // lists are reloaded in the background and the combos updated in place (never while a popup is open)
-        service.refreshDiffRefs {
+        scanScope(service.project).refreshDiffRefs {
             populateRefCombo(fromCombo, true, pluginLocalState.diffFromRef, pluginLocalState.diffRefs)
             populateRefCombo(toCombo, false, pluginLocalState.diffToRef, pluginLocalState.diffRefs)
         }
@@ -333,9 +335,9 @@ class ScanContentTab : Component<CycodeService>() {
                 if (updatingCombos) return@addActionListener
                 val selected = selectedItem as? RefOption ?: return@addActionListener
                 if (isFrom) {
-                    service.setDiffRefs(selected.value, pluginLocalState.diffToRef)
+                    scanScope(service.project).setDiffRefs(selected.value, pluginLocalState.diffToRef)
                 } else {
-                    service.setDiffRefs(pluginLocalState.diffFromRef, selected.value)
+                    scanScope(service.project).setDiffRefs(pluginLocalState.diffFromRef, selected.value)
                 }
             }
         }

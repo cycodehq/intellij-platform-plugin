@@ -58,7 +58,7 @@ class CycodeToolWindowFactory : DumbAware, ToolWindowFactory {
                 val anchor = toolWindowManager.getToolWindow(CycodeBundle.message("toolWindowId"))?.anchor ?: return
                 if (anchor != lastAnchor) {
                     lastAnchor = anchor
-                    updateToolWindowState(project, forceRebuild = true, reloadResults = false)
+                    updateToolWindowState(project, ToolWindowUpdate.LayoutChanged)
                 }
             }
         })
@@ -136,48 +136,38 @@ object ScanTabs {
     }
 }
 
-/** Updates the scan buttons of the visible scan tab without replacing the panel; false if a rebuild is needed. */
-private fun refreshScanTabInPlace(project: Project, reloadResults: Boolean): Boolean {
+/** The scan tab is the panel currently on screen (a finding, the auth page etc. may be shown instead). */
+private fun getShownScanTab(project: Project): ScanContentTab? {
     val local = pluginLocalState(project)
-    val scanTab = ScanTabs.get(project) ?: return false
-    val contentTab = CycodeToolWindowFactory.TabManager.getTab(project) ?: return false
-    if (!local.cliInstalled || !local.cliAuthed || contentTab.getTreeView().getRightPanel() !== scanTab.panel) {
-        return false
-    }
-    if (!scanTab.refresh(cycode(project))) {
-        return false
-    }
-
-    if (reloadResults) {
-        contentTab.getTreeView().refreshTree()
-    } else {
-        contentTab.getTreeView().refreshRunningState()
-    }
-    return true
+    val scanTab = ScanTabs.get(project) ?: return null
+    val contentTab = CycodeToolWindowFactory.TabManager.getTab(project) ?: return null
+    val shown = local.cliInstalled && local.cliAuthed && contentTab.getTreeView().getRightPanel() === scanTab.panel
+    return scanTab.takeIf { shown }
 }
 
 /**
- * [forceRebuild] replaces the right panel even when the scan tab is already shown; use it when the layout changes
- * (scope, collapse, docking). Otherwise the visible scan tab is only refreshed in place, to avoid flicker.
- * [reloadResults] reloads the results tree; pass false when the results did not change (a scan started or
- * finished, or only the layout changed), so the user's expanded nodes are kept.
+ * Updates the tool window as little as the [update] allows: the visible scan tab is refreshed in place when possible,
+ * to avoid flicker, and the results tree is only reloaded when the results may have changed.
  */
-fun updateToolWindowState(project: Project, forceRebuild: Boolean = false, reloadResults: Boolean = true) {
+fun updateToolWindowState(project: Project, update: ToolWindowUpdate = ToolWindowUpdate.StateChanged) {
     ApplicationManager.getApplication().invokeLater {
-        if (!forceRebuild) {
-            if (refreshScanTabInPlace(project, reloadResults)) {
-                return@invokeLater
-            }
+        val treeView = CycodeToolWindowFactory.TabManager.getTab(project)?.getTreeView()
+        val scanTab = getShownScanTab(project)
 
-            if (!reloadResults) {
-                // only the running state changed: do not replace whatever else is shown (e.g. an open finding)
-                CycodeToolWindowFactory.TabManager.getTab(project)?.getTreeView()?.refreshRunningState()
-                return@invokeLater
-            }
+        var action = resolveToolWindowAction(update, scanTab != null)
+        // something structural changed (e.g. the scope): the shown scan tab cannot be refreshed in place
+        if (action is ToolWindowAction.RefreshScanTab && scanTab?.refresh(cycode(project)) != true) {
+            action = resolveToolWindowAction(update, scanTabShown = false)
         }
 
-        WriteAction.run<Error> {
-            replaceToolWindowRightPanel(project, getRightPanelDependingOnState(project), reloadResults)
+        when (action) {
+            is ToolWindowAction.RefreshScanTab ->
+                if (action.reloadResults) treeView?.refreshTree() else treeView?.refreshRunningState()
+
+            ToolWindowAction.RefreshSpinners -> treeView?.refreshRunningState()
+            is ToolWindowAction.Rebuild -> WriteAction.run<Error> {
+                replaceToolWindowRightPanel(project, getRightPanelDependingOnState(project), action.reloadResults)
+            }
         }
     }
 }

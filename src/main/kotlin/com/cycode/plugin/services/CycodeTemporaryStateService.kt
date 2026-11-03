@@ -2,6 +2,7 @@ package com.cycode.plugin.services
 
 import com.cycode.plugin.cli.CliScanType
 import com.cycode.plugin.cli.models.StatusResult
+import com.cycode.plugin.components.toolWindow.ScanOptionsCollapse
 import com.cycode.plugin.git.HEAD_REF
 import com.cycode.plugin.git.LOCAL_DIRECTORY_REF
 import com.cycode.plugin.git.RefOption
@@ -37,8 +38,7 @@ class CycodeTemporaryStateService {
     fun hasRunningScans(): Boolean = runningScanCounts.values.any { it.get() > 0 }
 
     // collapsed state of the scan options section in the tool window (session-only)
-    @Volatile
-    var scanControlsCollapsed: Boolean = false
+    val scanOptionsCollapse = ScanOptionsCollapse()
 
     // the "git is not available" message is shown once per session
     @Volatile

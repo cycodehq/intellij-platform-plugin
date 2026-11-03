@@ -64,7 +64,7 @@ class TreeView(
 
     // the spinner icons are time-based; the tree only needs to be repainted while a scan is running
     private val spinnerTimer = Timer(SPINNER_REPAINT_DELAY_MS) {
-        if (pluginLocalState.hasRunningScans()) tree.repaint()
+        repaintRunningScanRows()
     }
 
     private var severityFilter: Map<String, Boolean>? = null
@@ -143,14 +143,9 @@ class TreeView(
             else -> return
         }
 
-        // a violation card needs the room: expand the pane if the scan options were collapsed, and collapse it
-        // again when the card is closed
+        // a violation card needs the room: the scan options expand for it and collapse again when it is closed
         val cardAlreadyShown = splitPane.secondComponent?.getClientProperty(VIOLATION_CARD_KEY) == true
-        if (!cardAlreadyShown) {
-            collapsedBeforeCard = collapsed
-        }
-        if (collapsed) {
-            pluginLocalState.scanControlsCollapsed = false
+        if (pluginLocalState.scanOptionsCollapse.onCardOpened(cardAlreadyShown)) {
             setSecondPaneCollapsed(false, 0)
         }
         replaceRightPanel(wrapWithCloseButton(card))
@@ -160,9 +155,7 @@ class TreeView(
     private fun wrapWithCloseButton(card: JComponent): JPanel {
         val closeButton = InplaceButton(CycodeBundle.message("violationCardCloseTooltip"), AllIcons.Actions.Close) {
             tree.clearSelection()
-            if (collapsedBeforeCard) {
-                collapsedBeforeCard = false
-                pluginLocalState.scanControlsCollapsed = true
+            if (pluginLocalState.scanOptionsCollapse.onCardClosed()) {
                 setSecondPaneCollapsed(true, collapsedExtent())
             }
             replaceRightPanel(getRightPanelDependingOnState(project))
@@ -312,7 +305,6 @@ class TreeView(
     }
 
     private var collapsed = false
-    private var collapsedBeforeCard = false
 
     /** Size of the collapsed scan options; set by the owner because it depends on the docking. */
     var collapsedExtent: () -> Int = { 0 }
@@ -344,6 +336,14 @@ class TreeView(
     override fun removeNotify() {
         spinnerTimer.stop()
         super.removeNotify()
+    }
+
+    /** The spinner icons are time-based: repaint only the rows of the scan types that are running. */
+    private fun repaintRunningScanRows() {
+        CliScanType.entries.filter { pluginLocalState.isScanRunning(it) }.forEach {
+            val bounds = tree.getPathBounds(TreePath(rootNodes.getScanTypeNode(it).path)) ?: return@forEach
+            tree.repaint(0, bounds.y, tree.width, bounds.height)
+        }
     }
 
     fun getRightPanel(): JComponent? = splitPane.secondComponent
