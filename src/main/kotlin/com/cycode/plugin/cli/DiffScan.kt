@@ -38,9 +38,7 @@ fun getDiffScanArgs(mode: DiffScanMode, ref: String, path: String): Array<String
  * would still be parsed as an option. Reject those and anything containing control characters.
  */
 fun assertSafeRefArg(ref: String) {
-    require(ref.isNotEmpty()) { "Revision must not be empty" }
-    require(!ref.startsWith("-")) { "Revision must not start with '-': $ref" }
-    require(ref.none { it.isISOControl() }) { "Revision must not contain control characters" }
+    require(isSafeRefArg(ref)) { "Unsafe revision: must be non-empty, not start with '-' and have no control characters" }
 }
 
 fun isSafeRefArg(ref: String): Boolean = ref.isNotEmpty() && !ref.startsWith("-") && ref.none { it.isISOControl() }

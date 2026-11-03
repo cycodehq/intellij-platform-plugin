@@ -52,6 +52,11 @@ class GitRepository(private val workDirectory: String) {
         }
     }
 
+    fun isGitAvailable(): Boolean {
+        val output = run("--version")
+        return output != null && output.exitCode == 0
+    }
+
     /** Only an explicit "not a git repository" answer returns false; other failures are left to later steps. */
     fun isGitRepository(): Boolean {
         val output = run("rev-parse", "--is-inside-work-tree") ?: return true

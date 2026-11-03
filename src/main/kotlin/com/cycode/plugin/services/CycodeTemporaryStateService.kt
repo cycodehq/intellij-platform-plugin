@@ -7,6 +7,8 @@ import com.cycode.plugin.git.LOCAL_DIRECTORY_REF
 import com.cycode.plugin.git.RefOption
 import com.intellij.openapi.components.Service
 import com.intellij.openapi.diagnostic.thisLogger
+import java.util.concurrent.ConcurrentHashMap
+import java.util.concurrent.atomic.AtomicInteger
 
 @Service(Service.Level.PROJECT)
 class CycodeTemporaryStateService {
@@ -21,10 +23,10 @@ class CycodeTemporaryStateService {
 
     // per-repository and therefore session-only; persisting them globally leaks picks between projects
     // number of running scans per type (e.g. an on-save scan can overlap a manual one); drives the spinners
-    private val runningScanCounts = java.util.concurrent.ConcurrentHashMap<CliScanType, java.util.concurrent.atomic.AtomicInteger>()
+    private val runningScanCounts = ConcurrentHashMap<CliScanType, AtomicInteger>()
 
     fun scanStarted(scanType: CliScanType) {
-        runningScanCounts.computeIfAbsent(scanType) { java.util.concurrent.atomic.AtomicInteger() }.incrementAndGet()
+        runningScanCounts.computeIfAbsent(scanType) { AtomicInteger() }.incrementAndGet()
     }
 
     fun scanFinished(scanType: CliScanType) {
@@ -38,6 +40,10 @@ class CycodeTemporaryStateService {
     // collapsed state of the scan options section in the tool window (session-only)
     @Volatile
     var scanControlsCollapsed: Boolean = false
+
+    // the "git is not available" message is shown once per session
+    @Volatile
+    var gitUnavailableNotified: Boolean = false
 
     @Volatile
     var diffFromRef: String = LOCAL_DIRECTORY_REF

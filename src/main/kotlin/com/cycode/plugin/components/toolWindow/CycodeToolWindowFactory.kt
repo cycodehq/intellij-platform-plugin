@@ -21,6 +21,7 @@ import com.intellij.openapi.wm.ex.ToolWindowManagerListener
 import com.intellij.openapi.wm.ex.ToolWindowManagerListener.ToolWindowManagerEventType
 import com.intellij.ui.content.Content
 import com.intellij.ui.content.ContentFactory
+import java.util.concurrent.ConcurrentHashMap
 import javax.swing.JPanel
 
 class CycodeToolWindowFactory : DumbAware, ToolWindowFactory {
@@ -122,7 +123,7 @@ fun updateToolWindowStateForAllProjects() {
 
 
 object ScanTabs {
-    private val tabs = java.util.concurrent.ConcurrentHashMap<Project, ScanContentTab>()
+    private val tabs = ConcurrentHashMap<Project, ScanContentTab>()
 
     fun add(project: Project, tab: ScanContentTab) {
         tabs[project] = tab

@@ -21,8 +21,15 @@ import com.intellij.ui.components.JBLabel
 import com.intellij.ui.components.JBRadioButton
 import com.intellij.util.ui.JBUI
 import java.awt.BorderLayout
+import java.awt.Cursor
+import java.awt.Dimension
+import java.awt.FlowLayout
+import java.awt.Font
 import java.awt.GridBagConstraints
 import java.awt.GridBagLayout
+import java.awt.Rectangle
+import java.awt.event.MouseAdapter
+import java.awt.event.MouseEvent
 import javax.swing.*
 
 class ScanContentTab : Component<CycodeService>() {
@@ -201,11 +208,11 @@ class ScanContentTab : Component<CycodeService>() {
             SwingConstants.LEFT
         ).apply {
             iconTextGap = JBUI.scale(4)
-            font = font.deriveFont(java.awt.Font.BOLD)
+            font = font.deriveFont(Font.BOLD)
             toolTipText = CycodeBundle.message(if (collapsed) "scanTabExpand" else "scanTabCollapse")
-            cursor = java.awt.Cursor.getPredefinedCursor(java.awt.Cursor.HAND_CURSOR)
-            addMouseListener(object : java.awt.event.MouseAdapter() {
-                override fun mouseClicked(e: java.awt.event.MouseEvent) {
+            cursor = Cursor.getPredefinedCursor(Cursor.HAND_CURSOR)
+            addMouseListener(object : MouseAdapter() {
+                override fun mouseClicked(e: MouseEvent) {
                     pluginLocalState(service.project).scanControlsCollapsed = !collapsed
                     updateToolWindowState(service.project, forceRebuild = true)
                 }
@@ -220,8 +227,8 @@ class ScanContentTab : Component<CycodeService>() {
     /** Tracks the viewport width (so wrapped text re-flows) and scrolls vertically only when needed. */
     private class ScrollableContentPanel : JPanel(BorderLayout()), Scrollable {
         override fun getPreferredScrollableViewportSize() = preferredSize
-        override fun getScrollableUnitIncrement(r: java.awt.Rectangle, o: Int, d: Int) = JBUI.scale(16)
-        override fun getScrollableBlockIncrement(r: java.awt.Rectangle, o: Int, d: Int) = JBUI.scale(64)
+        override fun getScrollableUnitIncrement(r: Rectangle, o: Int, d: Int) = JBUI.scale(16)
+        override fun getScrollableBlockIncrement(r: Rectangle, o: Int, d: Int) = JBUI.scale(64)
         override fun getScrollableTracksViewportWidth() = true
         // never stretch to the viewport height: the wrapped text makes the preferred height depend on the
         // width, and tracking it made the layout flip-flop (the "shake") when a combo was clicked
@@ -274,7 +281,7 @@ class ScanContentTab : Component<CycodeService>() {
                 }
             }
         }
-        val radioPanel = JPanel(java.awt.FlowLayout(java.awt.FlowLayout.LEFT, 0, 0))
+        val radioPanel = JPanel(FlowLayout(FlowLayout.LEFT, 0, 0))
         radios.forEach { radioPanel.add(it); radioPanel.add(Box.createHorizontalStrut(JBUI.scale(12))) }
         out.add(radioPanel)
         out.add(createWrappedNote(CycodeBundle.message("scanScope${effectiveScope.name}Hint"), null))
@@ -295,9 +302,9 @@ class ScanContentTab : Component<CycodeService>() {
             // pin the row height (with room for the focus ring) so focusing or opening a combo
             // cannot change the size of the row and shift the layout around it
             val height = maxOf(fromCombo.preferredSize.height, toCombo.preferredSize.height) + JBUI.scale(8)
-            preferredSize = java.awt.Dimension(preferredSize.width, height)
-            minimumSize = java.awt.Dimension(0, height)
-            maximumSize = java.awt.Dimension(Int.MAX_VALUE, height)
+            preferredSize = Dimension(preferredSize.width, height)
+            minimumSize = Dimension(0, height)
+            maximumSize = Dimension(Int.MAX_VALUE, height)
         })
         out.add(createWrappedNote(CycodeBundle.message("scanScopeDiffIacNote"), AllIcons.General.Warning))
 
