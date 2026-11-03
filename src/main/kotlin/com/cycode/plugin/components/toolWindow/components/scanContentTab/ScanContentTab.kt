@@ -47,6 +47,7 @@ class ScanContentTab : Component<CycodeService>() {
     private var scanAllButton: JButton? = null
     private var builtScope: ScanScope? = null
     private var builtDiffSupported: Boolean? = null
+    private var builtGitRepository: Boolean? = null
     private var builtCollapsed: Boolean? = null
 
     /**
@@ -70,6 +71,7 @@ class ScanContentTab : Component<CycodeService>() {
         val local = pluginLocalState(service.project)
         if (builtScope != scanScope(service.project).getEffectiveScanScope() ||
             builtDiffSupported != scanScope(service.project).isDiffScanSupported() ||
+            builtGitRepository != scanScope(service.project).isGitRepository() ||
             builtCollapsed != local.scanOptionsCollapse.collapsed
         ) {
             return false
@@ -122,6 +124,9 @@ class ScanContentTab : Component<CycodeService>() {
         scanAllButton = null
         builtScope = scanScope(service.project).getEffectiveScanScope()
         builtDiffSupported = scanScope(service.project).isDiffScanSupported()
+        builtGitRepository = scanScope(service.project).isGitRepository()
+        // Diff is disabled when this turns out not to be a git repository; the tab is rebuilt if that changes
+        scanScope(service.project).refreshGitRepositoryState()
         builtCollapsed = pluginLocalState.scanOptionsCollapse.collapsed
 
         val scopeComponents = mutableListOf<JComponent>()
@@ -275,6 +280,8 @@ class ScanContentTab : Component<CycodeService>() {
         val radios = scopes.map { scope ->
             JBRadioButton(CycodeBundle.message("scanScope${scope.name}"), scope == effectiveScope).apply {
                 group.add(this)
+                // Diff cannot work without a git repository
+                isEnabled = scope != ScanScope.Diff || scanScope(service.project).isGitRepository() != false
                 addActionListener {
                     if (scope != scanScope(service.project).getScanScope()) {
                         scanScope(service.project).setScanScope(scope)
@@ -287,6 +294,9 @@ class ScanContentTab : Component<CycodeService>() {
         radios.forEach { radioPanel.add(it); radioPanel.add(Box.createHorizontalStrut(JBUI.scale(12))) }
         out.add(radioPanel)
         out.add(createWrappedNote(CycodeBundle.message("scanScope${effectiveScope.name}Hint"), null))
+        if (scopes.contains(ScanScope.Diff) && scanScope(service.project).isGitRepository() == false) {
+            out.add(createWrappedNote(CycodeBundle.message("scanScopeDiffNoGitNote"), AllIcons.General.Warning))
+        }
 
         if (effectiveScope != ScanScope.Diff) {
             return

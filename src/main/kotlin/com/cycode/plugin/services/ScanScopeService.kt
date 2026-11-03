@@ -6,8 +6,11 @@ import com.cycode.plugin.cli.ScanTarget
 import com.cycode.plugin.cli.CliScanType
 import com.cycode.plugin.cli.getScanTypeDisplayName
 import com.cycode.plugin.cli.isDiffScanSupportedByCli
-import com.cycode.plugin.cli.isSupportedIacFile
-import com.cycode.plugin.cli.isSupportedPackageFile
+import com.cycode.plugin.cli.isFileSupportedByScanType
+import com.cycode.plugin.cli.partitionByFileSupport
+import com.cycode.plugin.components.toolWindow.ToolWindowUpdate
+import com.cycode.plugin.components.toolWindow.updateToolWindowState
+import com.cycode.plugin.git.DiffRefsCache
 import com.cycode.plugin.git.DiffScanPlan
 import com.cycode.plugin.git.GitRepository
 import com.cycode.plugin.git.HEAD_REF
@@ -30,15 +33,15 @@ class ScanScopeService(private val project: Project) {
     private val cliService = cli(project)
     private val cycodeService = cycode(project)
     private val pluginLocalState = pluginLocalState(project)
-    private val pluginState = pluginState()
+    private val projectState = projectState(project)
     private val refreshRequestId = AtomicLong()
 
     fun getScanScope(): ScanScope {
-        return ScanScope.entries.firstOrNull { it.name == pluginState.scanScope } ?: ScanScope.Project
+        return ScanScope.entries.firstOrNull { it.name == projectState.scanScope } ?: ScanScope.Project
     }
 
     fun setScanScope(scope: ScanScope) {
-        pluginState.scanScope = scope.name
+        projectState.scanScope = scope.name
         if (scope == ScanScope.Diff) {
             refreshDiffRefs()
         }
@@ -46,10 +49,29 @@ class ScanScopeService(private val project: Project) {
 
     fun isDiffScanSupported(): Boolean = isDiffScanSupportedByCli(pluginLocalState.cliStatus?.version)
 
-    /** Until the CLI status is known (or if the CLI is too old), Diff behaves as Project. */
+    /** False only when the project folder is known not to be inside a git repository. */
+    fun isGitRepository(): Boolean? = pluginLocalState.isGitRepository
+
+    /** Diff needs a new enough CLI and a git repository. */
+    fun isDiffScanAvailable(): Boolean = isDiffScanSupported() && isGitRepository() != false
+
+    /** Until the CLI status is known (or if the CLI is too old or there is no repository), Diff behaves as Project. */
     fun getEffectiveScanScope(): ScanScope {
         val scope = getScanScope()
-        return if (scope == ScanScope.Diff && !isDiffScanSupported()) ScanScope.Project else scope
+        return if (scope == ScanScope.Diff && !isDiffScanAvailable()) ScanScope.Project else scope
+    }
+
+    /** Checks in the background whether the project is a git repository; rebuilds the scan tab if that changed. */
+    fun refreshGitRepositoryState() {
+        val projectRoot = cliService.getProjectRootDirectory() ?: return
+
+        ApplicationManager.getApplication().executeOnPooledThread {
+            val isRepository = GitRepository(projectRoot).isGitRepository()
+            if (!project.isDisposed && isRepository != pluginLocalState.isGitRepository) {
+                pluginLocalState.isGitRepository = isRepository
+                updateToolWindowState(project, ToolWindowUpdate.LayoutChanged)
+            }
+        }
     }
 
     fun setDiffRefs(from: String, to: String) {
@@ -76,12 +98,9 @@ class ScanScopeService(private val project: Project) {
                 CycodeNotifier.notifyInfo(project, CycodeBundle.message("diffGitUnavailableNotification"))
             }
 
-            val cached = pluginLocalState.diffRefs
-            val refs = if (fingerprint != null && fingerprint == pluginLocalState.diffRefsFingerprint && cached.isNotEmpty()) {
-                cached
-            } else {
-                git.getAvailableRefs(pinned).also { pluginLocalState.diffRefsFingerprint = fingerprint }
-            }
+            val cache = pluginLocalState.diffRefsCache
+            val reuse = cache != null && cache.canReuse(fingerprint)
+            val refs = if (reuse) cache!!.refs else git.getAvailableRefs(pinned)
             if (requestId != refreshRequestId.get() || project.isDisposed) {
                 return@executeOnPooledThread
             }
@@ -89,7 +108,8 @@ class ScanScopeService(private val project: Project) {
             val values = refs.map { it.value }.toSet() + LOCAL_DIRECTORY_REF
             if (pluginLocalState.diffFromRef !in values) pluginLocalState.diffFromRef = LOCAL_DIRECTORY_REF
             if (pluginLocalState.diffToRef !in values) pluginLocalState.diffToRef = HEAD_REF
-            pluginLocalState.diffRefs = refs
+            // only a request that is still current may publish lists, together with the state they were built for
+            if (!reuse) pluginLocalState.diffRefsCache = DiffRefsCache(fingerprint, refs)
 
             if (onDone != null) {
                 ApplicationManager.getApplication().invokeLater({ onDone() }, project.disposed)
@@ -131,19 +151,11 @@ class ScanScopeService(private val project: Project) {
 
         // one combined message for the types that cannot scan the open file, instead of one per type
         val filePath = currentLocalFilePath() ?: return
-        val (supported, unsupported) = scanTypes.partition { isFileSupportedByScanType(filePath, it) }
+        val (supported, unsupported) = partitionByFileSupport(filePath, scanTypes)
         supported.forEach { cycodeService.startScan(it, listOf(filePath)) }
         if (unsupported.isNotEmpty()) {
             val names = unsupported.joinToString(", ") { getScanTypeDisplayName(it) }
             CycodeNotifier.notifyInfo(project, CycodeBundle.message("scanFileUnsupportedNotification", names))
-        }
-    }
-
-    private fun isFileSupportedByScanType(filePath: String, scanType: CliScanType): Boolean {
-        return when (scanType) {
-            CliScanType.Sca -> isSupportedPackageFile(filePath)
-            CliScanType.Iac -> isSupportedIacFile(filePath)
-            else -> true
         }
     }
 

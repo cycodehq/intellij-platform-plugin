@@ -28,6 +28,7 @@ typealias TaskCancelledCallback = (() -> Boolean)?
 class CliService(private val project: Project) {
     private val pluginState = pluginState()
     private val pluginLocalState = pluginLocalState(project)
+    private val projectState = projectState(project)
     private val scanResults = scanResults(project)
     private val cli = CliWrapper(getProjectRootDirectory())
 
@@ -109,9 +110,9 @@ class CliService(private val project: Project) {
         pluginState.cliVer = processedResult.result.version
 
         if (!isDiffScanSupportedByCli(processedResult.result.version) &&
-            pluginState.scanScope == ScanScope.Diff.name
+            projectState.scanScope == ScanScope.Diff.name
         ) {
-            pluginState.scanScope = ScanScope.Project.name
+            projectState.scanScope = ScanScope.Project.name
         }
 
         if (!pluginLocalState.cliAuthed) {

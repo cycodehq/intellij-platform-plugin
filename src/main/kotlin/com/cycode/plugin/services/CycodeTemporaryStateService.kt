@@ -3,6 +3,7 @@ package com.cycode.plugin.services
 import com.cycode.plugin.cli.CliScanType
 import com.cycode.plugin.cli.models.StatusResult
 import com.cycode.plugin.components.toolWindow.ScanOptionsCollapse
+import com.cycode.plugin.git.DiffRefsCache
 import com.cycode.plugin.git.HEAD_REF
 import com.cycode.plugin.git.LOCAL_DIRECTORY_REF
 import com.cycode.plugin.git.RefOption
@@ -51,12 +52,16 @@ class CycodeTemporaryStateService {
     @Volatile
     var diffToRef: String = HEAD_REF
 
-    // identifies the git state the cached diffRefs were built for (see GitRepository.getHeadFingerprint)
+    // the revision lists and the git state they were built for (see GitRepository.getHeadFingerprint)
     @Volatile
-    var diffRefsFingerprint: String? = null
+    var diffRefsCache: DiffRefsCache? = null
 
+    val diffRefs: List<RefOption>
+        get() = diffRefsCache?.refs ?: emptyList()
+
+    // null until known; only an explicit "not a git repository" answer makes it false
     @Volatile
-    var diffRefs: List<RefOption> = emptyList()
+    var isGitRepository: Boolean? = null
 
     val isSecretScanningEnabled: Boolean
         get() = cliStatus?.supportedModules?.secretScanning == true

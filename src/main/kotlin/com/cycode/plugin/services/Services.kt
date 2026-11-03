@@ -31,4 +31,6 @@ fun githubReleases(project: Project? = null): GithubReleaseService = getCycodeSe
 
 fun cycode(project: Project? = null): CycodeService = getCycodeService(project)
 
+fun projectState(project: Project): CycodeProjectStateService = getCycodeService(project)
+
 fun scanScope(project: Project? = null): ScanScopeService = getCycodeService(project)

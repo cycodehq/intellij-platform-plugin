@@ -46,7 +46,7 @@ class ScanStateTest {
             "diffUnknownRevisionNotification", "diffNotGitRepositoryNotification", "diffGitFailureNotification",
             "diffGitUnavailableNotification", "scanFileUnsupportedNotification", "noOpenFileErrorNotification",
             "scanScopeProject", "scanScopeDiff", "scanScopeFile", "scanScopeProjectHint", "scanScopeDiffHint",
-            "scanScopeFileHint", "scanScopeDiffIacNote", "scanScopeDiffFromLabel", "scanScopeDiffToLabel",
+            "scanScopeFileHint", "scanScopeDiffIacNote", "scanScopeDiffNoGitNote", "scanScopeDiffFromLabel", "scanScopeDiffToLabel",
             "scanScopeDiffLocalDirectory", "scanTabHeader", "scanTabHeaderCollapsed", "scanTabScanAllBtn",
             "scanTabCollapse", "scanTabExpand", "violationCardCloseTooltip",
         )
