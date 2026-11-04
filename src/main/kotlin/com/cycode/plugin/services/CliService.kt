@@ -28,6 +28,7 @@ typealias TaskCancelledCallback = (() -> Boolean)?
 class CliService(private val project: Project) {
     private val pluginState = pluginState()
     private val pluginLocalState = pluginLocalState(project)
+    private val projectState = projectState(project)
     private val scanResults = scanResults(project)
     private val cli = CliWrapper(getProjectRootDirectory())
 
@@ -108,6 +109,12 @@ class CliService(private val project: Project) {
         pluginLocalState.cliStatus = processedResult.result
         pluginState.cliVer = processedResult.result.version
 
+        if (!isDiffScanSupportedByCli(processedResult.result.version) &&
+            projectState.scanScope == ScanScope.Diff.name
+        ) {
+            projectState.scanScope = ScanScope.Project.name
+        }
+
         if (!pluginLocalState.cliAuthed) {
             showErrorNotification(CycodeBundle.message("checkAuthErrorNotification"))
         }
@@ -179,8 +186,8 @@ class CliService(private val project: Project) {
         return options.toTypedArray()
     }
 
-    private inline fun <reified T> scanPaths(
-        paths: List<String>,
+    private inline fun <reified T> runScan(
+        target: ScanTarget,
         scanType: CliScanType,
         noinline cancelledCallback: TaskCancelledCallback = null
     ): CliResult<T>? {
@@ -191,26 +198,35 @@ class CliService(private val project: Project) {
                 "-t",
                 scanTypeString,
                 *getCliScanOptions(scanType),
-                "path",
-                *getPathsAsArguments(paths),
+                *target.toCliArgs(),
                 cancelledCallback = cancelledCallback
             )
 
         return processResult(result)
     }
 
-    private fun getPathsAsArguments(paths: List<String>): Array<String> {
-        return paths.toTypedArray()
-    }
-
-    fun scanPathsSecrets(
-        paths: List<String>,
+    /**
+     * One runner for every kind of scan (paths, commit range, local diff).
+     * Do not add one method per mode.
+     */
+    fun scan(
+        scanType: CliScanType,
+        target: ScanTarget,
         onDemand: Boolean = true,
         cancelledCallback: TaskCancelledCallback = null
     ) {
-        val results = scanPaths<SecretScanResult>(paths, CliScanType.Secret, cancelledCallback)
+        when (scanType) {
+            CliScanType.Secret -> scanSecrets(target, onDemand, cancelledCallback)
+            CliScanType.Sca -> scanSca(target, onDemand, cancelledCallback)
+            CliScanType.Iac -> scanIac(target, onDemand, cancelledCallback)
+            CliScanType.Sast -> scanSast(target, onDemand, cancelledCallback)
+        }
+    }
+
+    private fun scanSecrets(target: ScanTarget, onDemand: Boolean, cancelledCallback: TaskCancelledCallback) {
+        val results = runScan<SecretScanResult>(target, CliScanType.Secret, cancelledCallback)
         if (results == null) {
-            thisLogger().warn("Failed to scan Secret paths: $paths")
+            thisLogger().warn("Failed to scan Secret: $target")
             return
         }
 
@@ -225,10 +241,10 @@ class CliService(private val project: Project) {
         rerunAnnotators()
     }
 
-    fun scanPathsSca(paths: List<String>, onDemand: Boolean = true, cancelledCallback: TaskCancelledCallback = null) {
-        val results = scanPaths<ScaScanResult>(paths, CliScanType.Sca, cancelledCallback)
+    private fun scanSca(target: ScanTarget, onDemand: Boolean, cancelledCallback: TaskCancelledCallback) {
+        val results = runScan<ScaScanResult>(target, CliScanType.Sca, cancelledCallback)
         if (results == null) {
-            thisLogger().warn("Failed to scan SCA paths: $paths")
+            thisLogger().warn("Failed to scan SCA: $target")
             return
         }
 
@@ -255,10 +271,10 @@ class CliService(private val project: Project) {
         }
     }
 
-    fun scanPathsIac(paths: List<String>, onDemand: Boolean = true, cancelledCallback: TaskCancelledCallback = null) {
-        var results = scanPaths<IacScanResult>(paths, CliScanType.Iac, cancelledCallback)
+    private fun scanIac(target: ScanTarget, onDemand: Boolean, cancelledCallback: TaskCancelledCallback) {
+        var results = runScan<IacScanResult>(target, CliScanType.Iac, cancelledCallback)
         if (results == null) {
-            thisLogger().warn("Failed to IaC scan paths: $paths")
+            thisLogger().warn("Failed to IaC scan: $target")
             return
         }
 
@@ -281,10 +297,10 @@ class CliService(private val project: Project) {
         rerunAnnotators()
     }
 
-    fun scanPathsSast(paths: List<String>, onDemand: Boolean = true, cancelledCallback: TaskCancelledCallback = null) {
-        val results = scanPaths<SastScanResult>(paths, CliScanType.Sast, cancelledCallback)
+    private fun scanSast(target: ScanTarget, onDemand: Boolean, cancelledCallback: TaskCancelledCallback) {
+        val results = runScan<SastScanResult>(target, CliScanType.Sast, cancelledCallback)
         if (results == null) {
-            thisLogger().warn("Failed to SAST scan paths: $paths")
+            thisLogger().warn("Failed to SAST scan: $target")
             return
         }
 

@@ -54,6 +54,7 @@ class ApplicationSettingsConfigurable(val project: Project) : SearchableConfigur
         pluginSettings.cliAutoManaged = newSettings.cliAutoManaged
         pluginSettings.cliAdditionalParams = newSettings.cliAdditionalParams
         pluginSettings.scanOnSave = newSettings.scanOnSave
+        pluginSettings.openFindingsInEditorTab = newSettings.openFindingsInEditorTab
 
         if (isValidCliPath(newSettings.cliPath)) {
             pluginSettings.cliPath = newSettings.cliPath
