@@ -19,6 +19,7 @@ class CycodePersistentSettingsService : PersistentStateComponent<CycodePersisten
     var cliAdditionalParams: String = ""
 
     var scanOnSave: Boolean = true
+    var openFindingsInEditorTab: Boolean = false
 
     override fun getState(): CycodePersistentSettingsService {
         return this
@@ -36,6 +37,7 @@ class CycodePersistentSettingsService : PersistentStateComponent<CycodePersisten
             cliAppUrl,
             cliAdditionalParams,
             scanOnSave,
+            openFindingsInEditorTab,
         )
     }
 }

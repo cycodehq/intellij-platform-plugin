@@ -6,6 +6,7 @@
 
 - Add scan scope selector: Project, Diff (between two revisions or the local directory) and File
 - Increase required CLI version to 3.25.0
+- Add a setting to open vulnerabilities in an editor tab on the right side, for more room
 
 ## [3.1.1] - 2026-08-30
 

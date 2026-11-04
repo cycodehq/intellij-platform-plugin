@@ -91,7 +91,7 @@ In the Cycode tool window, choose what the scan buttons and **Scan all** run on:
 * **Diff** - scans only what changed. Pick two revisions in **From** and **To** (HEAD, branches, tags or recent
   commits), or choose **Local directory** on one side to include your uncommitted changes. The default is
   Local directory compared with HEAD. Two different revisions are required.
-  * Scanning only the changes is faster, but findings that need the surrounding code may be less accurate.
+  * Scanning only the changes is faster, but vulnerabilities that need the surrounding code may be less accurate.
   * Infrastructure As Code scans do not support diffs and always scan the full project.
   * The project must be inside a Git repository (otherwise Diff is disabled), and Cycode CLI 3.25.0 or later is
     required (otherwise the Diff option is hidden).
@@ -101,6 +101,10 @@ In the Cycode tool window, choose what the scan buttons and **Scan all** run on:
 The scope is remembered for each project between sessions. The selected revisions are kept for the current session only.
 
 ## Viewing Scan Results
+
+By default the details of a vulnerability open in the Cycode tool window. To get more room, enable **Open vulnerabilities in an
+editor tab** in the plugin settings: each vulnerability then opens in a tab on the right side of the editor, and selecting
+another vulnerability reuses that tab.
 
 ### Handling Detected Secrets
 

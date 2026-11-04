@@ -4,6 +4,7 @@ import com.cycode.plugin.CycodeBundle
 import com.cycode.plugin.components.toolWindow.getRightPanelDependingOnState
 import com.cycode.plugin.cli.CliResult
 import com.cycode.plugin.cli.CliScanType
+import com.cycode.plugin.cli.getScanTypeDisplayName
 import com.cycode.plugin.cli.models.scanResult.DetectionBase
 import com.cycode.plugin.cli.models.scanResult.ScanResultBase
 import com.cycode.plugin.cli.models.scanResult.iac.IacDetection
@@ -12,14 +13,14 @@ import com.cycode.plugin.cli.models.scanResult.sca.ScaDetection
 import com.cycode.plugin.cli.models.scanResult.secret.SecretDetection
 import com.cycode.plugin.components.toolWindow.components.treeView.components.detectionNodeContextMenu.DetectionNodeContextMenu
 import com.cycode.plugin.components.toolWindow.components.treeView.nodes.*
-import com.cycode.plugin.components.toolWindow.components.violationCardContentTab.iacViolationCardContentTab.IacViolationCardContentTab
-import com.cycode.plugin.components.toolWindow.components.violationCardContentTab.sastViolationCardContentTab.SastViolationCardContentTab
-import com.cycode.plugin.components.toolWindow.components.violationCardContentTab.scaViolationCardContentTab.ScaViolationCardContentTab
-import com.cycode.plugin.components.toolWindow.components.violationCardContentTab.secretViolationCardContentTab.SecretViolationCardContentTab
+import com.cycode.plugin.components.toolWindow.components.violationCardContentTab.createViolationCard
+import com.cycode.plugin.editor.FindingTabService
 import com.cycode.plugin.icons.PluginIcons
 import com.cycode.plugin.services.pluginLocalState
+import com.cycode.plugin.services.pluginSettings
 import com.cycode.plugin.services.scanResults
 import com.intellij.icons.AllIcons
+import com.intellij.openapi.components.service
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.util.Iconable
 import com.intellij.ui.InplaceButton
@@ -135,12 +136,12 @@ class TreeView(
     }
 
     fun displayViolationCard(detection: DetectionBase) {
-        val card = when (detection) {
-            is SecretDetection -> SecretViolationCardContentTab(project).getContent(detection)
-            is ScaDetection -> ScaViolationCardContentTab(project).getContent(detection)
-            is IacDetection -> IacViolationCardContentTab(project).getContent(detection)
-            is SastDetection -> SastViolationCardContentTab(project).getContent(detection)
-            else -> return
+        val card = createViolationCard(project, detection) ?: return
+
+        // with the option on, findings get an editor tab on the right instead of the tool window pane
+        if (pluginSettings().openFindingsInEditorTab) {
+            project.service<FindingTabService>().show(card)
+            return
         }
 
         // a violation card needs the room: the scan options expand for it and collapse again when it is closed
@@ -362,6 +363,9 @@ class TreeView(
     }
 
     fun refreshTree() {
+        // a reload collapses every node: remember what the user expanded and restore it afterwards
+        val expanded = getRestorableExpandedPaths()
+
         // TODO(MarshalX): is possible to optimize this to only update the nodes that have changed
         dummyRootNode.removeAllChildren()
         createNodes(dummyRootNode)
@@ -372,7 +376,43 @@ class TreeView(
         It did not crash in 2023.3.7 and earlier.
         */
         model.reload()
+
+        restoreExpandedPaths(expanded)
     }
+
+    /**
+     * The expanded paths (as node names) that survive a reload. The rows of a scan type that is running again are
+     * left out: they start over, which also covers the Scan all buttons. Clearing the results needs no special
+     * case because the rows are gone afterwards.
+     */
+    private fun getRestorableExpandedPaths(): Set<List<String>> {
+        val expandedPaths = tree.getExpandedDescendants(TreePath(dummyRootNode))?.toList().orEmpty()
+        val keys = expandedPaths
+            .filter { path -> (2 until path.pathCount).all { tree.isExpanded(TreePath(path.path.copyOf(it))) } }
+            .map { path -> path.path.drop(1).map { getNodeName(it) } }
+            .filter { it.isNotEmpty() }
+            .toSet()
+
+        return withoutRunningScanTypes(keys) { typeName ->
+            CliScanType.entries.any { getScanTypeDisplayName(it) == typeName && pluginLocalState.isScanRunning(it) }
+        }
+    }
+
+    private fun restoreExpandedPaths(keys: Set<List<String>>) {
+        for (names in keys) {
+            var node: DefaultMutableTreeNode = dummyRootNode
+            for (name in names) {
+                node = node.children().asSequence()
+                    .map { it as DefaultMutableTreeNode }
+                    .firstOrNull { getNodeName(it) == name } ?: break
+            }
+            if (getNodeName(node) == names.last()) {
+                tree.expandPath(TreePath(node.path))
+            }
+        }
+    }
+
+    private fun getNodeName(node: Any): String = ((node as DefaultMutableTreeNode).userObject as AbstractNode).name
 
     private fun createNodes(top: DefaultMutableTreeNode) {
         rootNodes.createNodes(top)

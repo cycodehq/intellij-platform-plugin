@@ -48,7 +48,7 @@ class ScanStateTest {
             "scanScopeProject", "scanScopeDiff", "scanScopeFile", "scanScopeProjectHint", "scanScopeDiffHint",
             "scanScopeFileHint", "scanScopeDiffIacNote", "scanScopeDiffNoGitNote", "scanScopeDiffFromLabel", "scanScopeDiffToLabel",
             "scanScopeDiffLocalDirectory", "scanTabHeader", "scanTabHeaderCollapsed", "scanTabScanAllBtn",
-            "scanTabCollapse", "scanTabExpand", "violationCardCloseTooltip",
+            "scanTabCollapse", "scanTabExpand", "violationCardCloseTooltip", "settingsOpenFindingsInEditorTabCheckbox",
         )
         keys.forEach { assertTrue("Missing message key: $it", bundle.containsKey(it)) }
     }
