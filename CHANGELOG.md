@@ -4,6 +4,8 @@
 
 ## [Unreleased]
 
+- Add scan scope selector: Project, Diff (between two revisions or the local directory) and File
+- Increase required CLI version to 3.25.0
 - Update extension icon to the new Cycode brand logo
 
 ## [3.1.1] - 2026-08-30
