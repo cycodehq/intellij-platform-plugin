@@ -126,17 +126,17 @@ class ScanScopeService(private val project: Project) {
             return
         }
 
-        cycodeService.runBackgroundTask(cycodeService.getBackgroundScanningLabel(scanType)) { indicator ->
+        cycodeService.runScanBackgroundTask(scanType) { indicator ->
             if (!pluginLocalState.cliAuthed) {
                 CycodeNotifier.notifyInfo(project, CycodeBundle.message("authorizationRequiredNotification"))
-                return@runBackgroundTask
+                return@runScanBackgroundTask
             }
 
             val target = when (val plan = planDiffScan(scanType, from, to, projectRoot, GitCli(projectRoot))) {
                 is DiffScanPlan.Run -> plan.target
                 is DiffScanPlan.Refused -> {
                     CycodeNotifier.notifyInfo(project, CycodeBundle.message(plan.messageKey))
-                    return@runBackgroundTask
+                    return@runScanBackgroundTask
                 }
             }
 

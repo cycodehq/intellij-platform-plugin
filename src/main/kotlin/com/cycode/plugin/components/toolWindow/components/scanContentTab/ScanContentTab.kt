@@ -5,9 +5,11 @@ import com.cycode.plugin.cli.CliScanType
 import com.cycode.plugin.cli.ScanScope
 import com.cycode.plugin.components.Component
 import com.cycode.plugin.components.common.createClickableLabel
+import com.cycode.plugin.components.common.createWrappedHtmlPane
+import com.cycode.plugin.components.toolWindow.ToolWindowUpdate
 import com.cycode.plugin.components.toolWindow.updateToolWindowState
-import com.cycode.plugin.git.HEAD_REF
 import com.cycode.plugin.git.DiffSide
+import com.cycode.plugin.git.HEAD_REF
 import com.cycode.plugin.git.RefOption
 import com.cycode.plugin.services.CycodeService
 import com.cycode.plugin.services.diffRefs
@@ -15,74 +17,234 @@ import com.cycode.plugin.services.pluginLocalState
 import com.cycode.plugin.services.scanScope
 import com.intellij.icons.AllIcons
 import com.intellij.openapi.ui.ComboBox
+import com.intellij.openapi.wm.ToolWindowManager
+import com.intellij.ui.ScrollPaneFactory
 import com.intellij.ui.SimpleListCellRenderer
 import com.intellij.ui.components.JBLabel
 import com.intellij.ui.components.JBRadioButton
 import com.intellij.util.ui.JBUI
+import java.awt.BorderLayout
+import java.awt.Cursor
+import java.awt.Dimension
 import java.awt.FlowLayout
+import java.awt.Font
 import java.awt.GridBagConstraints
 import java.awt.GridBagLayout
-import javax.swing.Box
-import javax.swing.ButtonGroup
-import javax.swing.DefaultComboBoxModel
-import javax.swing.JButton
-import javax.swing.JComponent
-import javax.swing.JPanel
-import javax.swing.SwingConstants
+import java.awt.Rectangle
+import java.awt.event.MouseAdapter
+import java.awt.event.MouseEvent
+import javax.swing.*
 
 class ScanContentTab : Component<CycodeService>() {
-    private val panel = JPanel(GridBagLayout())
-    private val gbc = GridBagConstraints().apply {
-        gridy = 0
-        insets = JBUI.insetsBottom(10)
-        anchor = GridBagConstraints.NORTHWEST
-        fill = GridBagConstraints.HORIZONTAL
-    }
     private var updatingCombos = false
 
-    private fun addComponentToPanel(component: JComponent) {
-        gbc.gridy++
-        panel.add(component, gbc)
+    /** The panel returned by [getContent]; lets the owner check that this tab is the one on screen. */
+    var panel: JPanel? = null
+        private set
+
+    private class ScanButton(val button: JButton, val scanType: CliScanType, val isModuleEnabled: () -> Boolean)
+
+    private val scanButtons = mutableListOf<ScanButton>()
+    private var scanAllButton: JButton? = null
+    private var builtScope: ScanScope? = null
+    private var builtDiffSupported: Boolean? = null
+    private var builtGitRepository: Boolean? = null
+    private var builtCollapsed: Boolean? = null
+
+    /**
+     * Disabling the focused button makes Swing move focus to the next button (it shows up highlighted).
+     * Park the focus on the panel first so nothing else gets selected.
+     */
+    private fun setEnabledKeepingFocus(button: JButton, enabled: Boolean) {
+        if (button.isEnabled == enabled) return
+        if (!enabled && button.isFocusOwner) {
+            panel?.requestFocusInWindow()
+        }
+        button.isEnabled = enabled
+    }
+
+    /**
+     * Updates the scan buttons in place (enabled state) instead of rebuilding the whole panel, which flickered
+     * every time a scan started or finished. Returns false when something structural changed and the owner
+     * must rebuild the tab.
+     */
+    fun refresh(service: CycodeService): Boolean {
+        val local = pluginLocalState(service.project)
+        if (builtScope != scanScope(service.project).getEffectiveScanScope() ||
+            builtDiffSupported != scanScope(service.project).isDiffScanSupported() ||
+            builtGitRepository != diffRefs(service.project).isGitRepository ||
+            builtCollapsed != local.scanOptionsCollapse.collapsed
+        ) {
+            return false
+        }
+
+        scanAllButton?.let {
+            val enabled = !local.hasRunningScans()
+            setEnabledKeepingFocus(it, enabled)
+        }
+        scanButtons.forEach {
+            val enabled = it.isModuleEnabled() && !local.isScanRunning(it.scanType)
+            setEnabledKeepingFocus(it.button, enabled)
+        }
+        return true
+    }
+
+    private fun column(vararg components: JComponent): JPanel {
+        val panel = JPanel(GridBagLayout())
+        val gbc = GridBagConstraints().apply {
+            gridy = 0
+            weightx = 1.0
+            insets = JBUI.insetsBottom(8)
+            anchor = GridBagConstraints.NORTHWEST
+            fill = GridBagConstraints.HORIZONTAL
+        }
+        components.forEach {
+            panel.add(it, gbc)
+            gbc.gridy++
+        }
+        // filler row absorbs spare height so every row stays pinned to the top
+        panel.add(JPanel(), GridBagConstraints().apply {
+            gridy = gbc.gridy
+            weighty = 1.0
+            fill = GridBagConstraints.VERTICAL
+        })
+        return panel
     }
 
     override fun getContent(service: CycodeService): JPanel {
         // do not get local state on class level because will be outdated
         val pluginLocalState = pluginLocalState(service.project)
 
-        addComponentToPanel(createClickableLabel(CycodeBundle.message("scanTabTitleLabel")))
-        addScopeControls(service)
-        addComponentToPanel(createScanButton(service, CliScanType.Secret, "scanTabSecretsBtn") {
-            pluginLocalState.isSecretScanningEnabled
-        })
-        addComponentToPanel(createScanButton(service, CliScanType.Sca, "scanTabScaBtn") {
-            pluginLocalState.isScaScanningEnabled
-        })
-        addComponentToPanel(createScanButton(service, CliScanType.Iac, "scanTabIacBtn") {
-            pluginLocalState.isIacScanningEnabled
-        })
-        addComponentToPanel(createScanButton(service, CliScanType.Sast, "scanTabSastBtn") {
-            pluginLocalState.isSastScanningEnabled
-        })
+        // docked on the bottom the tab is wide and short: put scope and scan buttons side by side;
+        // docked on the left/right it is narrow and tall: stack everything
+        val dockAnchor = ToolWindowManager.getInstance(service.project)
+            .getToolWindow(CycodeBundle.message("toolWindowId"))?.anchor
+        val horizontal = dockAnchor?.isHorizontal ?: false
 
-        addComponentToPanel(createClickableLabel(CycodeBundle.message("scanTabOnSaveTip")))
-        addComponentToPanel(createClickableLabel(CycodeBundle.message("howToUseLabel")))
+        scanButtons.clear()
+        scanAllButton = null
+        builtScope = scanScope(service.project).getEffectiveScanScope()
+        builtDiffSupported = scanScope(service.project).isDiffScanSupported()
+        builtGitRepository = diffRefs(service.project).isGitRepository
+        // Diff is disabled when this turns out not to be a git repository; the tab is rebuilt if that changes
+        diffRefs(service.project).refreshGitRepositoryState()
+        builtCollapsed = pluginLocalState.scanOptionsCollapse.collapsed
 
-        return panel
+        val scopeComponents = mutableListOf<JComponent>()
+        addScopeControls(service, horizontal, scopeComponents)
+
+        val buttons = listOf(
+            createScanButton(service, CliScanType.Secret, "scanTabSecretsBtn") { pluginLocalState.isSecretScanningEnabled },
+            createScanButton(service, CliScanType.Sca, "scanTabScaBtn") { pluginLocalState.isScaScanningEnabled },
+            createScanButton(service, CliScanType.Sast, "scanTabSastBtn") { pluginLocalState.isSastScanningEnabled },
+            createScanButton(service, CliScanType.Iac, "scanTabIacBtn") { pluginLocalState.isIacScanningEnabled },
+        )
+        val footer = arrayOf<JComponent>(
+            createWrappedHtmlPane(CycodeBundle.message("scanTabOnSaveTip")),
+            createWrappedHtmlPane(CycodeBundle.message("howToUseLabel")),
+        )
+
+        // "Ready to scan." with a scan-all button at the end of the line
+        val scanAll = JButton(CycodeBundle.message("scanTabScanAllBtn")).apply {
+            isEnabled = !pluginLocalState.hasRunningScans()
+            toolTipText = CycodeBundle.message("toolbarRunAllAction")
+            addActionListener { scanScope(service.project).startAllScansForCurrentScope() }
+        }
+        scanAllButton = scanAll
+        val titleLabel = createClickableLabel(CycodeBundle.message("scanTabTitleLabel"))
+        val title = JPanel(BorderLayout()).apply {
+            add(titleLabel, BorderLayout.CENTER)
+            add(scanAll, BorderLayout.EAST)
+        }
+        val root = ScrollableContentPanel()
+        root.border = JBUI.Borders.empty(4, 12, 0, 12)
+
+        if (horizontal) {
+            val columns = JPanel(GridBagLayout())
+            val gbc = GridBagConstraints().apply {
+                weightx = 1.0
+                weighty = 1.0
+                anchor = GridBagConstraints.NORTHWEST
+                fill = GridBagConstraints.HORIZONTAL
+                insets = JBUI.insetsRight(24)
+            }
+            // the title row lives in the same grid so "Scan all" lines up with the right edge of the scan buttons
+            columns.add(titleLabel, GridBagConstraints().apply {
+                gridx = 0; gridy = 0
+                anchor = GridBagConstraints.WEST
+                insets = JBUI.insetsBottom(8)
+            })
+            columns.add(scanAll, GridBagConstraints().apply {
+                gridx = 1; gridy = 0
+                anchor = GridBagConstraints.EAST
+                insets = JBUI.insets(0, 0, 8, 24)
+            })
+            gbc.gridy = 1
+            columns.add(column(*scopeComponents.toTypedArray()), gbc)
+            gbc.gridx = 1
+            columns.add(column(*buttons.toTypedArray()), gbc)
+            root.add(columns, BorderLayout.CENTER)
+            root.add(column(*footer), BorderLayout.SOUTH)
+        } else {
+            root.add(
+                column(title, *scopeComponents.toTypedArray(), *buttons.toTypedArray(), *footer),
+                BorderLayout.CENTER
+            )
+        }
+
+        // the scan options are collapsible so the results can use the whole window
+        val collapsed = pluginLocalState.scanOptionsCollapse.collapsed
+        val outer = JPanel(BorderLayout())
+        outer.add(createHeader(service, collapsed), BorderLayout.NORTH)
+        if (!collapsed) {
+            outer.add(ScrollPaneFactory.createScrollPane(root, true).apply {
+                horizontalScrollBarPolicy = ScrollPaneConstants.HORIZONTAL_SCROLLBAR_NEVER
+            }, BorderLayout.CENTER)
+        }
+        outer.isFocusable = true
+        panel = outer
+        return outer
     }
 
-    private fun createScanButton(
-        service: CycodeService,
-        scanType: CliScanType,
-        key: String,
-        isModuleEnabled: () -> Boolean
-    ): JButton {
-        return JButton(CycodeBundle.message(key)).apply {
-            isEnabled = isModuleEnabled()
-            addActionListener { scanScope(service.project).startScanForCurrentScope(scanType) }
+    private fun createHeader(service: CycodeService, collapsed: Boolean): JComponent {
+        val label = JBLabel(
+            // the chosen scope stays visible while the section is collapsed
+            if (collapsed) CycodeBundle.message("scanTabHeaderCollapsed",
+                CycodeBundle.message("scanScope${scanScope(service.project).getEffectiveScanScope().name}"))
+            else CycodeBundle.message("scanTabHeader"),
+            if (collapsed) AllIcons.General.ArrowRight else AllIcons.General.ArrowDown,
+            SwingConstants.LEFT
+        ).apply {
+            iconTextGap = JBUI.scale(4)
+            font = font.deriveFont(Font.BOLD)
+            toolTipText = CycodeBundle.message(if (collapsed) "scanTabExpand" else "scanTabCollapse")
+            cursor = Cursor.getPredefinedCursor(Cursor.HAND_CURSOR)
+            addMouseListener(object : MouseAdapter() {
+                override fun mouseClicked(e: MouseEvent) {
+                    pluginLocalState(service.project).scanOptionsCollapse.toggle()
+                    updateToolWindowState(service.project, ToolWindowUpdate.LayoutChanged)
+                }
+            })
+        }
+        return JPanel(BorderLayout()).apply {
+            border = JBUI.Borders.empty(4, 12)
+            add(label, BorderLayout.CENTER)
         }
     }
 
-    private fun createNote(text: String, icon: javax.swing.Icon? = null): JBLabel {
+    /** Tracks the viewport width (so wrapped text re-flows) and scrolls vertically only when needed. */
+    private class ScrollableContentPanel : JPanel(BorderLayout()), Scrollable {
+        override fun getPreferredScrollableViewportSize() = preferredSize
+        override fun getScrollableUnitIncrement(r: Rectangle, o: Int, d: Int) = JBUI.scale(16)
+        override fun getScrollableBlockIncrement(r: Rectangle, o: Int, d: Int) = JBUI.scale(64)
+        override fun getScrollableTracksViewportWidth() = true
+        // never stretch to the viewport height: the wrapped text makes the preferred height depend on the
+        // width, and tracking it made the layout flip-flop (the "shake") when a combo was clicked
+        override fun getScrollableTracksViewportHeight() = false
+    }
+
+    // always visible and wrapped to the available width (no tooltips)
+    private fun createWrappedNote(text: String, icon: Icon?): JBLabel {
         return JBLabel("<html>$text</html>").apply {
             setAllowAutoWrapping(true)
             icon?.let {
@@ -93,39 +255,48 @@ class ScanContentTab : Component<CycodeService>() {
         }
     }
 
-    private fun addScopeControls(service: CycodeService) {
-        val scopeService = scanScope(service.project)
-        val effectiveScope = scopeService.getEffectiveScanScope()
-        val diffRefs = diffRefs(service.project)
-        val isGitRepository = diffRefs.isGitRepository
-        val scopes = ScanScope.entries.filter { it != ScanScope.Diff || scopeService.isDiffScanSupported() }
+    private fun createScanButton(
+        service: CycodeService,
+        scanType: CliScanType,
+        key: String,
+        isModuleEnabled: () -> Boolean
+    ): JButton {
+        val running = pluginLocalState(service.project).isScanRunning(scanType)
+        return JButton(CycodeBundle.message(key)).apply {
+            isEnabled = isModuleEnabled() && !running
+            addActionListener { scanScope(service.project).startScanForCurrentScope(scanType) }
+            scanButtons.add(ScanButton(this, scanType, isModuleEnabled))
+        }
+    }
 
-        // Diff is disabled when this turns out not to be a git repository; the tab is rebuilt if that changes
-        diffRefs.refreshGitRepositoryState()
+    private fun addScopeControls(service: CycodeService, horizontal: Boolean, out: MutableList<JComponent>) {
+        val pluginLocalState = pluginLocalState(service.project)
+        val effectiveScope = scanScope(service.project).getEffectiveScanScope()
+        val scopes = ScanScope.entries.filter { it != ScanScope.Diff || scanScope(service.project).isDiffScanSupported() }
 
-        addComponentToPanel(createClickableLabel(CycodeBundle.message("scanScopeLabel")))
+        out.add(createClickableLabel(CycodeBundle.message("scanScopeLabel")))
 
+        // radio buttons instead of a dropdown: every option is visible and one click selects it
         val group = ButtonGroup()
-        val radioPanel = JPanel(FlowLayout(FlowLayout.LEFT, 0, 0))
-        scopes.forEach { scope ->
-            val radio = JBRadioButton(CycodeBundle.message("scanScope${scope.name}"), scope == effectiveScope).apply {
+        val radios = scopes.map { scope ->
+            JBRadioButton(CycodeBundle.message("scanScope${scope.name}"), scope == effectiveScope).apply {
+                group.add(this)
                 // Diff cannot work without a git repository
-                isEnabled = scope != ScanScope.Diff || isGitRepository != false
+                isEnabled = scope != ScanScope.Diff || diffRefs(service.project).isGitRepository != false
                 addActionListener {
-                    if (scope != scopeService.getScanScope()) {
-                        scopeService.setScanScope(scope)
-                        updateToolWindowState(service.project)
+                    if (scope != scanScope(service.project).getScanScope()) {
+                        scanScope(service.project).setScanScope(scope)
+                        updateToolWindowState(service.project, ToolWindowUpdate.LayoutChanged)
                     }
                 }
             }
-            group.add(radio)
-            radioPanel.add(radio)
-            radioPanel.add(Box.createHorizontalStrut(JBUI.scale(12)))
         }
-        addComponentToPanel(radioPanel)
-        addComponentToPanel(createNote(CycodeBundle.message("scanScope${effectiveScope.name}Hint")))
-        if (scopes.contains(ScanScope.Diff) && isGitRepository == false) {
-            addComponentToPanel(createNote(CycodeBundle.message("scanScopeDiffNoGitNote"), AllIcons.General.Warning))
+        val radioPanel = JPanel(FlowLayout(FlowLayout.LEFT, 0, 0))
+        radios.forEach { radioPanel.add(it); radioPanel.add(Box.createHorizontalStrut(JBUI.scale(12))) }
+        out.add(radioPanel)
+        out.add(createWrappedNote(CycodeBundle.message("scanScope${effectiveScope.name}Hint"), null))
+        if (scopes.contains(ScanScope.Diff) && diffRefs(service.project).isGitRepository == false) {
+            out.add(createWrappedNote(CycodeBundle.message("scanScopeDiffNoGitNote"), AllIcons.General.Warning))
         }
 
         if (effectiveScope != ScanScope.Diff) {
@@ -134,16 +305,24 @@ class ScanContentTab : Component<CycodeService>() {
 
         val fromCombo = createRefCombo(service, true)
         val toCombo = createRefCombo(service, false)
-        addComponentToPanel(JPanel(GridBagLayout()).apply {
-            val c = GridBagConstraints().apply { fill = GridBagConstraints.HORIZONTAL; gridy = 0 }
-            add(JBLabel(CycodeBundle.message("scanScopeDiffFromLabel")), c.apply { gridx = 0; weightx = 0.0 })
-            add(fromCombo, c.apply { gridx = 1; weightx = 1.0; insets = JBUI.insets(0, 4, 0, 8) })
-            add(JBLabel(CycodeBundle.message("scanScopeDiffToLabel")), c.apply { gridx = 2; weightx = 0.0; insets = JBUI.emptyInsets() })
-            add(toCombo, c.apply { gridx = 3; weightx = 1.0; insets = JBUI.insetsLeft(4) })
+        // From and To share one row; the combos share the width and shrink (long labels are truncated)
+        out.add(JPanel(GridBagLayout()).apply {
+            val gbc = GridBagConstraints().apply { fill = GridBagConstraints.HORIZONTAL; gridy = 0 }
+            add(JBLabel(CycodeBundle.message("scanScopeDiffFromLabel")), gbc.apply { gridx = 0; weightx = 0.0 })
+            add(fromCombo, gbc.apply { gridx = 1; weightx = 1.0; insets = JBUI.insets(0, 4, 0, 8) })
+            add(JBLabel(CycodeBundle.message("scanScopeDiffToLabel")), gbc.apply { gridx = 2; weightx = 0.0; insets = JBUI.emptyInsets() })
+            add(toCombo, gbc.apply { gridx = 3; weightx = 1.0; insets = JBUI.insetsLeft(4) })
+            // pin the row height (with room for the focus ring) so focusing or opening a combo
+            // cannot change the size of the row and shift the layout around it
+            val height = maxOf(fromCombo.preferredSize.height, toCombo.preferredSize.height) + JBUI.scale(8)
+            preferredSize = Dimension(preferredSize.width, height)
+            minimumSize = Dimension(0, height)
+            maximumSize = Dimension(Int.MAX_VALUE, height)
         })
-        addComponentToPanel(createNote(CycodeBundle.message("scanScopeDiffIacNote"), AllIcons.General.Warning))
+        out.add(createWrappedNote(CycodeBundle.message("scanScopeDiffIacNote"), AllIcons.General.Warning))
 
         // lists are reloaded in the background and the combos updated in place (never while a popup is open)
+        val diffRefs = diffRefs(service.project)
         diffRefs.refresh {
             populateCombo(fromCombo, true, diffRefs.from, diffRefs.refs)
             populateCombo(toCombo, false, diffRefs.to, diffRefs.refs)
@@ -158,7 +337,8 @@ class ScanContentTab : Component<CycodeService>() {
     private fun createRefCombo(service: CycodeService, isFrom: Boolean): ComboBox<SideOption> {
         val diffRefs = diffRefs(service.project)
         return ComboBox<SideOption>().apply {
-            // long labels are truncated instead of widening the tool window
+            // the closed combo has a fixed small width (long labels are truncated); the popup list is sized
+            // by its widest item in a single pass, which avoids the popup resizing itself after it opens
             setMinimumAndPreferredWidth(JBUI.scale(REF_COMBO_WIDTH))
             maximumRowCount = REF_COMBO_VISIBLE_ROWS
             renderer = SimpleListCellRenderer.create("") { it.label }

@@ -17,8 +17,11 @@ import com.intellij.openapi.util.Disposer
 import com.intellij.openapi.wm.ToolWindow
 import com.intellij.openapi.wm.ToolWindowFactory
 import com.intellij.openapi.wm.ToolWindowManager
+import com.intellij.openapi.wm.ex.ToolWindowManagerListener
+import com.intellij.openapi.wm.ex.ToolWindowManagerListener.ToolWindowManagerEventType
 import com.intellij.ui.content.Content
 import com.intellij.ui.content.ContentFactory
+import java.util.concurrent.ConcurrentHashMap
 import javax.swing.JPanel
 
 class CycodeToolWindowFactory : DumbAware, ToolWindowFactory {
@@ -42,6 +45,23 @@ class CycodeToolWindowFactory : DumbAware, ToolWindowFactory {
         toolWindow.contentManager.addContent(toolWindowContent)
 
         Disposer.register(service, toolWindowContent)
+
+        // re-layout the scan tab when the tool window is moved to another side
+        var lastAnchor = toolWindow.anchor
+        project.messageBus.connect(service).subscribe(ToolWindowManagerListener.TOPIC, object : ToolWindowManagerListener {
+            override fun stateChanged(
+                toolWindowManager: ToolWindowManager,
+                changedToolWindow: ToolWindow,
+                changeType: ToolWindowManagerEventType
+            ) {
+                if (changeType != ToolWindowManagerEventType.MovedOrResized) return
+                val anchor = toolWindowManager.getToolWindow(CycodeBundle.message("toolWindowId"))?.anchor ?: return
+                if (anchor != lastAnchor) {
+                    lastAnchor = anchor
+                    updateToolWindowState(project, ToolWindowUpdate.LayoutChanged)
+                }
+            }
+        })
     }
 
     override fun shouldBeAvailable(project: Project) = true
@@ -64,9 +84,9 @@ class CycodeToolWindowFactory : DumbAware, ToolWindowFactory {
 
 }
 
-private fun replaceToolWindowRightPanel(project: Project, panel: JPanel) {
+private fun replaceToolWindowRightPanel(project: Project, panel: JPanel, reloadResults: Boolean) {
     val contentTab = CycodeToolWindowFactory.TabManager.getTab(project) ?: return
-    contentTab.updateContent(panel)
+    contentTab.updateContent(panel, reloadResults)
 }
 
 private fun createToolWindowContent(component: JPanel): Content {
@@ -82,7 +102,9 @@ fun getRightPanelDependingOnState(project: Project): JPanel {
     }
 
     return if (pluginLocalState.cliAuthed) {
-        ScanContentTab().getContent(service)
+        val scanTab = ScanContentTab()
+        ScanTabs.add(project, scanTab)
+        scanTab.getContent(service)
     } else {
         AuthContentTab().getContent(service)
     }
@@ -100,10 +122,52 @@ fun updateToolWindowStateForAllProjects() {
 }
 
 
-fun updateToolWindowState(project: Project) {
+object ScanTabs {
+    private val tabs = ConcurrentHashMap<Project, ScanContentTab>()
+
+    fun add(project: Project, tab: ScanContentTab) {
+        tabs[project] = tab
+    }
+
+    fun get(project: Project): ScanContentTab? = tabs[project]
+
+    fun remove(project: Project) {
+        tabs.remove(project)
+    }
+}
+
+/** The scan tab is the panel currently on screen (a finding, the auth page etc. may be shown instead). */
+private fun getShownScanTab(project: Project): ScanContentTab? {
+    val local = pluginLocalState(project)
+    val scanTab = ScanTabs.get(project) ?: return null
+    val contentTab = CycodeToolWindowFactory.TabManager.getTab(project) ?: return null
+    val shown = local.cliInstalled && local.cliAuthed && contentTab.getTreeView().getRightPanel() === scanTab.panel
+    return scanTab.takeIf { shown }
+}
+
+/**
+ * Updates the tool window as little as the [update] allows: the visible scan tab is refreshed in place when possible,
+ * to avoid flicker, and the results tree is only reloaded when the results may have changed.
+ */
+fun updateToolWindowState(project: Project, update: ToolWindowUpdate = ToolWindowUpdate.StateChanged) {
     ApplicationManager.getApplication().invokeLater {
-        WriteAction.run<Error> {
-            replaceToolWindowRightPanel(project, getRightPanelDependingOnState(project))
+        val treeView = CycodeToolWindowFactory.TabManager.getTab(project)?.getTreeView()
+        val scanTab = getShownScanTab(project)
+
+        var action = resolveToolWindowAction(update, scanTab != null)
+        // something structural changed (e.g. the scope): the shown scan tab cannot be refreshed in place
+        if (action is ToolWindowAction.RefreshScanTab && scanTab?.refresh(cycode(project)) != true) {
+            action = resolveToolWindowAction(update, scanTabShown = false)
+        }
+
+        when (action) {
+            is ToolWindowAction.RefreshScanTab ->
+                if (action.reloadResults) treeView?.refreshTree() else treeView?.refreshRunningState()
+
+            ToolWindowAction.RefreshSpinners -> treeView?.refreshRunningState()
+            is ToolWindowAction.Rebuild -> WriteAction.run<Error> {
+                replaceToolWindowRightPanel(project, getRightPanelDependingOnState(project), action.reloadResults)
+            }
         }
     }
 }

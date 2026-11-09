@@ -1,6 +1,7 @@
 package com.cycode.plugin.services
 
 import com.cycode.plugin.CycodeBundle
+import com.cycode.plugin.components.toolWindow.ToolWindowUpdate
 import com.cycode.plugin.components.toolWindow.updateToolWindowState
 import com.cycode.plugin.git.DiffRefsCache
 import com.cycode.plugin.git.DiffSide
@@ -60,7 +61,7 @@ class DiffRefsService(private val project: Project) {
             val isRepository = GitCli(projectRoot).isGitRepository()
             if (!project.isDisposed && isRepository != isGitRepository) {
                 isGitRepository = isRepository
-                updateToolWindowState(project)
+                updateToolWindowState(project, ToolWindowUpdate.LayoutChanged)
             }
         }
     }

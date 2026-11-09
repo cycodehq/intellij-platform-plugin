@@ -4,6 +4,8 @@ import com.cycode.plugin.CycodeBundle
 import com.cycode.plugin.cli.*
 import com.cycode.plugin.cli.models.AiRemediationResultData
 import com.cycode.plugin.components.toolWindow.CycodeToolWindowFactory
+import com.cycode.plugin.components.toolWindow.ScanTabs
+import com.cycode.plugin.components.toolWindow.ToolWindowUpdate
 import com.cycode.plugin.components.toolWindow.updateToolWindowState
 import com.cycode.plugin.components.toolWindow.updateToolWindowStateForAllProjects
 import com.cycode.plugin.utils.CycodeNotifier
@@ -39,6 +41,21 @@ class CycodeService(val project: Project) : Disposable {
         thisLogger().debug("Background task queued: $title")
     }
 
+    /** Background task for a scan that also marks the scan type as running (spinner in the scan tab). */
+    fun runScanBackgroundTask(scanType: CliScanType, task: (ProgressIndicator) -> Unit) {
+        pluginLocalState.scanStarted(scanType)
+        updateToolWindowState(project, ToolWindowUpdate.RunningStateChanged)
+        runBackgroundTask(getBackgroundScanningLabel(scanType)) { indicator ->
+            try {
+                task(indicator)
+            } finally {
+                pluginLocalState.scanFinished(scanType)
+                // the results (if any) were already reloaded by CliService; only the spinners change here
+                updateToolWindowState(project, ToolWindowUpdate.RunningStateChanged)
+            }
+        }
+    }
+
     fun installCliIfNeededAndCheckAuthentication() {
         runBackgroundTask(CycodeBundle.message("pluginLoading"), canBeCancelled = false) { _ ->
             thisLogger().debug("Check CLI installation and authentication")
@@ -62,7 +79,7 @@ class CycodeService(val project: Project) : Disposable {
         }
     }
 
-    fun getBackgroundScanningLabel(scanType: CliScanType) = when (scanType) {
+    private fun getBackgroundScanningLabel(scanType: CliScanType) = when (scanType) {
         CliScanType.Secret -> CycodeBundle.message("secretScanning")
         CliScanType.Sca -> CycodeBundle.message("scaScanning")
         CliScanType.Iac -> CycodeBundle.message("iacScanning")
@@ -82,10 +99,10 @@ class CycodeService(val project: Project) : Disposable {
     }
 
     fun startScan(scanType: CliScanType, pathsToScan: List<String>, onDemand: Boolean = true) {
-        runBackgroundTask(getBackgroundScanningLabel(scanType)) { indicator ->
+        runScanBackgroundTask(scanType) { indicator ->
             if (!pluginLocalState.cliAuthed) {
                 CycodeNotifier.notifyInfo(project, CycodeBundle.message("authorizationRequiredNotification"))
-                return@runBackgroundTask
+                return@runScanBackgroundTask
             }
 
             thisLogger().debug("[$scanType] Start scanning paths: $pathsToScan")
@@ -149,6 +166,7 @@ class CycodeService(val project: Project) : Disposable {
     }
 
     override fun dispose() {
+        ScanTabs.remove(project)
         CycodeToolWindowFactory.TabManager.removeTab(project)
     }
 }
