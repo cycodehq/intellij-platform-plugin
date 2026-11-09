@@ -59,11 +59,3 @@ fun openDetectionInFile(project: Project, node: AbstractNode) {
         is SastDetectionNode -> openSastDetectionInFile(project, node)
     }
 }
-
-/**
- * [paths] are expanded tree paths as node names, starting with the scan type name. Drops the ones of scan types
- * for which [isRunning] is true, because their rows are about to be replaced.
- */
-fun withoutRunningScanTypes(paths: Set<List<String>>, isRunning: (typeName: String) -> Boolean): Set<List<String>> {
-    return paths.filterNot { it.isNotEmpty() && isRunning(it.first()) }.toSet()
-}

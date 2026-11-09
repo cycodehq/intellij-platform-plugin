@@ -264,7 +264,6 @@ class ScanContentTab : Component<CycodeService>() {
     }
 
     private fun addScopeControls(service: CycodeService, horizontal: Boolean, out: MutableList<JComponent>) {
-        val pluginLocalState = pluginLocalState(service.project)
         val effectiveScope = scanScope(service.project).getEffectiveScanScope()
 
         out.add(createClickableLabel(CycodeBundle.message("scanScopeLabel")))

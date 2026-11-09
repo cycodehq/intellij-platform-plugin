@@ -21,12 +21,14 @@ import com.cycode.plugin.icons.PluginIcons
 import com.cycode.plugin.services.pluginLocalState
 import com.cycode.plugin.services.scanResults
 import com.intellij.icons.AllIcons
+import com.intellij.ide.util.treeView.TreeState
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.util.Iconable
 import com.intellij.ui.InplaceButton
 import com.intellij.ui.JBColor
 import com.intellij.ui.JBSplitter
 import com.intellij.ui.SideBorder
+import com.intellij.ui.AnimatedIcon
 import com.intellij.ui.components.JBScrollPane
 import com.intellij.ui.treeStructure.Tree
 import com.intellij.util.ui.JBUI
@@ -38,7 +40,6 @@ import java.awt.event.MouseEvent
 import java.io.File
 import javax.swing.JComponent
 import javax.swing.JPanel
-import javax.swing.Timer
 import javax.swing.event.TreeSelectionEvent
 import javax.swing.event.TreeSelectionListener
 import javax.swing.tree.DefaultMutableTreeNode
@@ -63,11 +64,6 @@ class TreeView(
 
     private lateinit var treeScrollPane: JBScrollPane
 
-    // the spinner icons are time-based; the tree only needs to be repainted while a scan is running
-    private val spinnerTimer = Timer(SPINNER_REPAINT_DELAY_MS) {
-        repaintRunningScanRows()
-    }
-
     private var severityFilter: Map<String, Boolean>? = null
 
     init {
@@ -75,6 +71,8 @@ class TreeView(
 
         tree = Tree(model)
         tree.isRootVisible = false
+        // lets the platform animate the spinner of a running scan in the renderer, only while one is shown
+        tree.putClientProperty(AnimatedIcon.ANIMATION_IN_RENDERER_ALLOWED, true)
         tree.cellRenderer = TreeCellRenderer()
 
         tree.selectionModel.selectionMode = TreeSelectionModel.SINGLE_TREE_SELECTION
@@ -329,24 +327,6 @@ class TreeView(
         treeScrollPane.minimumSize = if (stacked) Dimension(100, 100) else Dimension(400, 100)
     }
 
-    override fun addNotify() {
-        super.addNotify()
-        spinnerTimer.start()
-    }
-
-    override fun removeNotify() {
-        spinnerTimer.stop()
-        super.removeNotify()
-    }
-
-    /** The spinner icons are time-based: repaint only the rows of the scan types that are running. */
-    private fun repaintRunningScanRows() {
-        CliScanType.entries.filter { pluginLocalState.isScanRunning(it) }.forEach {
-            val bounds = tree.getPathBounds(TreePath(rootNodes.getScanTypeNode(it).path)) ?: return@forEach
-            tree.repaint(0, bounds.y, tree.width, bounds.height)
-        }
-    }
-
     fun getRightPanel(): JComponent? = splitPane.secondComponent
 
     fun replaceRightPanel(newRightPanel: JComponent): TreeView {
@@ -364,7 +344,7 @@ class TreeView(
 
     fun refreshTree() {
         // a reload collapses every node: remember what the user expanded and restore it afterwards
-        val expanded = getRestorableExpandedPaths()
+        val state = TreeState.createOn(tree)
 
         // TODO(MarshalX): is possible to optimize this to only update the nodes that have changed
         dummyRootNode.removeAllChildren()
@@ -377,42 +357,12 @@ class TreeView(
         */
         model.reload()
 
-        restoreExpandedPaths(expanded)
-    }
-
-    /**
-     * The expanded paths (as node names) that survive a reload. The rows of a scan type that is running again are
-     * left out: they start over, which also covers the Scan all buttons. Clearing the results needs no special
-     * case because the rows are gone afterwards.
-     */
-    private fun getRestorableExpandedPaths(): Set<List<String>> {
-        val expandedPaths = tree.getExpandedDescendants(TreePath(dummyRootNode))?.toList().orEmpty()
-        val keys = expandedPaths
-            .filter { path -> (2 until path.pathCount).all { tree.isExpanded(TreePath(path.path.copyOf(it))) } }
-            .map { path -> path.path.drop(1).map { getNodeName(it) } }
-            .filter { it.isNotEmpty() }
-            .toSet()
-
-        return withoutRunningScanTypes(keys) { typeName ->
-            CliScanType.entries.any { getScanTypeDisplayName(it) == typeName && pluginLocalState.isScanRunning(it) }
+        state.applyTo(tree)
+        // the rows of a scan type that is running again start over (this also covers the Scan all buttons)
+        CliScanType.entries.filter { pluginLocalState.isScanRunning(it) }.forEach {
+            tree.collapsePath(TreePath(rootNodes.getScanTypeNode(it).path))
         }
     }
-
-    private fun restoreExpandedPaths(keys: Set<List<String>>) {
-        for (names in keys) {
-            var node: DefaultMutableTreeNode = dummyRootNode
-            for (name in names) {
-                node = node.children().asSequence()
-                    .map { it as DefaultMutableTreeNode }
-                    .firstOrNull { getNodeName(it) == name } ?: break
-            }
-            if (getNodeName(node) == names.last()) {
-                tree.expandPath(TreePath(node.path))
-            }
-        }
-    }
-
-    private fun getNodeName(node: Any): String = ((node as DefaultMutableTreeNode).userObject as AbstractNode).name
 
     private fun createNodes(top: DefaultMutableTreeNode) {
         rootNodes.createNodes(top)
@@ -431,7 +381,6 @@ class TreeView(
     }
 
     companion object {
-        private const val SPINNER_REPAINT_DELAY_MS = 100
         private const val VIOLATION_CARD_KEY = "cycode.violationCard"
     }
 }
