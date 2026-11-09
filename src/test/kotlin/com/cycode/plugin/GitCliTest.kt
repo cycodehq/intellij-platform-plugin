@@ -5,7 +5,7 @@ import org.junit.Assert.*
 import org.junit.Test
 
 /** Uses real temporary git repositories: the exit-code semantics are the point. */
-class GitRepositoryTest : GitTestBase() {
+class GitCliTest : GitTestBase() {
     private fun diverge() {
         sh("checkout", "-b", "feature")
         commit("feature-1")
@@ -61,7 +61,7 @@ class GitRepositoryTest : GitTestBase() {
     fun nonGitFolder() {
         val plain = createPlainDirectory()
         try {
-            assertFalse(GitRepository(plain.path).isGitRepository())
+            assertFalse(GitCli(plain.path).isGitRepository())
             assertTrue(git.isGitRepository())
         } finally {
             plain.deleteRecursively()
@@ -84,20 +84,20 @@ class GitRepositoryTest : GitTestBase() {
 
     @Test
     fun labelFormat() {
-        assertEquals("main │ abc123 │ subject", GitRepository.buildLabel("main", "abc123", "subject"))
+        assertEquals("main │ abc123 │ subject", GitCli.buildLabel("main", "abc123", "subject"))
     }
 
     @Test
     fun refListsAreCapped() {
-        repeat(GitRepository.MAX_REFS + 5) { sh("branch", "b$it") }
-        repeat(GitRepository.MAX_COMMITS + 5) { commit("c$it") }
+        repeat(GitCli.MAX_REFS + 5) { sh("branch", "b$it") }
+        repeat(GitCli.MAX_COMMITS + 5) { commit("c$it") }
 
         val refs = git.getAvailableRefs()
         val sha = Regex("[0-9a-f]{40}")
         val branchesAndTags = refs.count { it.value != HEAD_REF && !sha.matches(it.value) }
-        assertTrue(branchesAndTags <= GitRepository.MAX_REFS)
+        assertTrue(branchesAndTags <= GitCli.MAX_REFS)
         // HEAD + capped refs + capped commits
-        assertTrue(refs.size <= 1 + GitRepository.MAX_REFS + GitRepository.MAX_COMMITS)
+        assertTrue(refs.size <= 1 + GitCli.MAX_REFS + GitCli.MAX_COMMITS)
     }
 
     @Test
@@ -151,11 +151,10 @@ class GitRepositoryTest : GitTestBase() {
     @Test
     fun pinnedRefThatScrolledOutOfTheListIsKept() {
         val oldest = sh("rev-parse", "HEAD")
-        repeat(GitRepository.MAX_COMMITS + 5) { commit("c$it") }
-        val refs = git.getAvailableRefs(listOf(oldest, LOCAL_DIRECTORY_REF, "HEAD"))
+        repeat(GitCli.MAX_COMMITS + 5) { commit("c$it") }
+        val refs = git.getAvailableRefs(listOf(oldest, "HEAD"))
         assertEquals(1, refs.count { it.value == oldest })
         assertEquals(1, refs.count { it.value == HEAD_REF })
-        assertFalse(refs.any { it.value == LOCAL_DIRECTORY_REF })
     }
 
     @Test
@@ -165,8 +164,8 @@ class GitRepositoryTest : GitTestBase() {
 
     @Test
     fun labelWithoutRefNameOrSubject() {
-        assertEquals("abc123", GitRepository.buildLabel(null, "abc123", ""))
-        assertEquals("abc123 │ subject", GitRepository.buildLabel("", "abc123", "subject"))
+        assertEquals("abc123", GitCli.buildLabel(null, "abc123", ""))
+        assertEquals("abc123 │ subject", GitCli.buildLabel("", "abc123", "subject"))
     }
 
     @Test
@@ -189,7 +188,7 @@ class GitRepositoryTest : GitTestBase() {
     fun headFingerprintIsNullOutsideARepository() {
         val plain = createPlainDirectory()
         try {
-            assertNull(GitRepository(plain.path).getHeadFingerprint())
+            assertNull(GitCli(plain.path).getHeadFingerprint())
         } finally {
             plain.deleteRecursively()
         }

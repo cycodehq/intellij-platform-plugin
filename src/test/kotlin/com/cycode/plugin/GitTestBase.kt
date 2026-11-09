@@ -1,6 +1,6 @@
 package com.cycode.plugin
 
-import com.cycode.plugin.git.GitRepository
+import com.cycode.plugin.git.GitCli
 import org.junit.After
 import org.junit.Before
 import java.io.File
@@ -12,7 +12,7 @@ import java.nio.file.Files
  */
 abstract class GitTestBase {
     protected lateinit var dir: File
-    protected lateinit var git: GitRepository
+    protected lateinit var git: GitCli
 
     protected fun sh(vararg args: String): String {
         // signing and the user's global config must not influence the tests
@@ -40,7 +40,7 @@ abstract class GitTestBase {
         sh("init")
         sh("symbolic-ref", "HEAD", "refs/heads/main") // `init -b` needs git 2.28
         commit("base")
-        git = GitRepository(dir.path)
+        git = GitCli(dir.path)
     }
 
     @After

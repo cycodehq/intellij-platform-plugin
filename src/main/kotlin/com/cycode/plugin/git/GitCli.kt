@@ -7,7 +7,6 @@ import com.intellij.openapi.diagnostic.thisLogger
 import java.io.File
 import java.nio.charset.StandardCharsets
 
-const val LOCAL_DIRECTORY_REF = "\u0000local"
 const val HEAD_REF = "HEAD"
 const val LABEL_SEPARATOR = " │ "
 
@@ -32,7 +31,7 @@ data class GitOutput(val exitCode: Int, val stdout: String, val stderr: String)
  * Git is invoked with an argv list (never a shell string); exit codes keep their git semantics
  * because the user-facing messages depend on them.
  */
-class GitRepository(private val workDirectory: String) {
+class GitCli(private val workDirectory: String) {
     fun run(vararg args: String): GitOutput? {
         return try {
             val commandLine = GeneralCommandLine("git")
@@ -173,7 +172,7 @@ class GitRepository(private val workDirectory: String) {
         }
 
         for (pinned in pinnedRefs) {
-            if (pinned == LOCAL_DIRECTORY_REF || pinned in listedValues || !isSafeRefArg(pinned)) continue
+            if (pinned in listedValues || !isSafeRefArg(pinned)) continue
             val (sha, _) = resolveCommit(pinned)
             if (sha == null) continue
             val subject = run("log", "-n", "1", "--format=%h%x09%s", sha)?.stdout?.split("\t", limit = 2)

@@ -17,7 +17,7 @@ sealed class DiffScanPlan {
  * Decides what a diff scan of [scanType] should run, without touching the IDE. Runs git, so call it on a
  * background thread.
  */
-fun planDiffScan(scanType: CliScanType, from: String, to: String, projectRoot: String, git: GitRepository): DiffScanPlan {
+fun planDiffScan(scanType: CliScanType, from: DiffSide, to: DiffSide, projectRoot: String, git: GitCli): DiffScanPlan {
     if (from == to) {
         return DiffScanPlan.Refused("diffSameRevisionNotification")
     }
@@ -31,15 +31,18 @@ fun planDiffScan(scanType: CliScanType, from: String, to: String, projectRoot: S
         return DiffScanPlan.Refused("diffNotGitRepositoryNotification")
     }
 
-    if (from == LOCAL_DIRECTORY_REF || to == LOCAL_DIRECTORY_REF) {
-        val ref = if (from == LOCAL_DIRECTORY_REF) to else from
-        if (!isSafeRefArg(ref)) {
+    if (from is DiffSide.Local || to is DiffSide.Local) {
+        val rev = (if (from is DiffSide.Local) to else from) as DiffSide.Rev
+        if (!isSafeRefArg(rev.ref)) {
             return DiffScanPlan.Refused("diffUnknownRevisionNotification")
         }
-        return DiffScanPlan.Run(ScanTarget.Diff(DiffScanMode.LocalDiff, ref, projectRoot))
+        return DiffScanPlan.Run(ScanTarget.Diff(DiffScanMode.LocalDiff, rev.ref, projectRoot))
     }
 
-    return when (val result = git.getCommitRange(from, to)) {
+    // both sides are revisions here (two local sides were caught by the equality check above)
+    from as DiffSide.Rev
+    to as DiffSide.Rev
+    return when (val result = git.getCommitRange(from.ref, to.ref)) {
         is CommitRangeResult.Range -> DiffScanPlan.Run(ScanTarget.Diff(DiffScanMode.CommitRange, result.range, projectRoot))
         CommitRangeResult.SameCommit -> DiffScanPlan.Refused("diffSameCommitNotification")
         CommitRangeResult.NoCommonHistory -> DiffScanPlan.Refused("diffNoCommonHistoryNotification")

@@ -4,8 +4,8 @@ import com.cycode.plugin.cli.CliScanType
 import com.cycode.plugin.cli.DiffScanMode
 import com.cycode.plugin.cli.ScanTarget
 import com.cycode.plugin.git.DiffScanPlan
-import com.cycode.plugin.git.GitRepository
-import com.cycode.plugin.git.LOCAL_DIRECTORY_REF
+import com.cycode.plugin.git.GitCli
+import com.cycode.plugin.git.DiffSide
 import com.cycode.plugin.git.planDiffScan
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
@@ -20,8 +20,11 @@ class DiffScanPlannerTest : GitTestBase() {
         commit("b")
     }
 
-    private fun plan(type: CliScanType, from: String, to: String, repo: GitRepository = git) =
-        planDiffScan(type, from, to, dir.path, repo)
+    // a side is either DiffSide.Local or the name of a revision
+    private fun side(value: Any): DiffSide = value as? DiffSide ?: DiffSide.Rev(value as String)
+
+    private fun plan(type: CliScanType, from: Any, to: Any, repo: GitCli = git) =
+        planDiffScan(type, side(from), side(to), dir.path, repo)
 
     private val secret = CliScanType.Secret
 
@@ -30,8 +33,8 @@ class DiffScanPlannerTest : GitTestBase() {
         val expected = DiffScanPlan.Run(
             ScanTarget.Diff(DiffScanMode.LocalDiff, "main", dir.path)
         )
-        assertEquals(expected, plan(secret, LOCAL_DIRECTORY_REF, "main"))
-        assertEquals(expected, plan(secret, "main", LOCAL_DIRECTORY_REF))
+        assertEquals(expected, plan(secret, DiffSide.Local, "main"))
+        assertEquals(expected, plan(secret, "main", DiffSide.Local))
     }
 
     @Test
@@ -48,8 +51,8 @@ class DiffScanPlannerTest : GitTestBase() {
         try {
             val expected = DiffScanPlan.Run(ScanTarget.Paths(listOf(dir.path)))
             val iac = CliScanType.Iac
-            assertEquals(expected, plan(iac, LOCAL_DIRECTORY_REF, "main"))
-            assertEquals(expected, plan(iac, "other", "main", GitRepository(plain.path)))
+            assertEquals(expected, plan(iac, DiffSide.Local, "main"))
+            assertEquals(expected, plan(iac, "other", "main", GitCli(plain.path)))
         } finally {
             plain.deleteRecursively()
         }
@@ -60,7 +63,7 @@ class DiffScanPlannerTest : GitTestBase() {
         assertEquals(DiffScanPlan.Refused("diffSameRevisionNotification"), plan(secret, "main", "main"))
         assertEquals(
             DiffScanPlan.Refused("diffSameRevisionNotification"),
-            plan(secret, LOCAL_DIRECTORY_REF, LOCAL_DIRECTORY_REF)
+            plan(secret, DiffSide.Local, DiffSide.Local)
         )
     }
 
@@ -72,7 +75,7 @@ class DiffScanPlannerTest : GitTestBase() {
         try {
             assertEquals(
                 DiffScanPlan.Refused("diffNotGitRepositoryNotification"),
-                plan(secret, LOCAL_DIRECTORY_REF, "main", GitRepository(plain.path))
+                plan(secret, DiffSide.Local, "main", GitCli(plain.path))
             )
         } finally {
             plain.deleteRecursively()
@@ -83,7 +86,7 @@ class DiffScanPlannerTest : GitTestBase() {
     fun unsafeRefsAreRefusedInBothFlavours() {
         assertEquals(
             DiffScanPlan.Refused("diffUnknownRevisionNotification"),
-            plan(secret, LOCAL_DIRECTORY_REF, "--output=x")
+            plan(secret, DiffSide.Local, "--output=x")
         )
         assertEquals(DiffScanPlan.Refused("diffUnknownRevisionNotification"), plan(secret, "--output=x", "main"))
     }
@@ -105,7 +108,7 @@ class DiffScanPlannerTest : GitTestBase() {
     @Test
     fun everyDiffScanTypeGetsAPlan() {
         CliScanType.entries.forEach {
-            assertTrue(plan(it, LOCAL_DIRECTORY_REF, "main") is DiffScanPlan.Run)
+            assertTrue(plan(it, DiffSide.Local, "main") is DiffScanPlan.Run)
         }
     }
 }

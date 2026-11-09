@@ -7,9 +7,10 @@ import com.cycode.plugin.components.Component
 import com.cycode.plugin.components.common.createClickableLabel
 import com.cycode.plugin.components.toolWindow.updateToolWindowState
 import com.cycode.plugin.git.HEAD_REF
-import com.cycode.plugin.git.LOCAL_DIRECTORY_REF
+import com.cycode.plugin.git.DiffSide
 import com.cycode.plugin.git.RefOption
 import com.cycode.plugin.services.CycodeService
+import com.cycode.plugin.services.diffRefs
 import com.cycode.plugin.services.pluginLocalState
 import com.cycode.plugin.services.scanScope
 import com.intellij.icons.AllIcons
@@ -94,13 +95,13 @@ class ScanContentTab : Component<CycodeService>() {
 
     private fun addScopeControls(service: CycodeService) {
         val scopeService = scanScope(service.project)
-        val pluginLocalState = pluginLocalState(service.project)
         val effectiveScope = scopeService.getEffectiveScanScope()
-        val isGitRepository = scopeService.isGitRepository()
+        val diffRefs = diffRefs(service.project)
+        val isGitRepository = diffRefs.isGitRepository
         val scopes = ScanScope.entries.filter { it != ScanScope.Diff || scopeService.isDiffScanSupported() }
 
         // Diff is disabled when this turns out not to be a git repository; the tab is rebuilt if that changes
-        scopeService.refreshGitRepositoryState()
+        diffRefs.refreshGitRepositoryState()
 
         addComponentToPanel(createClickableLabel(CycodeBundle.message("scanScopeLabel")))
 
@@ -143,49 +144,46 @@ class ScanContentTab : Component<CycodeService>() {
         addComponentToPanel(createNote(CycodeBundle.message("scanScopeDiffIacNote"), AllIcons.General.Warning))
 
         // lists are reloaded in the background and the combos updated in place (never while a popup is open)
-        scopeService.refreshDiffRefs {
-            populateRefCombo(fromCombo, true, pluginLocalState.diffFromRef, pluginLocalState.diffRefs)
-            populateRefCombo(toCombo, false, pluginLocalState.diffToRef, pluginLocalState.diffRefs)
+        diffRefs.refresh {
+            populateCombo(fromCombo, true, diffRefs.from, diffRefs.refs)
+            populateCombo(toCombo, false, diffRefs.to, diffRefs.refs)
         }
     }
 
-    private fun createRefCombo(service: CycodeService, isFrom: Boolean): ComboBox<RefOption> {
-        val pluginLocalState = pluginLocalState(service.project)
-        return ComboBox<RefOption>().apply {
+    /** A combo entry: the local directory or a revision. */
+    private class SideOption(val side: DiffSide, val label: String) {
+        override fun toString() = label
+    }
+
+    private fun createRefCombo(service: CycodeService, isFrom: Boolean): ComboBox<SideOption> {
+        val diffRefs = diffRefs(service.project)
+        return ComboBox<SideOption>().apply {
             // long labels are truncated instead of widening the tool window
             setMinimumAndPreferredWidth(JBUI.scale(REF_COMBO_WIDTH))
             maximumRowCount = REF_COMBO_VISIBLE_ROWS
             renderer = SimpleListCellRenderer.create("") { it.label }
-            populateRefCombo(
-                this,
-                isFrom,
-                if (isFrom) pluginLocalState.diffFromRef else pluginLocalState.diffToRef,
-                pluginLocalState.diffRefs
-            )
+            populateCombo(this, isFrom, if (isFrom) diffRefs.from else diffRefs.to, diffRefs.refs)
             addActionListener {
                 if (updatingCombos) return@addActionListener
-                val selected = selectedItem as? RefOption ?: return@addActionListener
-                if (isFrom) {
-                    scanScope(service.project).setDiffRefs(selected.value, pluginLocalState.diffToRef)
-                } else {
-                    scanScope(service.project).setDiffRefs(pluginLocalState.diffFromRef, selected.value)
-                }
+                val selected = (selectedItem as? SideOption)?.side ?: return@addActionListener
+                if (isFrom) diffRefs.setSides(selected, diffRefs.to) else diffRefs.setSides(diffRefs.from, selected)
             }
         }
     }
 
-    private fun populateRefCombo(combo: ComboBox<RefOption>, isFrom: Boolean, selectedValue: String, refs: List<RefOption>) {
+    private fun populateCombo(combo: ComboBox<SideOption>, isFrom: Boolean, selected: DiffSide, known: List<RefOption>) {
         // replacing the model closes an open popup
         if (combo.isPopupVisible) return
 
-        val items = mutableListOf(RefOption(LOCAL_DIRECTORY_REF, CycodeBundle.message("scanScopeDiffLocalDirectory")))
-        items.addAll(refs.ifEmpty { listOf(RefOption(HEAD_REF, HEAD_REF)) })
+        val refs = known.ifEmpty { listOf(RefOption(HEAD_REF, HEAD_REF)) }
+        val items = listOf(SideOption(DiffSide.Local, CycodeBundle.message("scanScopeDiffLocalDirectory"))) +
+            refs.map { SideOption(DiffSide.Rev(it.value), it.label) }
 
         updatingCombos = true
         try {
             combo.model = DefaultComboBoxModel(items.toTypedArray())
-            combo.selectedItem = items.firstOrNull { it.value == selectedValue }
-                ?: items.first { it.value == if (isFrom) LOCAL_DIRECTORY_REF else HEAD_REF }
+            combo.selectedItem = items.firstOrNull { it.side == selected }
+                ?: items.first { it.side == if (isFrom) DiffSide.Local else DiffSide.Rev(HEAD_REF) }
         } finally {
             updatingCombos = false
         }
