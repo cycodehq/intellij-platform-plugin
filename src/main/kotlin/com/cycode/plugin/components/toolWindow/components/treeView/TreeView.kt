@@ -11,10 +11,10 @@ import com.cycode.plugin.cli.models.scanResult.iac.IacDetection
 import com.cycode.plugin.cli.models.scanResult.sast.SastDetection
 import com.cycode.plugin.cli.models.scanResult.sca.ScaDetection
 import com.cycode.plugin.cli.models.scanResult.secret.SecretDetection
-import com.cycode.plugin.components.toolWindow.components.violationCardContentTab.iacViolationCardContentTab.IacViolationCardContentTab
-import com.cycode.plugin.components.toolWindow.components.violationCardContentTab.sastViolationCardContentTab.SastViolationCardContentTab
-import com.cycode.plugin.components.toolWindow.components.violationCardContentTab.scaViolationCardContentTab.ScaViolationCardContentTab
-import com.cycode.plugin.components.toolWindow.components.violationCardContentTab.secretViolationCardContentTab.SecretViolationCardContentTab
+import com.cycode.plugin.components.toolWindow.components.violationCardContentTab.createViolationCard
+import com.cycode.plugin.editor.FindingTabService
+import com.cycode.plugin.services.pluginSettings
+import com.intellij.openapi.components.service
 import com.cycode.plugin.components.toolWindow.components.treeView.components.detectionNodeContextMenu.DetectionNodeContextMenu
 import com.cycode.plugin.components.toolWindow.components.treeView.nodes.*
 import com.cycode.plugin.icons.PluginIcons
@@ -134,12 +134,12 @@ class TreeView(
     }
 
     fun displayViolationCard(detection: DetectionBase) {
-        val card = when (detection) {
-            is SecretDetection -> SecretViolationCardContentTab(project).getContent(detection)
-            is ScaDetection -> ScaViolationCardContentTab(project).getContent(detection)
-            is IacDetection -> IacViolationCardContentTab(project).getContent(detection)
-            is SastDetection -> SastViolationCardContentTab(project).getContent(detection)
-            else -> return
+        val card = createViolationCard(project, detection) ?: return
+
+        // with the option on, vulnerabilities get an editor tab on the right instead of the tool window pane
+        if (pluginSettings().openFindingsInEditorTab) {
+            project.service<FindingTabService>().show(card)
+            return
         }
 
         // a violation card needs the room: the scan options expand for it and collapse again when it is closed

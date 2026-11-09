@@ -102,6 +102,10 @@ The scope is remembered for each project between sessions. The selected revision
 
 ## Viewing Scan Results
 
+By default the details of a vulnerability open in the Cycode tool window. To get more room, enable **Open vulnerabilities in an
+editor tab** in the plugin settings: each vulnerability then opens in a tab on the right side of the editor, and selecting
+another vulnerability reuses that tab.
+
 ### Handling Detected Secrets
 
 1. The scan displays a list of hardcoded secrets found in the application code.
