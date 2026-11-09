@@ -270,7 +270,6 @@ class ScanContentTab : Component<CycodeService>() {
     }
 
     private fun addScopeControls(service: CycodeService, horizontal: Boolean, out: MutableList<JComponent>) {
-        val pluginLocalState = pluginLocalState(service.project)
         val effectiveScope = scanScope(service.project).getEffectiveScanScope()
         val scopes = ScanScope.entries.filter { it != ScanScope.Diff || scanScope(service.project).isDiffScanSupported() }
 
