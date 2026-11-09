@@ -19,6 +19,7 @@ class SettingsWindow {
     private var cliAdditionalParamsTextField = JBTextField(pluginSettings.cliAdditionalParams, FIELD_COLUMNS_COUNT)
 
     private var scanOnSaveCheckbox = JBCheckBox(null, pluginSettings.scanOnSave)
+    private var openFindingsInEditorTabCheckbox = JBCheckBox(null, pluginSettings.openFindingsInEditorTab)
 
     fun getComponent(): DialogPanel {
         val contentPanel = panel {
@@ -45,6 +46,9 @@ class SettingsWindow {
                 row(CycodeBundle.message("settingsScanOnSaveCheckbox")) {
                     cell(scanOnSaveCheckbox)
                 }
+                row(CycodeBundle.message("settingsOpenFindingsInEditorTabCheckbox")) {
+                    cell(openFindingsInEditorTabCheckbox)
+                }
             }
         }
 
@@ -59,6 +63,7 @@ class SettingsWindow {
             cliAppUrlTextField.text,
             cliAdditionalParamsTextField.text,
             scanOnSaveCheckbox.isSelected,
+            openFindingsInEditorTabCheckbox.isSelected,
         )
     }
 

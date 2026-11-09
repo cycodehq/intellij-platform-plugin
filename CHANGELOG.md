@@ -4,6 +4,10 @@
 
 ## [Unreleased]
 
+- Add scan scope selector: Project, Diff (between two revisions or the local directory) and File
+- Increase required CLI version to 3.25.0
+- Improve the Cycode tool window: spinners for running scans, a Scan all button, collapsible scan options, a layout that follows the dock side, a close button on the vulnerability view, and results that stay expanded while other scans finish
+- Add a setting to open vulnerabilities in an editor tab on the right side, for more room
 - Update extension icon to the new Cycode brand logo
 
 ## [3.1.1] - 2026-08-30

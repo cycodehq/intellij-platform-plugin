@@ -5,6 +5,7 @@ import com.cycode.plugin.cli.models.scanResult.DetectionBase
 import com.cycode.plugin.components.toolWindow.CycodeToolWindowFactory
 import com.cycode.plugin.components.toolWindow.activateToolWindow
 import com.cycode.plugin.icons.PluginIcons
+import com.cycode.plugin.services.pluginSettings
 import com.intellij.codeInsight.intention.PriorityAction
 import com.intellij.codeInsight.intention.impl.BaseIntentionAction
 import com.intellij.openapi.diagnostic.thisLogger
@@ -58,7 +59,10 @@ class CycodeOpenViolationCardIntentionQuickFix(
             ?.getTreeView()
             ?.displayViolationCard(detection)
 
-        activateToolWindow(project)
+        // the finding opens in an editor tab instead when that option is on
+        if (!pluginSettings().openFindingsInEditorTab) {
+            activateToolWindow(project)
+        }
     }
 
     override fun getPriority(): PriorityAction.Priority {
