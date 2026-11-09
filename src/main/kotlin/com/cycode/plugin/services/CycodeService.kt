@@ -1,8 +1,7 @@
 package com.cycode.plugin.services
 
 import com.cycode.plugin.CycodeBundle
-import com.cycode.plugin.cli.CliIgnoreType
-import com.cycode.plugin.cli.CliScanType
+import com.cycode.plugin.cli.*
 import com.cycode.plugin.cli.models.AiRemediationResultData
 import com.cycode.plugin.components.toolWindow.CycodeToolWindowFactory
 import com.cycode.plugin.components.toolWindow.updateToolWindowState
@@ -63,7 +62,7 @@ class CycodeService(val project: Project) : Disposable {
         }
     }
 
-    private fun getBackgroundScanningLabel(scanType: CliScanType) = when (scanType) {
+    fun getBackgroundScanningLabel(scanType: CliScanType) = when (scanType) {
         CliScanType.Secret -> CycodeBundle.message("secretScanning")
         CliScanType.Sca -> CycodeBundle.message("scaScanning")
         CliScanType.Iac -> CycodeBundle.message("iacScanning")
@@ -90,15 +89,7 @@ class CycodeService(val project: Project) : Disposable {
             }
 
             thisLogger().debug("[$scanType] Start scanning paths: $pathsToScan")
-
-            val cancelledCallback = { indicator.isCanceled }
-            when (scanType) {
-                CliScanType.Secret -> cliService.scanPathsSecrets(pathsToScan, onDemand, cancelledCallback)
-                CliScanType.Sca -> cliService.scanPathsSca(pathsToScan, onDemand, cancelledCallback)
-                CliScanType.Iac -> cliService.scanPathsIac(pathsToScan, onDemand, cancelledCallback)
-                CliScanType.Sast -> cliService.scanPathsSast(pathsToScan, onDemand, cancelledCallback)
-            }
-
+            cliService.scan(scanType, ScanTarget.Paths(pathsToScan), onDemand) { indicator.isCanceled }
             thisLogger().debug("[$scanType] Finish scanning paths: $pathsToScan")
         }
     }

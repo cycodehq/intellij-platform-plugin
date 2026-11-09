@@ -19,6 +19,7 @@ The extension provides functionalities such as:
 * Company’s Custom Remediation Guidelines - If your company has set custom remediation guidelines via the Cycode portal, you'll see a field for "Company Guidelines" that contains those guidelines.
 * Running a new scan from your IDE even before committing the code.
 * Triggering a scan automatically whenever a file is saved.
+* Choosing the scan scope: the whole project, only the changes between two revisions (Diff), or the open file.
 * Highlighting vulnerable code in the editor - syntax highlighting for Cycode-specific code and configuration files,
   making it easy for users to identify and work with these files in their projects.
 * Removing a detected secret or ignoring it by secret value, rule (type) or by path.
@@ -81,6 +82,23 @@ To use the Cycode IntelliJ Platform Plugin, follow these steps:
        (including manifest files, such as package.json and dockerfile) for hardcoded secrets.
 4. Also applies for auto-save.
 5. Wait for the scan to complete and to display a success message.
+
+### Scan Scope
+
+In the Cycode tool window, choose what the scan buttons and **Scan all** run on:
+
+* **Project** - scans the entire project.
+* **Diff** - scans only what changed. Pick two revisions in **From** and **To** (HEAD, branches, tags or recent
+  commits), or choose **Local directory** on one side to include your uncommitted changes. The default is
+  Local directory compared with HEAD. Two different revisions are required.
+  * Scanning only the changes is faster, but vulnerabilities that need the surrounding code may be less accurate.
+  * Infrastructure As Code scans do not support diffs and always scan the full project.
+  * The project must be inside a Git repository (otherwise Diff is disabled), and Cycode CLI 3.25.0 or later is
+    required (otherwise the Diff option is hidden).
+* **File** - scans only the file open in the editor. Package vulnerability and Infrastructure As Code scans only run
+  for the file types they support.
+
+The scope is remembered for each project between sessions. The selected revisions are kept for the current session only.
 
 ## Viewing Scan Results
 
