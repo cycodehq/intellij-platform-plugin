@@ -4,6 +4,8 @@ import com.cycode.plugin.CycodeBundle
 import com.cycode.plugin.cli.*
 import com.cycode.plugin.cli.models.AiRemediationResultData
 import com.cycode.plugin.components.toolWindow.CycodeToolWindowFactory
+import com.cycode.plugin.components.toolWindow.ScanTabs
+import com.cycode.plugin.components.toolWindow.ToolWindowUpdate
 import com.cycode.plugin.components.toolWindow.updateToolWindowState
 import com.cycode.plugin.components.toolWindow.updateToolWindowStateForAllProjects
 import com.cycode.plugin.utils.CycodeNotifier
@@ -37,6 +39,21 @@ class CycodeService(val project: Project) : Disposable {
             }
         }.queue()
         thisLogger().debug("Background task queued: $title")
+    }
+
+    /** Background task for a scan that also marks the scan type as running (spinner in the scan tab). */
+    fun runScanBackgroundTask(scanType: CliScanType, task: (ProgressIndicator) -> Unit) {
+        pluginLocalState.scanStarted(scanType)
+        updateToolWindowState(project, ToolWindowUpdate.RunningStateChanged)
+        runBackgroundTask(getBackgroundScanningLabel(scanType)) { indicator ->
+            try {
+                task(indicator)
+            } finally {
+                pluginLocalState.scanFinished(scanType)
+                // the results (if any) were already reloaded by CliService; only the spinners change here
+                updateToolWindowState(project, ToolWindowUpdate.RunningStateChanged)
+            }
+        }
     }
 
     fun installCliIfNeededAndCheckAuthentication() {
@@ -90,13 +107,13 @@ class CycodeService(val project: Project) : Disposable {
      * to scan (the resolver has already told the user why).
      */
     fun startScan(scanType: CliScanType, onDemand: Boolean = true, resolveTarget: () -> ScanTarget?) {
-        runBackgroundTask(getBackgroundScanningLabel(scanType)) { indicator ->
+        runScanBackgroundTask(scanType) { indicator ->
             if (!pluginLocalState.cliAuthed) {
                 CycodeNotifier.notifyInfo(project, CycodeBundle.message("authorizationRequiredNotification"))
-                return@runBackgroundTask
+                return@runScanBackgroundTask
             }
 
-            val target = resolveTarget() ?: return@runBackgroundTask
+            val target = resolveTarget() ?: return@runScanBackgroundTask
 
             thisLogger().debug("[$scanType] Start scanning: $target")
             cliService.scan(scanType, target, onDemand) { indicator.isCanceled }
@@ -159,6 +176,7 @@ class CycodeService(val project: Project) : Disposable {
     }
 
     override fun dispose() {
+        ScanTabs.remove(project)
         CycodeToolWindowFactory.TabManager.removeTab(project)
     }
 }
