@@ -5,8 +5,6 @@ import com.cycode.plugin.cli.ScanScope
 import com.cycode.plugin.cli.ScanTarget
 import com.cycode.plugin.cli.CliScanType
 import com.cycode.plugin.cli.getScanTypeDisplayName
-import com.cycode.plugin.cli.isDiffScanSupportedByCli
-import com.cycode.plugin.cli.isFileSupportedByScanType
 import com.cycode.plugin.cli.partitionByFileSupport
 import com.cycode.plugin.git.DiffScanPlan
 import com.cycode.plugin.git.GitCli
@@ -40,12 +38,10 @@ class ScanScopeService(private val project: Project) {
         }
     }
 
-    fun isDiffScanSupported(): Boolean = isDiffScanSupportedByCli(pluginLocalState.cliStatus?.version)
+    /** Diff needs a git repository. */
+    fun isDiffScanAvailable(): Boolean = diffRefs.isGitRepository != false
 
-    /** Diff needs a new enough CLI and a git repository. */
-    fun isDiffScanAvailable(): Boolean = isDiffScanSupported() && diffRefs.isGitRepository != false
-
-    /** Until the CLI status is known (or if the CLI is too old or there is no repository), Diff behaves as Project. */
+    /** Without a git repository Diff behaves as Project. */
     fun getEffectiveScanScope(): ScanScope {
         val scope = getScanScope()
         return if (scope == ScanScope.Diff && !isDiffScanAvailable()) ScanScope.Project else scope
@@ -57,39 +53,17 @@ class ScanScopeService(private val project: Project) {
     fun startScanForCurrentScope(scanType: CliScanType) {
         when (getEffectiveScanScope()) {
             ScanScope.Project -> cycodeService.startScanForCurrentProject(scanType)
-            ScanScope.File -> startScanForCurrentFile(scanType)
+            ScanScope.File -> startFileScan(listOf(scanType))
             ScanScope.Diff -> startDiffScan(scanType)
         }
     }
 
     /** Runs every scan type enabled for the tenant, according to the selected scope. */
     fun startAllScansForCurrentScope() {
-        // without an open file every scan type would show the same message: say it once
-        if (getEffectiveScanScope() == ScanScope.File && currentLocalFilePath() == null) {
-            CycodeNotifier.notifyInfo(project, CycodeBundle.message("noOpenFileErrorNotification"))
-            return
-        }
-
-        val local = pluginLocalState
-        val scanTypes = listOf(
-            CliScanType.Secret to local.isSecretScanningEnabled,
-            CliScanType.Sca to local.isScaScanningEnabled,
-            CliScanType.Sast to local.isSastScanningEnabled,
-            CliScanType.Iac to local.isIacScanningEnabled,
-        ).filter { it.second }.map { it.first }
-
-        if (getEffectiveScanScope() != ScanScope.File) {
-            scanTypes.forEach { startScanForCurrentScope(it) }
-            return
-        }
-
-        // one combined message for the types that cannot scan the open file, instead of one per type
-        val filePath = currentLocalFilePath() ?: return
-        val (supported, unsupported) = partitionByFileSupport(filePath, scanTypes)
-        supported.forEach { cycodeService.startScan(it, listOf(filePath)) }
-        if (unsupported.isNotEmpty()) {
-            val names = unsupported.joinToString(", ") { getScanTypeDisplayName(it) }
-            CycodeNotifier.notifyInfo(project, CycodeBundle.message("scanFileUnsupportedNotification", names))
+        val scanTypes = pluginLocalState.enabledScanTypes
+        when (getEffectiveScanScope()) {
+            ScanScope.File -> startFileScan(scanTypes)
+            else -> scanTypes.forEach { startScanForCurrentScope(it) }
         }
     }
 
@@ -98,22 +72,20 @@ class ScanScopeService(private val project: Project) {
         return file?.takeIf { it.isInLocalFileSystem }?.canonicalPath
     }
 
-    private fun startScanForCurrentFile(scanType: CliScanType) {
+    /** Scans the open file with the types that support it, with one combined message for the rest. */
+    private fun startFileScan(scanTypes: List<CliScanType>) {
         val filePath = currentLocalFilePath()
         if (filePath == null) {
             CycodeNotifier.notifyInfo(project, CycodeBundle.message("noOpenFileErrorNotification"))
             return
         }
 
-        if (!isFileSupportedByScanType(filePath, scanType)) {
-            CycodeNotifier.notifyInfo(
-                project,
-                CycodeBundle.message("scanFileUnsupportedNotification", getScanTypeDisplayName(scanType))
-            )
-            return
+        val (supported, unsupported) = partitionByFileSupport(filePath, scanTypes)
+        supported.forEach { cycodeService.startScan(it, listOf(filePath)) }
+        if (unsupported.isNotEmpty()) {
+            val names = unsupported.joinToString(", ") { getScanTypeDisplayName(it) }
+            CycodeNotifier.notifyInfo(project, CycodeBundle.message("scanFileUnsupportedNotification", names))
         }
-
-        cycodeService.startScan(scanType, listOf(filePath))
     }
 
     private fun startDiffScan(scanType: CliScanType) {

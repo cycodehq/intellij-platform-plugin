@@ -43,7 +43,6 @@ class DiffScanTest {
         assertTrue(isVersionAtLeast("4.0.0", "3.25.0"))
         assertFalse(isVersionAtLeast("3.24.9", "3.25.0"))
         assertFalse(isVersionAtLeast("0.0.1.dev498", "3.25.0"))
-        assertFalse(isDiffScanSupportedByCli(null))
     }
 
     @Test
@@ -75,8 +74,6 @@ class DiffScanTest {
         assertTrue(isVersionAtLeast("10.0.0", "3.25.0"))
         assertFalse(isVersionAtLeast("", "3.25.0"))
         assertFalse(isVersionAtLeast("garbage", "3.25.0"))
-        assertTrue(isDiffScanSupportedByCli("3.26.0"))
-        assertFalse(isDiffScanSupportedByCli("3.21.0"))
     }
 
     @Test

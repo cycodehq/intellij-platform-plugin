@@ -10,6 +10,7 @@ import com.cycode.plugin.git.HEAD_REF
 import com.cycode.plugin.git.DiffSide
 import com.cycode.plugin.git.RefOption
 import com.cycode.plugin.services.CycodeService
+import com.cycode.plugin.services.CycodeTemporaryStateService
 import com.cycode.plugin.services.diffRefs
 import com.cycode.plugin.services.pluginLocalState
 import com.cycode.plugin.services.scanScope
@@ -51,18 +52,9 @@ class ScanContentTab : Component<CycodeService>() {
 
         addComponentToPanel(createClickableLabel(CycodeBundle.message("scanTabTitleLabel")))
         addScopeControls(service)
-        addComponentToPanel(createScanButton(service, CliScanType.Secret, "scanTabSecretsBtn") {
-            pluginLocalState.isSecretScanningEnabled
-        })
-        addComponentToPanel(createScanButton(service, CliScanType.Sca, "scanTabScaBtn") {
-            pluginLocalState.isScaScanningEnabled
-        })
-        addComponentToPanel(createScanButton(service, CliScanType.Iac, "scanTabIacBtn") {
-            pluginLocalState.isIacScanningEnabled
-        })
-        addComponentToPanel(createScanButton(service, CliScanType.Sast, "scanTabSastBtn") {
-            pluginLocalState.isSastScanningEnabled
-        })
+        CycodeTemporaryStateService.SCAN_TYPES_IN_ORDER.forEach { scanType ->
+            addComponentToPanel(createScanButton(service, scanType, pluginLocalState.isScanTypeEnabled(scanType)))
+        }
 
         addComponentToPanel(createClickableLabel(CycodeBundle.message("scanTabOnSaveTip")))
         addComponentToPanel(createClickableLabel(CycodeBundle.message("howToUseLabel")))
@@ -70,14 +62,15 @@ class ScanContentTab : Component<CycodeService>() {
         return panel
     }
 
-    private fun createScanButton(
-        service: CycodeService,
-        scanType: CliScanType,
-        key: String,
-        isModuleEnabled: () -> Boolean
-    ): JButton {
+    private fun createScanButton(service: CycodeService, scanType: CliScanType, enabled: Boolean): JButton {
+        val key = when (scanType) {
+            CliScanType.Secret -> "scanTabSecretsBtn"
+            CliScanType.Sca -> "scanTabScaBtn"
+            CliScanType.Iac -> "scanTabIacBtn"
+            CliScanType.Sast -> "scanTabSastBtn"
+        }
         return JButton(CycodeBundle.message(key)).apply {
-            isEnabled = isModuleEnabled()
+            isEnabled = enabled
             addActionListener { scanScope(service.project).startScanForCurrentScope(scanType) }
         }
     }
@@ -98,7 +91,6 @@ class ScanContentTab : Component<CycodeService>() {
         val effectiveScope = scopeService.getEffectiveScanScope()
         val diffRefs = diffRefs(service.project)
         val isGitRepository = diffRefs.isGitRepository
-        val scopes = ScanScope.entries.filter { it != ScanScope.Diff || scopeService.isDiffScanSupported() }
 
         // Diff is disabled when this turns out not to be a git repository; the tab is rebuilt if that changes
         diffRefs.refreshGitRepositoryState()
@@ -107,7 +99,7 @@ class ScanContentTab : Component<CycodeService>() {
 
         val group = ButtonGroup()
         val radioPanel = JPanel(FlowLayout(FlowLayout.LEFT, 0, 0))
-        scopes.forEach { scope ->
+        ScanScope.entries.forEach { scope ->
             val radio = JBRadioButton(CycodeBundle.message("scanScope${scope.name}"), scope == effectiveScope).apply {
                 // Diff cannot work without a git repository
                 isEnabled = scope != ScanScope.Diff || isGitRepository != false
@@ -124,7 +116,7 @@ class ScanContentTab : Component<CycodeService>() {
         }
         addComponentToPanel(radioPanel)
         addComponentToPanel(createNote(CycodeBundle.message("scanScope${effectiveScope.name}Hint")))
-        if (scopes.contains(ScanScope.Diff) && isGitRepository == false) {
+        if (isGitRepository == false) {
             addComponentToPanel(createNote(CycodeBundle.message("scanScopeDiffNoGitNote"), AllIcons.General.Warning))
         }
 

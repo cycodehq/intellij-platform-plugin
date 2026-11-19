@@ -1,5 +1,6 @@
 package com.cycode.plugin.services
 
+import com.cycode.plugin.Consts
 import com.cycode.plugin.CycodeBundle
 import com.cycode.plugin.cli.*
 import com.cycode.plugin.cli.models.AiRemediationResult
@@ -30,6 +31,7 @@ class CliService(private val project: Project) {
     private val pluginLocalState = pluginLocalState(project)
     private val scanResults = scanResults(project)
     private val cli = CliWrapper(getProjectRootDirectory())
+    private var outdatedCliNotified = false
 
     fun getProjectRootDirectory(): String? {
         val modules = ModuleManager.getInstance(project).modules
@@ -112,7 +114,24 @@ class CliService(private val project: Project) {
             showErrorNotification(CycodeBundle.message("checkAuthErrorNotification"))
         }
 
+        notifyIfCustomCliIsOutdated(processedResult.result.version)
+
         return
+    }
+
+    /** A plugin-managed CLI is always at the required version; a user-provided one may be older. */
+    private fun notifyIfCustomCliIsOutdated(version: String) {
+        if (pluginSettings().cliAutoManaged || outdatedCliNotified) {
+            return
+        }
+
+        if (!isVersionAtLeast(version, Consts.REQUIRED_CLI_VERSION)) {
+            outdatedCliNotified = true
+            CycodeNotifier.notifyInfo(
+                project,
+                CycodeBundle.message("customCliOutdatedNotification", Consts.REQUIRED_CLI_VERSION)
+            )
+        }
     }
 
     fun startAuth(cancelledCallback: TaskCancelledCallback = null): Boolean {
