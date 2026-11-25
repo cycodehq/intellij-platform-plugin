@@ -20,8 +20,8 @@ class GitCliTest : GitTestBase() {
         val feature = sh("rev-parse", "feature")
         val main = sh("rev-parse", "main")
 
-        assertEquals(CommitRangeResult.Range("$base..$feature"), git.getCommitRange("main", "feature"))
-        assertEquals(CommitRangeResult.Range("$base..$main"), git.getCommitRange("feature", "main"))
+        assertEquals(CommitRangeResult.Range("$base..$feature"), git.range("main", "feature"))
+        assertEquals(CommitRangeResult.Range("$base..$main"), git.range("feature", "main"))
     }
 
     @Test
@@ -30,8 +30,8 @@ class GitCliTest : GitTestBase() {
         commit("second")
         val new = sh("rev-parse", "HEAD")
 
-        assertEquals(CommitRangeResult.Range("$old..$new"), git.getCommitRange(old, new))
-        assertEquals(CommitRangeResult.Range("$old..$new"), git.getCommitRange(new, old))
+        assertEquals(CommitRangeResult.Range("$old..$new"), git.range(old, new))
+        assertEquals(CommitRangeResult.Range("$old..$new"), git.range(new, old))
     }
 
     @Test
@@ -41,20 +41,19 @@ class GitCliTest : GitTestBase() {
 
     @Test
     fun sameCommit() {
-        assertEquals(CommitRangeResult.SameCommit, git.getCommitRange("HEAD", "main"))
+        assertEquals(CommitRangeResult.SameCommit, git.range("HEAD", "main"))
     }
 
     @Test
     fun noCommonHistory() {
         sh("checkout", "--orphan", "orphan")
         commit("orphan-1")
-        assertEquals(CommitRangeResult.NoCommonHistory, git.getCommitRange("main", "orphan"))
+        assertEquals(CommitRangeResult.NoCommonHistory, git.range("main", "orphan"))
     }
 
     @Test
-    fun unknownAndOptionLikeRevisions() {
-        assertEquals(CommitRangeResult.UnknownRevision, git.getCommitRange("main", "nope"))
-        assertEquals(CommitRangeResult.UnknownRevision, git.getCommitRange("main", "--output=x"))
+    fun unknownRevision() {
+        assertEquals(CommitRangeResult.UnknownRevision, git.range("main", "nope"))
     }
 
     @Test
@@ -78,8 +77,8 @@ class GitCliTest : GitTestBase() {
         assertEquals(1, refs.count { it.label.endsWith("main-1") })
 
         val first = sh("rev-list", "--max-parents=0", "HEAD")
-        assertTrue(git.getAvailableRefs(listOf(first)).any { it.value == first })
-        assertFalse(git.getAvailableRefs(listOf("nope")).any { it.value == "nope" })
+        assertTrue(git.getAvailableRefs(listOf(DiffSide.Rev(first))).any { it.value == first })
+        assertFalse(git.getAvailableRefs(listOf(DiffSide.Rev("nope"))).any { it.value == "nope" })
     }
 
     @Test
@@ -136,30 +135,23 @@ class GitCliTest : GitTestBase() {
     fun commitRangeWithTagsAndRelativeRevisions() {
         sh("tag", "v1")
         commit("second")
-        val result = git.getCommitRange("v1", "HEAD") as CommitRangeResult.Range
+        val result = git.range("v1", "HEAD") as CommitRangeResult.Range
         assertTrue(result.range.matches(Regex("[0-9a-f]{40}\\.\\.[0-9a-f]{40}")))
-        assertEquals(result, git.getCommitRange("v1", "main"))
+        assertEquals(result, git.range("v1", "main"))
     }
 
     @Test
-    fun unknownOrUnsafeFromRevision() {
-        assertEquals(CommitRangeResult.UnknownRevision, git.getCommitRange("nope", "main"))
-        assertEquals(CommitRangeResult.UnknownRevision, git.getCommitRange("--output=x", "main"))
-        assertEquals(CommitRangeResult.UnknownRevision, git.getCommitRange("", "main"))
+    fun unknownFromRevision() {
+        assertEquals(CommitRangeResult.UnknownRevision, git.range("nope", "main"))
     }
 
     @Test
     fun pinnedRefThatScrolledOutOfTheListIsKept() {
         val oldest = sh("rev-parse", "HEAD")
         repeat(GitCli.MAX_COMMITS + 5) { commit("c$it") }
-        val refs = git.getAvailableRefs(listOf(oldest, "HEAD"))
+        val refs = git.getAvailableRefs(listOf(DiffSide.Rev(oldest), DiffSide.Rev("HEAD")))
         assertEquals(1, refs.count { it.value == oldest })
         assertEquals(1, refs.count { it.value == HEAD_REF })
-    }
-
-    @Test
-    fun unsafePinnedRefIsDropped() {
-        assertFalse(git.getAvailableRefs(listOf("--output=x")).any { it.value == "--output=x" })
     }
 
     @Test
@@ -168,29 +160,5 @@ class GitCliTest : GitTestBase() {
         assertEquals("abc123 │ subject", GitCli.buildLabel("", "abc123", "subject"))
     }
 
-    @Test
-    fun headFingerprintChangesOnCommitAndBranchSwitchOnly() {
-        val first = git.getHeadFingerprint()!!
-        assertEquals(first, git.getHeadFingerprint())
-
-        sh("branch", "other") // a new ref that is not checked out does not change it
-        assertEquals(first, git.getHeadFingerprint())
-
-        commit("second")
-        val afterCommit = git.getHeadFingerprint()!!
-        assertNotEquals(first, afterCommit)
-
-        sh("checkout", "other")
-        assertNotEquals(afterCommit, git.getHeadFingerprint())
-    }
-
-    @Test
-    fun headFingerprintIsNullOutsideARepository() {
-        val plain = createPlainDirectory()
-        try {
-            assertNull(GitCli(plain.path).getHeadFingerprint())
-        } finally {
-            plain.deleteRecursively()
-        }
-    }
+    private fun GitCli.range(from: String, to: String) = getCommitRange(DiffSide.Rev(from), DiffSide.Rev(to))
 }

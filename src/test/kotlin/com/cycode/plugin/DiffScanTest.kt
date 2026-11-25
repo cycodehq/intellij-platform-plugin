@@ -1,6 +1,7 @@
 package com.cycode.plugin
 
 import com.cycode.plugin.cli.*
+import com.cycode.plugin.git.DiffSide
 import org.junit.Assert.*
 import org.junit.Test
 
@@ -37,15 +38,6 @@ class DiffScanTest {
     }
 
     @Test
-    fun versionGate() {
-        assertTrue(isVersionAtLeast("3.25.0", "3.25.0"))
-        assertTrue(isVersionAtLeast("3.26.0", "3.25.0"))
-        assertTrue(isVersionAtLeast("4.0.0", "3.25.0"))
-        assertFalse(isVersionAtLeast("3.24.9", "3.25.0"))
-        assertFalse(isVersionAtLeast("0.0.1.dev498", "3.25.0"))
-    }
-
-    @Test
     fun scanTargetArgs() {
         assertArrayEquals(arrayOf("path", "/a", "/b"), ScanTarget.Paths(listOf("/a", "/b")).toCliArgs())
         assertArrayEquals(
@@ -59,21 +51,12 @@ class DiffScanTest {
         assertThrows(IllegalArgumentException::class.java) { assertSafeRefArg("") }
         assertThrows(IllegalArgumentException::class.java) { assertSafeRefArg("a\u0000b") }
         assertThrows(IllegalArgumentException::class.java) { getDiffScanArgs(DiffScanMode.CommitRange, "-x", "/repo") }
+        assertThrows(IllegalArgumentException::class.java) { DiffSide.Rev("--output=x") }
+        assertThrows(IllegalArgumentException::class.java) { DiffSide.Rev("") }
         assertFalse(isSafeRefArg(""))
         assertFalse(isSafeRefArg("-"))
         assertTrue(isSafeRefArg("origin/feature-1"))
         assertTrue(isSafeRefArg("HEAD~1"))
-    }
-
-    @Test
-    fun versionEdgeCases() {
-        assertTrue(isVersionAtLeast("v3.25.0", "3.25.0"))
-        assertTrue(isVersionAtLeast("3.25", "3.25.0"))
-        assertTrue(isVersionAtLeast("3.25.0.dev1", "3.25.0"))
-        assertFalse(isVersionAtLeast("3.25.0-alpha", "3.26.0"))
-        assertTrue(isVersionAtLeast("10.0.0", "3.25.0"))
-        assertFalse(isVersionAtLeast("", "3.25.0"))
-        assertFalse(isVersionAtLeast("garbage", "3.25.0"))
     }
 
     @Test

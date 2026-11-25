@@ -62,7 +62,7 @@ class CycodeService(val project: Project) : Disposable {
         }
     }
 
-    fun getBackgroundScanningLabel(scanType: CliScanType) = when (scanType) {
+    private fun getBackgroundScanningLabel(scanType: CliScanType) = when (scanType) {
         CliScanType.Secret -> CycodeBundle.message("secretScanning")
         CliScanType.Sca -> CycodeBundle.message("scaScanning")
         CliScanType.Iac -> CycodeBundle.message("iacScanning")
@@ -82,15 +82,25 @@ class CycodeService(val project: Project) : Disposable {
     }
 
     fun startScan(scanType: CliScanType, pathsToScan: List<String>, onDemand: Boolean = true) {
+        startScan(scanType, onDemand) { ScanTarget.Paths(pathsToScan) }
+    }
+
+    /**
+     * [resolveTarget] runs on the background thread once the scan is allowed to start; null means there is nothing
+     * to scan (the resolver has already told the user why).
+     */
+    fun startScan(scanType: CliScanType, onDemand: Boolean = true, resolveTarget: () -> ScanTarget?) {
         runBackgroundTask(getBackgroundScanningLabel(scanType)) { indicator ->
             if (!pluginLocalState.cliAuthed) {
                 CycodeNotifier.notifyInfo(project, CycodeBundle.message("authorizationRequiredNotification"))
                 return@runBackgroundTask
             }
 
-            thisLogger().debug("[$scanType] Start scanning paths: $pathsToScan")
-            cliService.scan(scanType, ScanTarget.Paths(pathsToScan), onDemand) { indicator.isCanceled }
-            thisLogger().debug("[$scanType] Finish scanning paths: $pathsToScan")
+            val target = resolveTarget() ?: return@runBackgroundTask
+
+            thisLogger().debug("[$scanType] Start scanning: $target")
+            cliService.scan(scanType, target, onDemand) { indicator.isCanceled }
+            thisLogger().debug("[$scanType] Finish scanning: $target")
         }
     }
 

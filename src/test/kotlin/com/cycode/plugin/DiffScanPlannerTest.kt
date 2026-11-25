@@ -83,15 +83,6 @@ class DiffScanPlannerTest : GitTestBase() {
     }
 
     @Test
-    fun unsafeRefsAreRefusedInBothFlavours() {
-        assertEquals(
-            DiffScanPlan.Refused("diffUnknownRevisionNotification"),
-            plan(secret, DiffSide.Local, "--output=x")
-        )
-        assertEquals(DiffScanPlan.Refused("diffUnknownRevisionNotification"), plan(secret, "--output=x", "main"))
-    }
-
-    @Test
     fun sameCommitUnderDifferentNamesIsRefused() {
         assertEquals(DiffScanPlan.Refused("diffSameCommitNotification"), plan(secret, "main", "HEAD"))
     }

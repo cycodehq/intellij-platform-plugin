@@ -3,7 +3,6 @@ package com.cycode.plugin.git
 import com.cycode.plugin.cli.CliScanType
 import com.cycode.plugin.cli.DiffScanMode
 import com.cycode.plugin.cli.ScanTarget
-import com.cycode.plugin.cli.isSafeRefArg
 import com.cycode.plugin.cli.supportsDiffScan
 
 sealed class DiffScanPlan {
@@ -33,16 +32,13 @@ fun planDiffScan(scanType: CliScanType, from: DiffSide, to: DiffSide, projectRoo
 
     if (from is DiffSide.Local || to is DiffSide.Local) {
         val rev = (if (from is DiffSide.Local) to else from) as DiffSide.Rev
-        if (!isSafeRefArg(rev.ref)) {
-            return DiffScanPlan.Refused("diffUnknownRevisionNotification")
-        }
         return DiffScanPlan.Run(ScanTarget.Diff(DiffScanMode.LocalDiff, rev.ref, projectRoot))
     }
 
     // both sides are revisions here (two local sides were caught by the equality check above)
     from as DiffSide.Rev
     to as DiffSide.Rev
-    return when (val result = git.getCommitRange(from.ref, to.ref)) {
+    return when (val result = git.getCommitRange(from, to)) {
         is CommitRangeResult.Range -> DiffScanPlan.Run(ScanTarget.Diff(DiffScanMode.CommitRange, result.range, projectRoot))
         CommitRangeResult.SameCommit -> DiffScanPlan.Refused("diffSameCommitNotification")
         CommitRangeResult.NoCommonHistory -> DiffScanPlan.Refused("diffNoCommonHistoryNotification")

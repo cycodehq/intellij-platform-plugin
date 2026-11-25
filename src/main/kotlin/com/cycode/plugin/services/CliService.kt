@@ -21,6 +21,7 @@ import com.intellij.openapi.components.Service
 import com.intellij.openapi.diagnostic.thisLogger
 import com.intellij.openapi.module.ModuleManager
 import com.intellij.openapi.project.Project
+import com.intellij.util.text.VersionComparatorUtil
 
 
 typealias TaskCancelledCallback = (() -> Boolean)?
@@ -125,7 +126,7 @@ class CliService(private val project: Project) {
             return
         }
 
-        if (!isVersionAtLeast(version, Consts.REQUIRED_CLI_VERSION)) {
+        if (VersionComparatorUtil.compare(version, Consts.REQUIRED_CLI_VERSION) < 0) {
             outdatedCliNotified = true
             CycodeNotifier.notifyInfo(
                 project,

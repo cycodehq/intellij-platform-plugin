@@ -2,7 +2,6 @@ package com.cycode.plugin.services
 
 import com.cycode.plugin.CycodeBundle
 import com.cycode.plugin.cli.ScanScope
-import com.cycode.plugin.cli.ScanTarget
 import com.cycode.plugin.cli.CliScanType
 import com.cycode.plugin.cli.getScanTypeDisplayName
 import com.cycode.plugin.cli.partitionByFileSupport
@@ -11,7 +10,6 @@ import com.cycode.plugin.git.GitCli
 import com.cycode.plugin.git.planDiffScan
 import com.cycode.plugin.utils.CycodeNotifier
 import com.intellij.openapi.components.Service
-import com.intellij.openapi.diagnostic.thisLogger
 import com.intellij.openapi.fileEditor.FileEditorManager
 import com.intellij.openapi.project.Project
 
@@ -98,23 +96,14 @@ class ScanScopeService(private val project: Project) {
             return
         }
 
-        cycodeService.runBackgroundTask(cycodeService.getBackgroundScanningLabel(scanType)) { indicator ->
-            if (!pluginLocalState.cliAuthed) {
-                CycodeNotifier.notifyInfo(project, CycodeBundle.message("authorizationRequiredNotification"))
-                return@runBackgroundTask
-            }
-
-            val target = when (val plan = planDiffScan(scanType, from, to, projectRoot, GitCli(projectRoot))) {
+        cycodeService.startScan(scanType) {
+            when (val plan = planDiffScan(scanType, from, to, projectRoot, GitCli(projectRoot))) {
                 is DiffScanPlan.Run -> plan.target
                 is DiffScanPlan.Refused -> {
                     CycodeNotifier.notifyInfo(project, CycodeBundle.message(plan.messageKey))
-                    return@runBackgroundTask
+                    null
                 }
             }
-
-            thisLogger().debug("[$scanType] Start diff scan: $target")
-            cliService.scan(scanType, target, true) { indicator.isCanceled }
-            thisLogger().debug("[$scanType] Finish diff scan: $target")
         }
     }
 }

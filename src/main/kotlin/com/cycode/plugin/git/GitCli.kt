@@ -56,16 +56,6 @@ class GitCli(private val workDirectory: String) {
         return output != null && output.exitCode == 0
     }
 
-    /**
-     * Changes when the checked out branch changes or a commit is created on it. Null if git could not tell.
-     * Used to cache the revision lists, which are expensive to build.
-     */
-    fun getHeadFingerprint(): String? {
-        val sha = run("rev-parse", "HEAD")?.takeIf { it.exitCode == 0 }?.stdout ?: return null
-        val branch = run("symbolic-ref", "-q", "HEAD")?.takeIf { it.exitCode == 0 }?.stdout ?: HEAD_REF
-        return "$branch@$sha"
-    }
-
     /** Only an explicit "not a git repository" answer returns false; other failures are left to later steps. */
     fun isGitRepository(): Boolean {
         val output = run("rev-parse", "--is-inside-work-tree") ?: return true
@@ -94,14 +84,10 @@ class GitCli(private val workDirectory: String) {
      * Plain `from..to` is empty when picked newest-first, and `from...to` would also scan commits
      * that landed on the other branch since divergence.
      */
-    fun getCommitRange(from: String, to: String): CommitRangeResult {
-        if (!isSafeRefArg(from) || !isSafeRefArg(to)) {
-            return CommitRangeResult.UnknownRevision
-        }
-
-        val (fromSha, fromError) = resolveCommit(from)
+    fun getCommitRange(from: DiffSide.Rev, to: DiffSide.Rev): CommitRangeResult {
+        val (fromSha, fromError) = resolveCommit(from.ref)
         if (fromSha == null) return fromError!!
-        val (toSha, toError) = resolveCommit(to)
+        val (toSha, toError) = resolveCommit(to.ref)
         if (toSha == null) return toError!!
 
         if (fromSha == toSha) {
@@ -130,7 +116,7 @@ class GitCli(private val workDirectory: String) {
      * HEAD first, then branches/tags, then recent commits, plus any [pinnedRefs] (the user's selection)
      * that scrolled out of the lists but still resolve. The caps are deliberate for now.
      */
-    fun getAvailableRefs(pinnedRefs: List<String> = emptyList()): List<RefOption> {
+    fun getAvailableRefs(pinnedRefs: List<DiffSide.Rev> = emptyList()): List<RefOption> {
         val options = mutableListOf<RefOption>()
         val listedValues = mutableSetOf<String>()
         val listedShas = mutableSetOf<String>()
@@ -171,8 +157,8 @@ class GitCli(private val workDirectory: String) {
             }
         }
 
-        for (pinned in pinnedRefs) {
-            if (pinned in listedValues || !isSafeRefArg(pinned)) continue
+        for ((pinned) in pinnedRefs) {
+            if (pinned in listedValues) continue
             val (sha, _) = resolveCommit(pinned)
             if (sha == null) continue
             val subject = run("log", "-n", "1", "--format=%h%x09%s", sha)?.stdout?.split("\t", limit = 2)

@@ -93,8 +93,9 @@ In the Cycode tool window, choose what the scan buttons and **Scan all** run on:
   Local directory compared with HEAD. Two different revisions are required.
   * Scanning only the changes is faster, but vulnerabilities that need the surrounding code may be less accurate.
   * Infrastructure As Code scans do not support diffs and always scan the full project.
-  * The project must be inside a Git repository (otherwise Diff is disabled), and Cycode CLI 3.25.0 or later is
-    required (otherwise the Diff option is hidden).
+  * The project must be inside a Git repository (otherwise Diff is disabled). Diff needs Cycode CLI 3.25.0 or later:
+    with a custom CLI that is older, the plugin shows one notification asking you to upgrade it or to turn
+    automatic CLI management back on.
 * **File** - scans only the file open in the editor. Package vulnerability and Infrastructure As Code scans only run
   for the file types they support.
 

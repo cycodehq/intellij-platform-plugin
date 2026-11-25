@@ -2,7 +2,6 @@ package com.cycode.plugin.services
 
 import com.cycode.plugin.CycodeBundle
 import com.cycode.plugin.components.toolWindow.updateToolWindowState
-import com.cycode.plugin.git.DiffRefsCache
 import com.cycode.plugin.git.DiffSide
 import com.cycode.plugin.git.GitCli
 import com.cycode.plugin.git.HEAD_REF
@@ -31,12 +30,10 @@ class DiffRefsService(private val project: Project) {
     var to: DiffSide = DiffSide.Rev(HEAD_REF)
         private set
 
-    // the revision lists and the git state they were built for (see GitCli.getHeadFingerprint)
+    // rebuilt on every refresh: git is fast enough with the capped lists, and it picks up refs created elsewhere
     @Volatile
-    private var cache: DiffRefsCache? = null
-
-    val refs: List<RefOption>
-        get() = cache?.refs ?: emptyList()
+    var refs: List<RefOption> = emptyList()
+        private set
 
     // null until known; only an explicit "not a git repository" answer makes it false
     @Volatile
@@ -72,21 +69,18 @@ class DiffRefsService(private val project: Project) {
     fun refresh(onDone: (() -> Unit)? = null) {
         val projectRoot = cliService.getProjectRootDirectory() ?: return
         val requestId = refreshRequestId.incrementAndGet()
-        val pinned = listOf(from, to).filterIsInstance<DiffSide.Rev>().map { it.ref }
+        val pinned = listOf(from, to).filterIsInstance<DiffSide.Rev>()
 
         ApplicationManager.getApplication().executeOnPooledThread {
             val git = GitCli(projectRoot)
+            val refs = git.getAvailableRefs(pinned)
 
-            // the lists are rebuilt only when the branch changes or a commit is created
-            val fingerprint = git.getHeadFingerprint()
-            if (fingerprint == null && !gitUnavailableNotified && !git.isGitAvailable()) {
+            // nothing but HEAD: git may be missing (a repository without commits would still answer --version)
+            if (refs.size <= 1 && !gitUnavailableNotified && !git.isGitAvailable()) {
                 gitUnavailableNotified = true
                 CycodeNotifier.notifyInfo(project, CycodeBundle.message("diffGitUnavailableNotification"))
             }
 
-            val current = cache
-            val reuse = current != null && current.canReuse(fingerprint)
-            val refs = if (reuse) current!!.refs else git.getAvailableRefs(pinned)
             if (requestId != refreshRequestId.get() || project.isDisposed) {
                 return@executeOnPooledThread
             }
@@ -94,8 +88,7 @@ class DiffRefsService(private val project: Project) {
             val known = refs.map { it.value }.toSet()
             if (from is DiffSide.Rev && (from as DiffSide.Rev).ref !in known) from = DiffSide.Local
             if (to is DiffSide.Rev && (to as DiffSide.Rev).ref !in known) to = DiffSide.Rev(HEAD_REF)
-            // only a request that is still current may publish lists, together with the state they were built for
-            if (!reuse) cache = DiffRefsCache(fingerprint, refs)
+            this.refs = refs
 
             if (onDone != null) {
                 ApplicationManager.getApplication().invokeLater({ onDone() }, project.disposed)
