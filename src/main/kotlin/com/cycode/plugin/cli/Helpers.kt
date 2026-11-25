@@ -102,6 +102,19 @@ fun isSupportedLockFile(filename: String): Boolean {
     return false
 }
 
+fun isFileSupportedByScanType(filePath: String, scanType: CliScanType): Boolean {
+    return when (scanType) {
+        CliScanType.Sca -> isSupportedPackageFile(filePath)
+        CliScanType.Iac -> isSupportedIacFile(filePath)
+        else -> true
+    }
+}
+
+/** Splits [scanTypes] (keeping their order) into the ones that can scan the file and the ones that cannot. */
+fun partitionByFileSupport(filePath: String, scanTypes: List<CliScanType>): Pair<List<CliScanType>, List<CliScanType>> {
+    return scanTypes.partition { isFileSupportedByScanType(filePath, it) }
+}
+
 fun getPackageFileForLockFile(filename: String): String {
     val lowercaseFilename = filename.lowercase()
     return SCA_CONFIGURATION_SCAN_LOCK_FILE_TO_PACKAGE_FILE.getOrDefault(lowercaseFilename, "package")

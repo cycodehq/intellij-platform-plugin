@@ -37,17 +37,17 @@ class FileSaveListener(private val project: Project) : FileDocumentManagerListen
             return
         }
 
-        if (pluginLocalState.isSecretScanningEnabled && pathsToScan.isNotEmpty()) {
+        if (pluginLocalState.isScanTypeEnabled(CliScanType.Secret) && pathsToScan.isNotEmpty()) {
             service.startScan(CliScanType.Secret, pathsToScan, onDemand = false)
         }
 
         val scaPathsToScan = excludeNonScaRelatedPaths(pathsToScan)
-        if (pluginLocalState.isScaScanningEnabled && scaPathsToScan.isNotEmpty()) {
+        if (pluginLocalState.isScanTypeEnabled(CliScanType.Sca) && scaPathsToScan.isNotEmpty()) {
             service.startScan(CliScanType.Sca, scaPathsToScan, onDemand = false)
         }
 
         val iacPathsToScan = excludeNonIacRelatedPaths(pathsToScan)
-        if (pluginLocalState.isIacScanningEnabled && iacPathsToScan.isNotEmpty()) {
+        if (pluginLocalState.isScanTypeEnabled(CliScanType.Iac) && iacPathsToScan.isNotEmpty()) {
             service.startScan(CliScanType.Iac, iacPathsToScan, onDemand = false)
         }
     }

@@ -1,8 +1,7 @@
 package com.cycode.plugin.services
 
 import com.cycode.plugin.CycodeBundle
-import com.cycode.plugin.cli.CliIgnoreType
-import com.cycode.plugin.cli.CliScanType
+import com.cycode.plugin.cli.*
 import com.cycode.plugin.cli.models.AiRemediationResultData
 import com.cycode.plugin.components.toolWindow.CycodeToolWindowFactory
 import com.cycode.plugin.components.toolWindow.updateToolWindowState
@@ -83,23 +82,25 @@ class CycodeService(val project: Project) : Disposable {
     }
 
     fun startScan(scanType: CliScanType, pathsToScan: List<String>, onDemand: Boolean = true) {
+        startScan(scanType, onDemand) { ScanTarget.Paths(pathsToScan) }
+    }
+
+    /**
+     * [resolveTarget] runs on the background thread once the scan is allowed to start; null means there is nothing
+     * to scan (the resolver has already told the user why).
+     */
+    fun startScan(scanType: CliScanType, onDemand: Boolean = true, resolveTarget: () -> ScanTarget?) {
         runBackgroundTask(getBackgroundScanningLabel(scanType)) { indicator ->
             if (!pluginLocalState.cliAuthed) {
                 CycodeNotifier.notifyInfo(project, CycodeBundle.message("authorizationRequiredNotification"))
                 return@runBackgroundTask
             }
 
-            thisLogger().debug("[$scanType] Start scanning paths: $pathsToScan")
+            val target = resolveTarget() ?: return@runBackgroundTask
 
-            val cancelledCallback = { indicator.isCanceled }
-            when (scanType) {
-                CliScanType.Secret -> cliService.scanPathsSecrets(pathsToScan, onDemand, cancelledCallback)
-                CliScanType.Sca -> cliService.scanPathsSca(pathsToScan, onDemand, cancelledCallback)
-                CliScanType.Iac -> cliService.scanPathsIac(pathsToScan, onDemand, cancelledCallback)
-                CliScanType.Sast -> cliService.scanPathsSast(pathsToScan, onDemand, cancelledCallback)
-            }
-
-            thisLogger().debug("[$scanType] Finish scanning paths: $pathsToScan")
+            thisLogger().debug("[$scanType] Start scanning: $target")
+            cliService.scan(scanType, target, onDemand) { indicator.isCanceled }
+            thisLogger().debug("[$scanType] Finish scanning: $target")
         }
     }
 
