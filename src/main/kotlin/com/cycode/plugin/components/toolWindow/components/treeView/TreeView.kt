@@ -1,7 +1,6 @@
 package com.cycode.plugin.components.toolWindow.components.treeView
 
 import com.cycode.plugin.CycodeBundle
-import com.cycode.plugin.components.toolWindow.getRightPanelDependingOnState
 import com.cycode.plugin.cli.CliResult
 import com.cycode.plugin.cli.CliScanType
 import com.cycode.plugin.cli.getScanTypeDisplayName
@@ -11,10 +10,6 @@ import com.cycode.plugin.cli.models.scanResult.iac.IacDetection
 import com.cycode.plugin.cli.models.scanResult.sast.SastDetection
 import com.cycode.plugin.cli.models.scanResult.sca.ScaDetection
 import com.cycode.plugin.cli.models.scanResult.secret.SecretDetection
-import com.cycode.plugin.components.toolWindow.components.violationCardContentTab.iacViolationCardContentTab.IacViolationCardContentTab
-import com.cycode.plugin.components.toolWindow.components.violationCardContentTab.sastViolationCardContentTab.SastViolationCardContentTab
-import com.cycode.plugin.components.toolWindow.components.violationCardContentTab.scaViolationCardContentTab.ScaViolationCardContentTab
-import com.cycode.plugin.components.toolWindow.components.violationCardContentTab.secretViolationCardContentTab.SecretViolationCardContentTab
 import com.cycode.plugin.components.toolWindow.components.treeView.components.detectionNodeContextMenu.DetectionNodeContextMenu
 import com.cycode.plugin.components.toolWindow.components.treeView.nodes.*
 import com.cycode.plugin.icons.PluginIcons
@@ -24,15 +19,12 @@ import com.intellij.icons.AllIcons
 import com.intellij.ide.util.treeView.TreeState
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.util.Iconable
-import com.intellij.ui.InplaceButton
 import com.intellij.ui.JBColor
 import com.intellij.ui.JBSplitter
 import com.intellij.ui.SideBorder
 import com.intellij.ui.AnimatedIcon
 import com.intellij.ui.components.JBScrollPane
 import com.intellij.ui.treeStructure.Tree
-import com.intellij.util.ui.JBUI
-import java.awt.BorderLayout
 import java.awt.Dimension
 import java.awt.GridLayout
 import java.awt.event.MouseAdapter
@@ -103,7 +95,7 @@ class TreeView(
         val node = tree.getLastSelectedPathComponent() as DefaultMutableTreeNode
 
         openDetectionInFile(project, node.userObject as AbstractNode)
-        displayViolationCard(node.userObject as AbstractNode)
+        openDetection(node.userObject as AbstractNode)
     }
 
     private fun createMouseListeners(): MouseAdapter {
@@ -123,53 +115,21 @@ class TreeView(
         }
     }
 
-    fun displayViolationCard(node: AbstractNode) {
+    /** Called when a finding is picked in the tree; the owner decides what is shown for it. */
+    var onDetectionSelected: ((DetectionBase) -> Unit)? = null
+
+    fun openDetection(node: AbstractNode) {
         when (node) {
-            is SecretDetectionNode -> displayViolationCard(node.detection)
-            is ScaDetectionNode -> displayViolationCard(node.detection)
-            is IacDetectionNode -> displayViolationCard(node.detection)
-            is SastDetectionNode -> displayViolationCard(node.detection)
+            is SecretDetectionNode -> openDetection(node.detection)
+            is ScaDetectionNode -> openDetection(node.detection)
+            is IacDetectionNode -> openDetection(node.detection)
+            is SastDetectionNode -> openDetection(node.detection)
             else -> return
         }
     }
 
-    fun displayViolationCard(detection: DetectionBase) {
-        val card = when (detection) {
-            is SecretDetection -> SecretViolationCardContentTab(project).getContent(detection)
-            is ScaDetection -> ScaViolationCardContentTab(project).getContent(detection)
-            is IacDetection -> IacViolationCardContentTab(project).getContent(detection)
-            is SastDetection -> SastViolationCardContentTab(project).getContent(detection)
-            else -> return
-        }
-
-        // a violation card needs the room: the scan options expand for it and collapse again when it is closed
-        val cardAlreadyShown = splitPane.secondComponent?.getClientProperty(VIOLATION_CARD_KEY) == true
-        if (pluginLocalState.scanOptionsCollapse.onCardOpened(cardAlreadyShown)) {
-            setSecondPaneCollapsed(false, 0)
-        }
-        replaceRightPanel(wrapWithCloseButton(card))
-    }
-
-    /** Adds a close button above a violation card that returns to the scan view. */
-    private fun wrapWithCloseButton(card: JComponent): JPanel {
-        val closeButton = InplaceButton(CycodeBundle.message("violationCardCloseTooltip"), AllIcons.Actions.Close) {
-            tree.clearSelection()
-            if (pluginLocalState.scanOptionsCollapse.onCardClosed()) {
-                setSecondPaneCollapsed(true, collapsedExtent())
-            }
-            replaceRightPanel(getRightPanelDependingOnState(project))
-        }
-
-        val header = JPanel(BorderLayout()).apply {
-            border = JBUI.Borders.empty(4, 8)
-            add(closeButton, BorderLayout.EAST)
-        }
-
-        return JPanel(BorderLayout()).apply {
-            putClientProperty(VIOLATION_CARD_KEY, true)
-            add(header, BorderLayout.NORTH)
-            add(card, BorderLayout.CENTER)
-        }
+    fun openDetection(detection: DetectionBase) {
+        onDetectionSelected?.invoke(detection)
     }
 
     private fun getSeverityWeight(severity: String): Int {
@@ -305,8 +265,6 @@ class TreeView(
 
     private var collapsed = false
 
-    /** Size of the collapsed scan options; set by the owner because it depends on the docking. */
-    var collapsedExtent: () -> Int = { 0 }
     private var proportionBeforeCollapse = 0.5f
 
     /** Shrinks the lower/right pane to [extent] pixels when collapsed and restores the previous split when expanded. */
@@ -378,9 +336,5 @@ class TreeView(
     fun updateSeverityFilter(newSeverityFilter: Map<String, Boolean>) {
         severityFilter = newSeverityFilter
         refreshTree()
-    }
-
-    companion object {
-        private const val VIOLATION_CARD_KEY = "cycode.violationCard"
     }
 }

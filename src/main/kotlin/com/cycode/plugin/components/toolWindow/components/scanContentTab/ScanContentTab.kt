@@ -6,7 +6,6 @@ import com.cycode.plugin.cli.ScanScope
 import com.cycode.plugin.components.Component
 import com.cycode.plugin.components.common.createClickableLabel
 import com.cycode.plugin.components.common.createWrappedHtmlPane
-import com.cycode.plugin.components.toolWindow.ToolWindowUpdate
 import com.cycode.plugin.components.toolWindow.updateToolWindowState
 import com.cycode.plugin.git.DiffSide
 import com.cycode.plugin.git.HEAD_REF
@@ -17,6 +16,7 @@ import com.cycode.plugin.services.diffRefs
 import com.cycode.plugin.services.pluginLocalState
 import com.cycode.plugin.services.scanScope
 import com.intellij.icons.AllIcons
+import com.intellij.openapi.project.Project
 import com.intellij.openapi.ui.ComboBox
 import com.intellij.openapi.wm.ToolWindowManager
 import com.intellij.ui.ScrollPaneFactory
@@ -47,9 +47,6 @@ class ScanContentTab : Component<CycodeService>() {
 
     private val scanButtons = mutableListOf<ScanButton>()
     private var scanAllButton: JButton? = null
-    private var builtScope: ScanScope? = null
-    private var builtGitRepository: Boolean? = null
-    private var builtCollapsed: Boolean? = null
 
     /**
      * Disabling the focused button makes Swing move focus to the next button (it shows up highlighted).
@@ -63,29 +60,13 @@ class ScanContentTab : Component<CycodeService>() {
         button.isEnabled = enabled
     }
 
-    /**
-     * Updates the scan buttons in place (enabled state) instead of rebuilding the whole panel, which flickered
-     * every time a scan started or finished. Returns false when something structural changed and the owner
-     * must rebuild the tab.
-     */
-    fun refresh(service: CycodeService): Boolean {
-        val local = pluginLocalState(service.project)
-        if (builtScope != scanScope(service.project).getEffectiveScanScope() ||
-            builtGitRepository != diffRefs(service.project).isGitRepository ||
-            builtCollapsed != local.scanOptionsCollapse.collapsed
-        ) {
-            return false
-        }
-
-        scanAllButton?.let {
-            val enabled = !local.hasRunningScans()
-            setEnabledKeepingFocus(it, enabled)
-        }
+    /** Updates the scan buttons in place (enabled state) instead of rebuilding the panel, which flickered. */
+    fun refreshRunningState(project: Project) {
+        val local = pluginLocalState(project)
+        scanAllButton?.let { setEnabledKeepingFocus(it, !local.hasRunningScans()) }
         scanButtons.forEach {
-            val enabled = local.isScanTypeEnabled(it.scanType) && !local.isScanRunning(it.scanType)
-            setEnabledKeepingFocus(it.button, enabled)
+            setEnabledKeepingFocus(it.button, local.isScanTypeEnabled(it.scanType) && !local.isScanRunning(it.scanType))
         }
-        return true
     }
 
     private fun column(vararg components: JComponent): JPanel {
@@ -122,11 +103,8 @@ class ScanContentTab : Component<CycodeService>() {
 
         scanButtons.clear()
         scanAllButton = null
-        builtScope = scanScope(service.project).getEffectiveScanScope()
-        builtGitRepository = diffRefs(service.project).isGitRepository
         // Diff is disabled when this turns out not to be a git repository; the tab is rebuilt if that changes
         diffRefs(service.project).refreshGitRepositoryState()
-        builtCollapsed = pluginLocalState.scanOptionsCollapse.collapsed
 
         val scopeComponents = mutableListOf<JComponent>()
         addScopeControls(service, horizontal, scopeComponents)
@@ -186,7 +164,7 @@ class ScanContentTab : Component<CycodeService>() {
         }
 
         // the scan options are collapsible so the results can use the whole window
-        val collapsed = pluginLocalState.scanOptionsCollapse.collapsed
+        val collapsed = pluginLocalState.scanOptionsCollapsed
         val outer = JPanel(BorderLayout())
         outer.add(createHeader(service, collapsed), BorderLayout.NORTH)
         if (!collapsed) {
@@ -214,8 +192,9 @@ class ScanContentTab : Component<CycodeService>() {
             cursor = Cursor.getPredefinedCursor(Cursor.HAND_CURSOR)
             addMouseListener(object : MouseAdapter() {
                 override fun mouseClicked(e: MouseEvent) {
-                    pluginLocalState(service.project).scanOptionsCollapse.toggle()
-                    updateToolWindowState(service.project, ToolWindowUpdate.LayoutChanged)
+                    val local = pluginLocalState(service.project)
+                    local.scanOptionsCollapsed = !local.scanOptionsCollapsed
+                    updateToolWindowState(service.project, reloadResults = false)
                 }
             })
         }
@@ -278,7 +257,7 @@ class ScanContentTab : Component<CycodeService>() {
                 addActionListener {
                     if (scope != scanScope(service.project).getScanScope()) {
                         scanScope(service.project).setScanScope(scope)
-                        updateToolWindowState(service.project, ToolWindowUpdate.LayoutChanged)
+                        updateToolWindowState(service.project, reloadResults = false)
                     }
                 }
             }

@@ -2,7 +2,6 @@ package com.cycode.plugin.services
 
 import com.cycode.plugin.cli.CliScanType
 import com.cycode.plugin.cli.models.StatusResult
-import com.cycode.plugin.components.toolWindow.ScanOptionsCollapse
 import com.intellij.openapi.components.Service
 import com.intellij.openapi.diagnostic.thisLogger
 import java.util.concurrent.ConcurrentHashMap
@@ -35,7 +34,9 @@ class CycodeTemporaryStateService {
     fun hasRunningScans(): Boolean = runningScanCounts.values.any { it.get() > 0 }
 
     // collapsed state of the scan options section in the tool window (session-only)
-    val scanOptionsCollapse = ScanOptionsCollapse()
+    /** Whether the scan options section of the scan tab is collapsed (a plain toggle). */
+    @Volatile
+    var scanOptionsCollapsed = false
 
     val isSecretScanningEnabled: Boolean
         get() = cliStatus?.supportedModules?.secretScanning == true
