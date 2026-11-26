@@ -25,13 +25,16 @@ import com.intellij.ui.SideBorder
 import com.intellij.ui.AnimatedIcon
 import com.intellij.ui.components.JBScrollPane
 import com.intellij.ui.treeStructure.Tree
+import java.awt.AWTEvent
 import java.awt.Dimension
+import java.awt.EventQueue
 import java.awt.GridLayout
 import java.awt.event.MouseAdapter
 import java.awt.event.MouseEvent
 import java.io.File
 import javax.swing.JComponent
 import javax.swing.JPanel
+import javax.swing.SwingUtilities
 import javax.swing.event.TreeSelectionEvent
 import javax.swing.event.TreeSelectionListener
 import javax.swing.tree.DefaultMutableTreeNode
@@ -57,6 +60,9 @@ class TreeView(
     private lateinit var treeScrollPane: JBScrollPane
 
     private var severityFilter: Map<String, Boolean>? = null
+
+    // what each scan type found (e.g. "High - 2"), shown on its row while no scan of that type is running
+    private val detectionSummaries = mutableMapOf<CliScanType, String>()
 
     init {
         createNodes(dummyRootNode)
@@ -91,12 +97,17 @@ class TreeView(
 
     override fun valueChanged(e: TreeSelectionEvent) {
         if (tree.getLastSelectedPathComponent() == null) return
+        // a right click selects the row too, but it only opens the context menu: open nothing before it is shown
+        if (isRightClick(EventQueue.getCurrentEvent())) return
 
         val node = tree.getLastSelectedPathComponent() as DefaultMutableTreeNode
 
         openDetectionInFile(project, node.userObject as AbstractNode)
         openDetection(node.userObject as AbstractNode)
     }
+
+    private fun isRightClick(event: AWTEvent?) =
+        event is MouseEvent && (event.isPopupTrigger || SwingUtilities.isRightMouseButton(event))
 
     private fun createMouseListeners(): MouseAdapter {
         val treeView = this
@@ -159,7 +170,7 @@ class TreeView(
         }
         val detectionsByFile = filteredDetections.groupBy { it.detectionDetails.getFilepath() }
 
-        rootNodes.setNodeSummary(scanType, getDetectionSummary(filteredDetections))
+        detectionSummaries[scanType] = getDetectionSummary(filteredDetections)
 
         val projectRoot = project.basePath?.let { File(it) } ?: File("")
 
@@ -295,12 +306,19 @@ class TreeView(
         tree.collapsePath(TreePath(rootNodes.getScanTypeNode(scanType).path))
     }
 
-    /** Swaps the spinner icons of the scan type nodes without reloading the tree (keeps expanded nodes). */
-    fun refreshRunningState() {
+    private fun updateSummaries() {
         CliScanType.entries.forEach {
-            rootNodes.setRunning(it, pluginLocalState.isScanRunning(it))
-            model.nodeChanged(rootNodes.getScanTypeNode(it))
+            // the previous findings are cleared as soon as a new scan starts, and come back with its results
+            val summary = if (pluginLocalState.isScanRunning(it)) "" else detectionSummaries[it].orEmpty()
+            rootNodes.setNodeSummary(it, summary)
         }
+    }
+
+    /** Swaps the spinner icons and summaries of the scan type nodes without reloading the tree (keeps expanded nodes). */
+    fun refreshRunningState() {
+        CliScanType.entries.forEach { rootNodes.setRunning(it, pluginLocalState.isScanRunning(it)) }
+        updateSummaries()
+        CliScanType.entries.forEach { model.nodeChanged(rootNodes.getScanTypeNode(it)) }
     }
 
     fun refreshTree() {
@@ -323,11 +341,13 @@ class TreeView(
 
     private fun createNodes(top: DefaultMutableTreeNode) {
         rootNodes.createNodes(top)
+        detectionSummaries.clear()
         CliScanType.entries.forEach { rootNodes.setRunning(it, pluginLocalState.isScanRunning(it)) }
         createSecretDetectionNodes()
         createScaDetectionNodes()
         createIacDetectionNodes()
         createSastDetectionNodes()
+        updateSummaries()
     }
 
     fun getTree() = tree
