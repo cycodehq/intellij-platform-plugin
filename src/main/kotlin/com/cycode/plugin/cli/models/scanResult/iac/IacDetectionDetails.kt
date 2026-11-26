@@ -1,6 +1,7 @@
 package com.cycode.plugin.cli.models.scanResult.iac
 
 import com.cycode.plugin.cli.models.scanResult.ScanDetectionDetailsBase
+import java.io.File
 
 data class IacDetectionDetails(
     val info: String,
@@ -17,7 +18,9 @@ data class IacDetectionDetails(
     val policyDisplayName: String?,
 ) : ScanDetectionDetailsBase {
     override fun getFilepath(): String {
-        return fileName
+        // the async scan flow passes the backend's path through as it is, and it can lack the leading slash
+        // ("Users/me/project/Dockerfile"), as SAST results always did (see SastDetectionDetails)
+        return if (File(fileName).isAbsolute) fileName else "/$fileName"
     }
 
     override fun getLineNumber(): Int {
