@@ -8,7 +8,7 @@ import javax.swing.JComponent
 import javax.swing.SwingConstants
 
 /**
- * Opens findings in one editor tab on the right of the editor area, so they get more room than the tool window.
+ * Opens findings in one editor tab in a split next to the open file, so they get more room than the tool window.
  * The tab is reused: selecting another finding replaces its content.
  */
 @Service(Service.Level.PROJECT)
@@ -21,7 +21,7 @@ class FindingTabService(private val project: Project) {
             // bring the existing tab forward without taking the focus from the tree
             manager.openFile(file, false)
         } else {
-            openOnTheRight()
+            openInAnotherWindow()
         }
 
         manager.getEditors(file).filterIsInstance<FindingFileEditor>().forEach { it.showCard(card) }
@@ -39,7 +39,7 @@ class FindingTabService(private val project: Project) {
         manager.windows.firstOrNull { !it.isFileOpen(file) }?.setAsCurrentWindow(false)
     }
 
-    private fun openOnTheRight() {
+    private fun openInAnotherWindow() {
         val manager = FileEditorManagerEx.getInstanceEx(project)
         val current = manager.currentWindow
         if (current == null) {
@@ -47,14 +47,15 @@ class FindingTabService(private val project: Project) {
             return
         }
 
-        // reuse an existing split to the right instead of creating another one every time
-        var other = manager.getNextWindow(current)?.takeIf { it != current }
-        // a new split starts with a copy of the file that was open on the left
+        // reuse another editor window if there is one, instead of creating a split every time
+        var other = manager.windows.firstOrNull { it != current }
+        // createSplitter starts the new window with a copy of the file that was open (not part of its documented
+        // contract, so it is checked by hand in the IDE and the copy is closed below)
         val copiedFile = current.selectedFile
         var splitCreated = false
         if (other == null) {
             manager.createSplitter(SwingConstants.VERTICAL, current)
-            other = manager.getNextWindow(current)?.takeIf { it != current }
+            other = manager.windows.firstOrNull { it != current }
             splitCreated = true
         }
         if (other == null) {

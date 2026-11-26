@@ -110,7 +110,7 @@ class DetectionNodeContextMenu(
     private fun onOpenViolationCardOptionClicked() {
         val node = getUnknownNode()
         if (node is AbstractNode) {
-            treeView.openDetection(node)
+            treeView.openFinding(node, openSource = false)
         }
     }
 

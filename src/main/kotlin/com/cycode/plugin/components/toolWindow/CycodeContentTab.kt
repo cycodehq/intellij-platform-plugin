@@ -36,11 +36,12 @@ class CycodeContentTab(private val project: Project) : SimpleToolWindowPanel(fal
 
     init {
         setContent(treeView)
-        treeView.onDetectionSelected = { showDetection(it) }
-        treeView.onNodeSelected = { node ->
-            // findings in an editor tab have a window of their own: source files must not open next to them
-            project.service<FindingTabService>().focusSourceWindow()
-            openDetectionInFile(project, node)
+        treeView.onOpenFinding = { node, openSource ->
+            if (openSource) {
+                // findings in an editor tab have a window of their own: source files must not open next to them
+                project.service<FindingTabService>().focusSourceWindow()
+                openDetectionInFile(project, node)
+            }
             node.detectionOrNull()?.let { showDetection(it) }
         }
     }
@@ -77,10 +78,22 @@ class CycodeContentTab(private val project: Project) : SimpleToolWindowPanel(fal
 
     /**
      * Shows a finding: in an editor tab when that setting is on, otherwise in the right panel with a close button that
-     * returns to the scan view. Returns true when it is shown in the tool window.
+     * returns to the scan view.
      */
-    fun showDetection(detection: DetectionBase): Boolean {
-        val card = createViolationCard(project, detection) ?: return true
+    fun showDetection(detection: DetectionBase) {
+        showCard(detection)
+    }
+
+    /** For a quick fix in the editor: also brings up the tool window when the finding is shown there. */
+    fun showDetectionAndReveal(detection: DetectionBase) {
+        if (showCard(detection)) {
+            activateToolWindow(project)
+        }
+    }
+
+    /** Returns true when the finding was shown in the tool window (not in an editor tab, and not an unknown type). */
+    private fun showCard(detection: DetectionBase): Boolean {
+        val card = createViolationCard(project, detection) ?: return false
 
         if (pluginSettings().openFindingsInEditorTab) {
             project.service<FindingTabService>().show(card)

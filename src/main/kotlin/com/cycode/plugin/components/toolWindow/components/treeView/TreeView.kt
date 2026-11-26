@@ -102,7 +102,7 @@ class TreeView(
 
         val node = tree.getLastSelectedPathComponent() as DefaultMutableTreeNode
 
-        onNodeSelected?.invoke(node.userObject as AbstractNode)
+        openFinding(node.userObject as AbstractNode, openSource = true)
     }
 
     private fun isRightClick(event: AWTEvent?) =
@@ -125,18 +125,14 @@ class TreeView(
         }
     }
 
-    /** Called when a finding is picked in the tree; the owner decides what is shown for it. */
-    var onDetectionSelected: ((DetectionBase) -> Unit)? = null
+    /**
+     * Called when the user opens a finding from the tree; the owner decides what is shown for it.
+     * [openSource]: also open the source file (a click in the tree does, the context menu's card item does not).
+     */
+    var onOpenFinding: ((node: AbstractNode, openSource: Boolean) -> Unit)? = null
 
-    /** Called when the user selects a node in the tree; the owner decides what opens for it. */
-    var onNodeSelected: ((AbstractNode) -> Unit)? = null
-
-    fun openDetection(node: AbstractNode) {
-        node.detectionOrNull()?.let { openDetection(it) }
-    }
-
-    fun openDetection(detection: DetectionBase) {
-        onDetectionSelected?.invoke(detection)
+    fun openFinding(node: AbstractNode, openSource: Boolean) {
+        onOpenFinding?.invoke(node, openSource)
     }
 
     private fun getSeverityWeight(severity: String): Int {
