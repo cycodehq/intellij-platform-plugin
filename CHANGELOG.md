@@ -4,6 +4,8 @@
 
 ## [Unreleased]
 
+- Fix IaC results failing to load and not matching files in the editor when the scan returned a path without the leading slash
+
 ## [3.2.0] - 2026-11-25
 
 - Add scan scope selector: Project, Diff (between two revisions or the local directory) and File

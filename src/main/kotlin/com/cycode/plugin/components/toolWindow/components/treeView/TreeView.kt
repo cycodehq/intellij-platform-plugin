@@ -164,7 +164,7 @@ class TreeView(
 
         for ((filePath, detections) in detectionsByFile) {
             val summary = CycodeBundle.message("fileNodeSummary", detections.size)
-            val projectRelativePath = File(filePath).relativeTo(projectRoot).path
+            val projectRelativePath = toProjectRelativePath(filePath, projectRoot)
 
             val psiFile = getPsiFile(project, filePath)
             val icon = if (psiFile != null)

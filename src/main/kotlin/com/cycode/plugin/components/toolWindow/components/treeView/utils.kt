@@ -59,3 +59,28 @@ fun openDetectionInFile(project: Project, node: AbstractNode) {
         is SastDetectionNode -> openSastDetectionInFile(project, node)
     }
 }
+
+/**
+ * The path to show in the tree: relative to the project root where the file is inside it.
+ *
+ * Never throws. Results do not always come back as absolute paths: IaC detections can lack the leading slash
+ * ("Users/me/project/Dockerfile"), and a project without a base path has no root to be relative to. A path that
+ * cannot be made relative is shown as it is.
+ */
+fun toProjectRelativePath(filePath: String, projectRoot: File): String {
+    if (!projectRoot.isAbsolute) return filePath
+
+    var file = File(filePath)
+    if (!file.isAbsolute) {
+        val rooted = File("/$filePath")
+        if (!rooted.startsWith(projectRoot)) return filePath
+        file = rooted
+    }
+
+    return try {
+        file.relativeTo(projectRoot).path
+    } catch (e: IllegalArgumentException) {
+        // different roots (e.g. another drive)
+        filePath
+    }
+}
