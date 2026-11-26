@@ -57,7 +57,7 @@ class DiffRefsService(private val project: Project) {
             val isRepository = GitCli(projectRoot).isGitRepository()
             if (!project.isDisposed && isRepository != isGitRepository) {
                 isGitRepository = isRepository
-                updateToolWindowState(project)
+                updateToolWindowState(project, reloadResults = false)
             }
         }
     }

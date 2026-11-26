@@ -1,13 +1,10 @@
 package com.cycode.plugin.components.toolWindow
 
 import com.cycode.plugin.CycodeBundle
-import com.cycode.plugin.components.toolWindow.components.authContentTab.AuthContentTab
+import com.cycode.plugin.cli.CliScanType
 import com.cycode.plugin.components.toolWindow.components.cycodeActionToolBar.CycodeActionToolbar
-import com.cycode.plugin.components.toolWindow.components.loadingContentTab.LoadingContentTab
-import com.cycode.plugin.components.toolWindow.components.scanContentTab.ScanContentTab
 import com.cycode.plugin.icons.PluginIcons
 import com.cycode.plugin.services.cycode
-import com.cycode.plugin.services.pluginLocalState
 import com.intellij.openapi.application.ApplicationManager
 import com.intellij.openapi.application.WriteAction
 import com.intellij.openapi.project.DumbAware
@@ -17,9 +14,11 @@ import com.intellij.openapi.util.Disposer
 import com.intellij.openapi.wm.ToolWindow
 import com.intellij.openapi.wm.ToolWindowFactory
 import com.intellij.openapi.wm.ToolWindowManager
+import com.intellij.openapi.wm.ex.ToolWindowManagerListener
+import com.intellij.openapi.wm.ex.ToolWindowManagerListener.ToolWindowManagerEventType
 import com.intellij.ui.content.Content
 import com.intellij.ui.content.ContentFactory
-import javax.swing.JPanel
+import javax.swing.JComponent
 
 class CycodeToolWindowFactory : DumbAware, ToolWindowFactory {
 
@@ -35,13 +34,29 @@ class CycodeToolWindowFactory : DumbAware, ToolWindowFactory {
 
         CycodeActionToolbar().attachActionToolbar(contentTab)
 
-        val initRightPanel = getRightPanelDependingOnState(project)
-        contentTab.updateContent(initRightPanel)
+        contentTab.showStatePanel()
 
         val toolWindowContent = createToolWindowContent(contentTab)
         toolWindow.contentManager.addContent(toolWindowContent)
 
         Disposer.register(service, toolWindowContent)
+
+        // re-layout when the tool window is moved between a side (stacked) and the bottom
+        var lastStacked = isToolWindowStacked(project)
+        project.messageBus.connect(service).subscribe(ToolWindowManagerListener.TOPIC, object : ToolWindowManagerListener {
+            override fun stateChanged(
+                toolWindowManager: ToolWindowManager,
+                changedToolWindow: ToolWindow,
+                changeType: ToolWindowManagerEventType
+            ) {
+                if (changeType != ToolWindowManagerEventType.MovedOrResized) return
+                val stacked = isToolWindowStacked(project)
+                if (stacked != lastStacked) {
+                    lastStacked = stacked
+                    updateToolWindowState(project, reloadResults = false)
+                }
+            }
+        })
     }
 
     override fun shouldBeAvailable(project: Project) = true
@@ -64,28 +79,8 @@ class CycodeToolWindowFactory : DumbAware, ToolWindowFactory {
 
 }
 
-private fun replaceToolWindowRightPanel(project: Project, panel: JPanel) {
-    val contentTab = CycodeToolWindowFactory.TabManager.getTab(project) ?: return
-    contentTab.updateContent(panel)
-}
-
-private fun createToolWindowContent(component: JPanel): Content {
+private fun createToolWindowContent(component: JComponent): Content {
     return ContentFactory.getInstance().createContent(component, null, false)
-}
-
-fun getRightPanelDependingOnState(project: Project): JPanel {
-    val service = cycode(project)
-    val pluginLocalState = pluginLocalState(project)
-
-    if (!pluginLocalState.cliInstalled) {
-        return LoadingContentTab().getContent(service)
-    }
-
-    return if (pluginLocalState.cliAuthed) {
-        ScanContentTab().getContent(service)
-    } else {
-        AuthContentTab().getContent(service)
-    }
 }
 
 fun updateToolWindowStateForAllProjects() {
@@ -100,12 +95,34 @@ fun updateToolWindowStateForAllProjects() {
 }
 
 
-fun updateToolWindowState(project: Project) {
+/**
+ * Full rebuild: replaces the right panel for the current state. [reloadResults] = false keeps the results tree
+ * (and its expanded nodes), for changes that only affect the layout (scope, collapse, docking).
+ */
+fun updateToolWindowState(project: Project, reloadResults: Boolean = true) {
     ApplicationManager.getApplication().invokeLater {
-        WriteAction.run<Error> {
-            replaceToolWindowRightPanel(project, getRightPanelDependingOnState(project))
-        }
+        val contentTab = CycodeToolWindowFactory.TabManager.getTab(project) ?: return@invokeLater
+        WriteAction.run<Error> { contentTab.showStatePanel(reloadResults) }
     }
+}
+
+/**
+ * A scan started or finished: only the scan buttons and the tree spinners change, nothing is rebuilt.
+ * [startedScanType] is a scan that has just started: its results rows start over, collapsed.
+ */
+fun refreshRunningState(project: Project, startedScanType: CliScanType? = null) {
+    ApplicationManager.getApplication().invokeLater {
+        CycodeToolWindowFactory.TabManager.getTab(project)?.refreshRunningState(startedScanType)
+    }
+}
+
+/**
+ * Docked on the left or right the tool window is narrow and tall, so its panels stack; at the bottom they sit side
+ * by side. Side by side is also the answer while the dock side is unknown.
+ */
+fun isToolWindowStacked(project: Project): Boolean {
+    val anchor = ToolWindowManager.getInstance(project).getToolWindow(CycodeBundle.message("toolWindowId"))?.anchor
+    return anchor != null && !anchor.isHorizontal
 }
 
 fun activateToolWindow(project: Project) {

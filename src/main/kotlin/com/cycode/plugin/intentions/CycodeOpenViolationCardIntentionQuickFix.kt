@@ -55,8 +55,7 @@ class CycodeOpenViolationCardIntentionQuickFix(
         thisLogger().warn("Open violation card quick fix intention has been invoked")
 
         CycodeToolWindowFactory.TabManager.getTab(project)
-            ?.getTreeView()
-            ?.displayViolationCard(detection)
+            ?.showDetection(detection)
 
         activateToolWindow(project)
     }
