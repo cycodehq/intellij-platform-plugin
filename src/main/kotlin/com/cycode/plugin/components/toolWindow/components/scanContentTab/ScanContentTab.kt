@@ -18,7 +18,6 @@ import com.cycode.plugin.services.scanScope
 import com.intellij.icons.AllIcons
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.ui.ComboBox
-import com.intellij.openapi.wm.ToolWindowManager
 import com.intellij.ui.ScrollPaneFactory
 import com.intellij.ui.SimpleListCellRenderer
 import com.intellij.ui.components.JBLabel
@@ -36,12 +35,12 @@ import java.awt.event.MouseAdapter
 import java.awt.event.MouseEvent
 import javax.swing.*
 
-class ScanContentTab : Component<CycodeService>() {
+/** [stacked]: the tool window is docked on the left or right (narrow and tall), so everything is stacked. */
+class ScanContentTab(private val stacked: Boolean) : Component<CycodeService>() {
     private var updatingCombos = false
 
-    /** The panel returned by [getContent]; lets the owner check that this tab is the one on screen. */
-    var panel: JPanel? = null
-        private set
+    // the panel returned by [getContent]; focus is parked on it while a button gets disabled
+    private var panel: JPanel? = null
 
     private class ScanButton(val button: JButton, val scanType: CliScanType)
 
@@ -92,79 +91,33 @@ class ScanContentTab : Component<CycodeService>() {
     }
 
     override fun getContent(service: CycodeService): JPanel {
-        // do not get local state on class level because will be outdated
-        val pluginLocalState = pluginLocalState(service.project)
-
-        // docked on the bottom the tab is wide and short: put scope and scan buttons side by side;
-        // docked on the left/right it is narrow and tall: stack everything
-        val dockAnchor = ToolWindowManager.getInstance(service.project)
-            .getToolWindow(CycodeBundle.message("toolWindowId"))?.anchor
-        val horizontal = dockAnchor?.isHorizontal ?: false
-
         scanButtons.clear()
         scanAllButton = null
         // Diff is disabled when this turns out not to be a git repository; the tab is rebuilt if that changes
         diffRefs(service.project).refreshGitRepositoryState()
 
         val scopeComponents = mutableListOf<JComponent>()
-        addScopeControls(service, horizontal, scopeComponents)
-
+        addScopeControls(service, !stacked, scopeComponents)
         val buttons = CycodeTemporaryStateService.SCAN_TYPES_IN_ORDER.map { createScanButton(service, it) }
-        val footer = arrayOf<JComponent>(
+        val footer = listOf<JComponent>(
             createWrappedHtmlPane(CycodeBundle.message("scanTabOnSaveTip")),
             createWrappedHtmlPane(CycodeBundle.message("howToUseLabel")),
         )
 
-        // "Ready to scan." with a scan-all button at the end of the line
-        val scanAll = JButton(CycodeBundle.message("scanTabScanAllBtn")).apply {
-            isEnabled = !pluginLocalState.hasRunningScans()
-            toolTipText = CycodeBundle.message("toolbarRunAllAction")
-            addActionListener { scanScope(service.project).startAllScansForCurrentScope() }
-        }
+        val scanAll = createScanAllButton(service)
         scanAllButton = scanAll
         val titleLabel = createClickableLabel(CycodeBundle.message("scanTabTitleLabel"))
-        val title = JPanel(BorderLayout()).apply {
-            add(titleLabel, BorderLayout.CENTER)
-            add(scanAll, BorderLayout.EAST)
-        }
+
         val root = ScrollableContentPanel()
         root.border = JBUI.Borders.empty(4, 12, 0, 12)
-
-        if (horizontal) {
-            val columns = JPanel(GridBagLayout())
-            val gbc = GridBagConstraints().apply {
-                weightx = 1.0
-                weighty = 1.0
-                anchor = GridBagConstraints.NORTHWEST
-                fill = GridBagConstraints.HORIZONTAL
-                insets = JBUI.insetsRight(24)
-            }
-            // the title row lives in the same grid so "Scan all" lines up with the right edge of the scan buttons
-            columns.add(titleLabel, GridBagConstraints().apply {
-                gridx = 0; gridy = 0
-                anchor = GridBagConstraints.WEST
-                insets = JBUI.insetsBottom(8)
-            })
-            columns.add(scanAll, GridBagConstraints().apply {
-                gridx = 1; gridy = 0
-                anchor = GridBagConstraints.EAST
-                insets = JBUI.insets(0, 0, 8, 24)
-            })
-            gbc.gridy = 1
-            columns.add(column(*scopeComponents.toTypedArray()), gbc)
-            gbc.gridx = 1
-            columns.add(column(*buttons.toTypedArray()), gbc)
-            root.add(columns, BorderLayout.CENTER)
-            root.add(column(*footer), BorderLayout.SOUTH)
-        } else {
-            root.add(
-                column(title, *scopeComponents.toTypedArray(), *buttons.toTypedArray(), *footer),
-                BorderLayout.CENTER
-            )
-        }
+        root.add(
+            if (stacked) buildStackedLayout(titleLabel, scanAll, scopeComponents, buttons, footer)
+            else buildSideBySideLayout(titleLabel, scanAll, scopeComponents, buttons, footer),
+            BorderLayout.CENTER
+        )
 
         // the scan options are collapsible so the results can use the whole window
-        val collapsed = pluginLocalState.scanOptionsCollapsed
+        val collapsed = pluginLocalState(service.project).scanOptionsCollapsed
         val outer = JPanel(BorderLayout())
         outer.add(createHeader(service, collapsed), BorderLayout.NORTH)
         if (!collapsed) {
@@ -175,6 +128,65 @@ class ScanContentTab : Component<CycodeService>() {
         outer.isFocusable = true
         panel = outer
         return outer
+    }
+
+    private fun createScanAllButton(service: CycodeService) = JButton(CycodeBundle.message("scanTabScanAllBtn")).apply {
+        isEnabled = !pluginLocalState(service.project).hasRunningScans()
+        toolTipText = CycodeBundle.message("toolbarRunAllAction")
+        addActionListener { scanScope(service.project).startAllScansForCurrentScope() }
+    }
+
+    /** "Ready to scan." with a scan-all button at the end of the line, then everything in one column. */
+    private fun buildStackedLayout(
+        titleLabel: JComponent,
+        scanAll: JButton,
+        scope: List<JComponent>,
+        buttons: List<JComponent>,
+        footer: List<JComponent>,
+    ): JPanel {
+        val title = JPanel(BorderLayout()).apply {
+            add(titleLabel, BorderLayout.CENTER)
+            add(scanAll, BorderLayout.EAST)
+        }
+        return column(title, *scope.toTypedArray(), *buttons.toTypedArray(), *footer.toTypedArray())
+    }
+
+    /** Docked at the bottom the tab is wide and short: scope and scan buttons side by side. */
+    private fun buildSideBySideLayout(
+        titleLabel: JComponent,
+        scanAll: JButton,
+        scope: List<JComponent>,
+        buttons: List<JComponent>,
+        footer: List<JComponent>,
+    ): JPanel {
+        val columns = JPanel(GridBagLayout())
+        val gbc = GridBagConstraints().apply {
+            weightx = 1.0
+            weighty = 1.0
+            anchor = GridBagConstraints.NORTHWEST
+            fill = GridBagConstraints.HORIZONTAL
+            insets = JBUI.insetsRight(24)
+        }
+        // the title row lives in the same grid so "Scan all" lines up with the right edge of the scan buttons
+        columns.add(titleLabel, GridBagConstraints().apply {
+            gridx = 0; gridy = 0
+            anchor = GridBagConstraints.WEST
+            insets = JBUI.insetsBottom(8)
+        })
+        columns.add(scanAll, GridBagConstraints().apply {
+            gridx = 1; gridy = 0
+            anchor = GridBagConstraints.EAST
+            insets = JBUI.insets(0, 0, 8, 24)
+        })
+        gbc.gridy = 1
+        columns.add(column(*scope.toTypedArray()), gbc)
+        gbc.gridx = 1
+        columns.add(column(*buttons.toTypedArray()), gbc)
+
+        return JPanel(BorderLayout()).apply {
+            add(columns, BorderLayout.CENTER)
+            add(column(*footer.toTypedArray()), BorderLayout.SOUTH)
+        }
     }
 
     private fun createHeader(service: CycodeService, collapsed: Boolean): JComponent {

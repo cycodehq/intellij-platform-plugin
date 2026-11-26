@@ -1,6 +1,7 @@
 package com.cycode.plugin.components.toolWindow
 
 import com.cycode.plugin.CycodeBundle
+import com.cycode.plugin.cli.CliScanType
 import com.cycode.plugin.components.toolWindow.components.cycodeActionToolBar.CycodeActionToolbar
 import com.cycode.plugin.icons.PluginIcons
 import com.cycode.plugin.services.cycode
@@ -40,8 +41,8 @@ class CycodeToolWindowFactory : DumbAware, ToolWindowFactory {
 
         Disposer.register(service, toolWindowContent)
 
-        // re-layout the scan tab when the tool window is moved to another side
-        var lastAnchor = toolWindow.anchor
+        // re-layout when the tool window is moved between a side (stacked) and the bottom
+        var lastStacked = isToolWindowStacked(project)
         project.messageBus.connect(service).subscribe(ToolWindowManagerListener.TOPIC, object : ToolWindowManagerListener {
             override fun stateChanged(
                 toolWindowManager: ToolWindowManager,
@@ -49,9 +50,9 @@ class CycodeToolWindowFactory : DumbAware, ToolWindowFactory {
                 changeType: ToolWindowManagerEventType
             ) {
                 if (changeType != ToolWindowManagerEventType.MovedOrResized) return
-                val anchor = toolWindowManager.getToolWindow(CycodeBundle.message("toolWindowId"))?.anchor ?: return
-                if (anchor != lastAnchor) {
-                    lastAnchor = anchor
+                val stacked = isToolWindowStacked(project)
+                if (stacked != lastStacked) {
+                    lastStacked = stacked
                     updateToolWindowState(project, reloadResults = false)
                 }
             }
@@ -105,11 +106,23 @@ fun updateToolWindowState(project: Project, reloadResults: Boolean = true) {
     }
 }
 
-/** A scan started or finished: only the scan buttons and the tree spinners change, nothing is rebuilt. */
-fun refreshRunningState(project: Project) {
+/**
+ * A scan started or finished: only the scan buttons and the tree spinners change, nothing is rebuilt.
+ * [startedScanType] is a scan that has just started: its results rows start over, collapsed.
+ */
+fun refreshRunningState(project: Project, startedScanType: CliScanType? = null) {
     ApplicationManager.getApplication().invokeLater {
-        CycodeToolWindowFactory.TabManager.getTab(project)?.refreshRunningState()
+        CycodeToolWindowFactory.TabManager.getTab(project)?.refreshRunningState(startedScanType)
     }
+}
+
+/**
+ * Docked on the left or right the tool window is narrow and tall, so its panels stack; at the bottom they sit side
+ * by side. Side by side is also the answer while the dock side is unknown.
+ */
+fun isToolWindowStacked(project: Project): Boolean {
+    val anchor = ToolWindowManager.getInstance(project).getToolWindow(CycodeBundle.message("toolWindowId"))?.anchor
+    return anchor != null && !anchor.isHorizontal
 }
 
 fun activateToolWindow(project: Project) {

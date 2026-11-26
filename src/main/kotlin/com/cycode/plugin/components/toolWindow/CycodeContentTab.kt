@@ -1,6 +1,7 @@
 package com.cycode.plugin.components.toolWindow
 
 import com.cycode.plugin.CycodeBundle
+import com.cycode.plugin.cli.CliScanType
 import com.cycode.plugin.cli.models.scanResult.DetectionBase
 import com.cycode.plugin.cli.models.scanResult.iac.IacDetection
 import com.cycode.plugin.cli.models.scanResult.sast.SastDetection
@@ -19,7 +20,6 @@ import com.cycode.plugin.services.pluginLocalState
 import com.intellij.icons.AllIcons
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.ui.SimpleToolWindowPanel
-import com.intellij.openapi.wm.ToolWindowManager
 import com.intellij.ui.InplaceButton
 import com.intellij.util.ui.JBUI
 import java.awt.BorderLayout
@@ -41,13 +41,7 @@ class CycodeContentTab(private val project: Project) : SimpleToolWindowPanel(fal
         treeView.onDetectionSelected = ::showDetection
     }
 
-    // left/right docking is narrow and tall: results above the scan controls; bottom: side by side
-    private fun isStacked(): Boolean {
-        val anchor = ToolWindowManager.getInstance(project).getToolWindow(CycodeBundle.message("toolWindowId"))?.anchor
-        return anchor != null && !anchor.isHorizontal
-    }
-
-    private fun getCollapsedExtent() = JBUI.scale(if (isStacked()) COLLAPSED_HEIGHT else COLLAPSED_WIDTH)
+    private fun getCollapsedExtent(stacked: Boolean) = JBUI.scale(if (stacked) COLLAPSED_HEIGHT else COLLAPSED_WIDTH)
 
     /**
      * Replaces the right panel with the one for the current plugin state (loading, authentication or scan).
@@ -57,18 +51,23 @@ class CycodeContentTab(private val project: Project) : SimpleToolWindowPanel(fal
         val service = cycode(project)
         val local = pluginLocalState(project)
 
+        val stacked = isToolWindowStacked(project)
         scanTab = null
         val panel = when {
             !local.cliInstalled -> LoadingContentTab().getContent(service)
-            local.cliAuthed -> ScanContentTab().also { scanTab = it }.getContent(service)
+            local.cliAuthed -> ScanContentTab(stacked).also { scanTab = it }.getContent(service)
             else -> AuthContentTab().getContent(service)
         }
-        show(panel, reloadResults)
+        show(panel, stacked, reloadResults)
     }
 
-    /** Only the scan buttons and the spinners in the tree change; whatever is shown is never replaced. */
-    fun refreshRunningState() {
-        scanTab?.takeIf { it.panel === treeView.getRightPanel() }?.refreshRunningState(project)
+    /**
+     * Only the scan buttons and the spinners in the tree change; whatever is shown is never replaced.
+     * [startedScanType] is a scan that has just started: its results rows start over, collapsed.
+     */
+    fun refreshRunningState(startedScanType: CliScanType? = null) {
+        startedScanType?.let { treeView.collapseScanType(it) }
+        scanTab?.refreshRunningState(project)
         treeView.refreshRunningState()
     }
 
@@ -83,7 +82,7 @@ class CycodeContentTab(private val project: Project) : SimpleToolWindowPanel(fal
         }
 
         scanTab = null
-        show(wrapWithCloseButton(card), reloadResults = false)
+        show(wrapWithCloseButton(card), isToolWindowStacked(project), reloadResults = false)
     }
 
     private fun wrapWithCloseButton(card: JComponent): JPanel {
@@ -103,11 +102,11 @@ class CycodeContentTab(private val project: Project) : SimpleToolWindowPanel(fal
         }
     }
 
-    private fun show(rightPanel: JPanel, reloadResults: Boolean) {
-        treeView.setStacked(isStacked())
+    private fun show(rightPanel: JPanel, stacked: Boolean, reloadResults: Boolean) {
+        treeView.setStacked(stacked)
         // only the scan tab can be collapsed; a finding always gets the room
         val collapsed = scanTab != null && pluginLocalState(project).scanOptionsCollapsed
-        treeView.setSecondPaneCollapsed(collapsed, getCollapsedExtent())
+        treeView.setSecondPaneCollapsed(collapsed, getCollapsedExtent(stacked))
         if (reloadResults) {
             treeView.refreshTree()
         }

@@ -285,11 +285,14 @@ class TreeView(
         treeScrollPane.minimumSize = if (stacked) Dimension(100, 100) else Dimension(400, 100)
     }
 
-    fun getRightPanel(): JComponent? = splitPane.secondComponent
-
     fun replaceRightPanel(newRightPanel: JComponent): TreeView {
         splitPane.secondComponent = newRightPanel
         return this
+    }
+
+    /** The rows of a scan type that is about to be scanned again start over, collapsed. */
+    fun collapseScanType(scanType: CliScanType) {
+        tree.collapsePath(TreePath(rootNodes.getScanTypeNode(scanType).path))
     }
 
     /** Swaps the spinner icons of the scan type nodes without reloading the tree (keeps expanded nodes). */
@@ -316,10 +319,6 @@ class TreeView(
         model.reload()
 
         state.applyTo(tree)
-        // the rows of a scan type that is running again start over (this also covers the Scan all buttons)
-        CliScanType.entries.filter { pluginLocalState.isScanRunning(it) }.forEach {
-            tree.collapsePath(TreePath(rootNodes.getScanTypeNode(it).path))
-        }
     }
 
     private fun createNodes(top: DefaultMutableTreeNode) {
