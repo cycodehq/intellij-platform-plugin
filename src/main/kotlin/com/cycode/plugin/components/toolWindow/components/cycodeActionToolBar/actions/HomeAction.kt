@@ -2,7 +2,6 @@ package com.cycode.plugin.components.toolWindow.components.cycodeActionToolBar.a
 
 import com.cycode.plugin.CycodeBundle
 import com.cycode.plugin.components.toolWindow.CycodeContentTab
-import com.cycode.plugin.components.toolWindow.getRightPanelDependingOnState
 import com.intellij.icons.AllIcons
 import com.intellij.openapi.actionSystem.ActionUpdateThread
 import com.intellij.openapi.actionSystem.AnActionEvent
@@ -22,8 +21,7 @@ class HomeAction(private val contentTab: CycodeContentTab) :
     }
 
     override fun actionPerformed(e: AnActionEvent) {
-        val initRightPanel = getRightPanelDependingOnState(e.project!!)
-        contentTab.updateContent(initRightPanel)
+        contentTab.showStatePanel()
     }
 
     override fun update(e: AnActionEvent) {

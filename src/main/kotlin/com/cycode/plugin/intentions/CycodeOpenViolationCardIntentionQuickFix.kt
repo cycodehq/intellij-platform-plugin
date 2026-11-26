@@ -54,11 +54,8 @@ class CycodeOpenViolationCardIntentionQuickFix(
 
         thisLogger().warn("Open violation card quick fix intention has been invoked")
 
-        CycodeToolWindowFactory.TabManager.getTab(project)
-            ?.getTreeView()
-            ?.displayViolationCard(detection)
-
-        activateToolWindow(project)
+        CycodeToolWindowFactory.TabManager.getTab(project)?.showDetectionAndReveal(detection)
+            ?: activateToolWindow(project)
     }
 
     override fun getPriority(): PriorityAction.Priority {

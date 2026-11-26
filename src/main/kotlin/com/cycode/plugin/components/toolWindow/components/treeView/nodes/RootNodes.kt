@@ -3,6 +3,7 @@ package com.cycode.plugin.components.toolWindow.components.treeView.nodes
 import com.cycode.plugin.CycodeBundle
 import com.cycode.plugin.cli.CliScanType
 import com.cycode.plugin.icons.PluginIcons
+import com.intellij.ui.AnimatedIcon
 import javax.swing.tree.DefaultMutableTreeNode
 
 class RootNodes {
@@ -48,6 +49,14 @@ class RootNodes {
     fun setNodeSummary(scanType: CliScanType, summary: String) {
         val node = getScanTypeNode(scanType)
         (node.userObject as ScanTypeNode).summary = summary
+    }
+
+    private val defaultIcons = scanTypeToNode.mapValues { (it.value.userObject as ScanTypeNode).icon }
+
+    // replaces the scan type icon with a spinner while that scan is running
+    fun setRunning(scanType: CliScanType, running: Boolean) {
+        val node = getScanTypeNode(scanType).userObject as ScanTypeNode
+        node.icon = if (running) AnimatedIcon.Default.INSTANCE else defaultIcons[scanType]
     }
 
     fun createNodes(top: DefaultMutableTreeNode) {

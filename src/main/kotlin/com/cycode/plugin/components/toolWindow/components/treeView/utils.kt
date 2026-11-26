@@ -1,5 +1,6 @@
 package com.cycode.plugin.components.toolWindow.components.treeView
 
+import com.cycode.plugin.cli.models.scanResult.DetectionBase
 import com.cycode.plugin.components.toolWindow.components.treeView.nodes.*
 import com.intellij.openapi.fileEditor.FileEditorManager
 import com.intellij.openapi.fileEditor.OpenFileDescriptor
@@ -58,4 +59,13 @@ fun openDetectionInFile(project: Project, node: AbstractNode) {
         is IacDetectionNode -> openIacDetectionInFile(project, node)
         is SastDetectionNode -> openSastDetectionInFile(project, node)
     }
+}
+
+/** The finding behind a tree node; null for nodes that are not findings (scan types, files). */
+fun AbstractNode.detectionOrNull(): DetectionBase? = when (this) {
+    is SecretDetectionNode -> detection
+    is ScaDetectionNode -> detection
+    is IacDetectionNode -> detection
+    is SastDetectionNode -> detection
+    else -> null
 }
