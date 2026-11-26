@@ -4,7 +4,7 @@
 
 ## [Unreleased]
 
-- Fix an error that stopped the results from loading when a detection path had no leading slash
+- Fix IaC results failing to load and not matching files in the editor when the scan returned a path without the leading slash
 
 ## [3.2.0] - 2026-11-25
 
