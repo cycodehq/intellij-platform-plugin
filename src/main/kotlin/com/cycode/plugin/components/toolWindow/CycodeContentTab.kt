@@ -3,20 +3,18 @@ package com.cycode.plugin.components.toolWindow
 import com.cycode.plugin.CycodeBundle
 import com.cycode.plugin.cli.CliScanType
 import com.cycode.plugin.cli.models.scanResult.DetectionBase
-import com.cycode.plugin.cli.models.scanResult.iac.IacDetection
-import com.cycode.plugin.cli.models.scanResult.sast.SastDetection
-import com.cycode.plugin.cli.models.scanResult.sca.ScaDetection
-import com.cycode.plugin.cli.models.scanResult.secret.SecretDetection
 import com.cycode.plugin.components.toolWindow.components.authContentTab.AuthContentTab
 import com.cycode.plugin.components.toolWindow.components.loadingContentTab.LoadingContentTab
 import com.cycode.plugin.components.toolWindow.components.scanContentTab.ScanContentTab
 import com.cycode.plugin.components.toolWindow.components.treeView.TreeView
-import com.cycode.plugin.components.toolWindow.components.violationCardContentTab.iacViolationCardContentTab.IacViolationCardContentTab
-import com.cycode.plugin.components.toolWindow.components.violationCardContentTab.sastViolationCardContentTab.SastViolationCardContentTab
-import com.cycode.plugin.components.toolWindow.components.violationCardContentTab.scaViolationCardContentTab.ScaViolationCardContentTab
-import com.cycode.plugin.components.toolWindow.components.violationCardContentTab.secretViolationCardContentTab.SecretViolationCardContentTab
+import com.cycode.plugin.components.toolWindow.components.treeView.detectionOrNull
+import com.cycode.plugin.components.toolWindow.components.treeView.openDetectionInFile
+import com.cycode.plugin.components.toolWindow.components.violationCardContentTab.createViolationCard
+import com.cycode.plugin.editor.FindingTabService
 import com.cycode.plugin.services.cycode
 import com.cycode.plugin.services.pluginLocalState
+import com.cycode.plugin.services.pluginSettings
+import com.intellij.openapi.components.service
 import com.intellij.icons.AllIcons
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.ui.SimpleToolWindowPanel
@@ -38,7 +36,13 @@ class CycodeContentTab(private val project: Project) : SimpleToolWindowPanel(fal
 
     init {
         setContent(treeView)
-        treeView.onDetectionSelected = ::showDetection
+        treeView.onDetectionSelected = { showDetection(it) }
+        treeView.onNodeSelected = { node ->
+            // findings in an editor tab have a window of their own: source files must not open next to them
+            project.service<FindingTabService>().focusSourceWindow()
+            openDetectionInFile(project, node)
+            node.detectionOrNull()?.let { showDetection(it) }
+        }
     }
 
     private fun getCollapsedExtent(stacked: Boolean) = JBUI.scale(if (stacked) COLLAPSED_HEIGHT else COLLAPSED_WIDTH)
@@ -71,18 +75,21 @@ class CycodeContentTab(private val project: Project) : SimpleToolWindowPanel(fal
         treeView.refreshRunningState()
     }
 
-    /** Shows a finding in the right panel, with a close button that returns to the scan view. */
-    fun showDetection(detection: DetectionBase) {
-        val card = when (detection) {
-            is SecretDetection -> SecretViolationCardContentTab(project).getContent(detection)
-            is ScaDetection -> ScaViolationCardContentTab(project).getContent(detection)
-            is IacDetection -> IacViolationCardContentTab(project).getContent(detection)
-            is SastDetection -> SastViolationCardContentTab(project).getContent(detection)
-            else -> return
+    /**
+     * Shows a finding: in an editor tab when that setting is on, otherwise in the right panel with a close button that
+     * returns to the scan view. Returns true when it is shown in the tool window.
+     */
+    fun showDetection(detection: DetectionBase): Boolean {
+        val card = createViolationCard(project, detection) ?: return true
+
+        if (pluginSettings().openFindingsInEditorTab) {
+            project.service<FindingTabService>().show(card)
+            return false
         }
 
         scanTab = null
         show(wrapWithCloseButton(card), isToolWindowStacked(project), reloadResults = false)
+        return true
     }
 
     private fun wrapWithCloseButton(card: JComponent): JPanel {

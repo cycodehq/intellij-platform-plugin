@@ -102,8 +102,7 @@ class TreeView(
 
         val node = tree.getLastSelectedPathComponent() as DefaultMutableTreeNode
 
-        openDetectionInFile(project, node.userObject as AbstractNode)
-        openDetection(node.userObject as AbstractNode)
+        onNodeSelected?.invoke(node.userObject as AbstractNode)
     }
 
     private fun isRightClick(event: AWTEvent?) =
@@ -129,14 +128,11 @@ class TreeView(
     /** Called when a finding is picked in the tree; the owner decides what is shown for it. */
     var onDetectionSelected: ((DetectionBase) -> Unit)? = null
 
+    /** Called when the user selects a node in the tree; the owner decides what opens for it. */
+    var onNodeSelected: ((AbstractNode) -> Unit)? = null
+
     fun openDetection(node: AbstractNode) {
-        when (node) {
-            is SecretDetectionNode -> openDetection(node.detection)
-            is ScaDetectionNode -> openDetection(node.detection)
-            is IacDetectionNode -> openDetection(node.detection)
-            is SastDetectionNode -> openDetection(node.detection)
-            else -> return
-        }
+        node.detectionOrNull()?.let { openDetection(it) }
     }
 
     fun openDetection(detection: DetectionBase) {
